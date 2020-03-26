@@ -1382,14 +1382,14 @@
 		continue;
 	    }
 	    split_input_port = raw_input_ports[i].split('|');
-	    if( split_input_port.length == 2 ) {
+	    if( split_input_port.length > 1 ) {
 		var cyperus_id = split_input_port[0];
 		var port_name = split_input_port[1];
 		node.addInput(port_name, "number", {'id': cyperus_id});
 		_cyperus_util_store_litegraph_to_cyperus_id(
 		    _cyperus_util_get_current_bus_id(),
 		    node.id,
-		    port_name,
+		    "input",
 		    i,
 		    cyperus_id);   
 	    }
@@ -1401,14 +1401,14 @@
 		continue;
 	    }
 	    split_output_port = raw_output_ports[i].split('|');
-	    if( split_output_port.length == 2 ) {
+	    if( split_output_port.length > 1 ) {
 		var cyperus_id = split_output_port[0];
 		var port_name = split_output_port[1];
 		node.addOutput(port_name, "number", {'id': cyperus_id });
 		_cyperus_util_store_litegraph_to_cyperus_id(
 		    _cyperus_util_get_current_bus_id(),
 		    node.id,
-		    port_name,
+		    "output",
 		    i,
 		    cyperus_id);
 	    }
