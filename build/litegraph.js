@@ -1364,70 +1364,58 @@
 					     args);
     }
 
-    function _cyperus_util_store_new_dsp_delay_module_ports(response, args) {
-	var node = args;
-	var raw_ports = response[1].split('out:\n');
 
-	var raw_input_ports = raw_ports[0].split('\n').slice(1);
-	var raw_output_ports = raw_ports[1].split('\n');
-	
-	for (var i = 0; i < raw_input_ports.length; i++) {
-	    split_input_port = raw_input_ports[i].split('|');
-	    if( split_input_port.length > 1 ) {
-		if (!split_input_port[1].localeCompare("in")) {
-		    var cyperus_id = split_input_port[0];
-		    node.addInput("in", "number", {'id': cyperus_id});
-		    _cyperus_util_store_litegraph_to_cyperus_id(_cyperus_util_get_current_bus_id(), node.id, 'input', i, cyperus_id);
-		} else if (!split_input_port[1].localeCompare("param_time")) {
-		    node.addInput("time", "number", {'id': split_input_port[0]});
-		    _cyperus_util_store_litegraph_to_cyperus_id(_cyperus_util_get_current_bus_id(), node.id, 'input', i, cyperus_id);
-		}
-	    }
-	}
-
-	for (var i = 0; i < raw_output_ports.length; i++) {
-	    split_output_port = raw_output_ports[i].split('|');
-	    if( split_output_port.length > 1 ) {
-		if (!split_output_port[1].localeCompare("out")) {
-		    var cyperus_id = split_output_port[0];
-		    node.addOutput("out", "number", {'id': cyperus_id });
-		    _cyperus_util_store_litegraph_to_cyperus_id(_cyperus_util_get_current_bus_id(), node.id, 'output', i, cyperus_id);
-		}
-	    }
-	}
-    }
     
-    function _cyperus_util_store_new_dsp_sine_module_ports(response, args) {
+    function _cyperus_util_store_new_dsp_module_ports(response, args) {
 	var node = args;
 	var raw_ports = response[1].split('out:\n');
 
 	var raw_input_ports = raw_ports[0].split('\n').slice(1);
 	var raw_output_ports = raw_ports[1].split('\n');
-	
+
+	console.log('raw_input_ports ', raw_input_ports);
+	console.log('raw_output_ports', raw_output_ports);
+
 	for (var i = 0; i < raw_input_ports.length; i++) {
+	    // empty string check
+	    if( raw_input_ports[i].includes('|') == false ) {
+		continue;
+	    }
 	    split_input_port = raw_input_ports[i].split('|');
-	    if( split_input_port.length > 1 ) {
-		if (!split_input_port[1].localeCompare("in")) {
-		    var cyperus_id = split_input_port[0];
-		    node.addInput("in", "number", {'id': cyperus_id});
-		    _cyperus_util_store_litegraph_to_cyperus_id(_cyperus_util_get_current_bus_id(), node.id, 'input', i, cyperus_id);
-		}
+	    if( split_input_port.length == 2 ) {
+		var cyperus_id = split_input_port[0];
+		var port_name = split_input_port[1];
+		node.addInput(port_name, "number", {'id': cyperus_id});
+		_cyperus_util_store_litegraph_to_cyperus_id(
+		    _cyperus_util_get_current_bus_id(),
+		    node.id,
+		    port_name,
+		    i,
+		    cyperus_id);   
 	    }
 	}
 
 	for (var i = 0; i < raw_output_ports.length; i++) {
+	    // empty string check
+	    if( raw_output_ports[i].includes('|') == false) {
+		continue;
+	    }
 	    split_output_port = raw_output_ports[i].split('|');
-	    if( split_output_port.length > 1 ) {
-		if (!split_output_port[1].localeCompare("out")) {
-		    var cyperus_id = split_output_port[0];
-		    node.addOutput("out", "number", {'id': cyperus_id });
-		    _cyperus_util_store_litegraph_to_cyperus_id(_cyperus_util_get_current_bus_id(), node.id, 'output', i, cyperus_id);
-		}
+	    if( split_output_port.length == 2 ) {
+		var cyperus_id = split_output_port[0];
+		var port_name = split_output_port[1];
+		node.addOutput(port_name, "number", {'id': cyperus_id });
+		_cyperus_util_store_litegraph_to_cyperus_id(
+		    _cyperus_util_get_current_bus_id(),
+		    node.id,
+		    port_name,
+		    i,
+		    cyperus_id);
 	    }
 	}
     }
 
-    function _cyperus_util_create_new_dsp_sine_module(response, args) {
+    function _cyperus_util_create_new_dsp_module(response, args) {
 	var node = args;
 	var self = this;
 
@@ -1437,22 +1425,7 @@
 	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[0]);
 
 	LiteGraph._cyperus.osc_list_module_port(module_path,
-						_cyperus_util_store_new_dsp_sine_module_ports,
-						node);
-					       
-    }
-
-    function _cyperus_util_create_new_dsp_delay_module(response, args) {
-	var node = args;
-	var self = this;
-
-	// store id
-	node.properties['id'] = response[0];
-	
-	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[0]);
-
-	LiteGraph._cyperus.osc_list_module_port(module_path,
-						_cyperus_util_store_new_dsp_delay_module_ports,
+						_cyperus_util_store_new_dsp_module_ports,
 						node);
 					       
     }
@@ -1522,7 +1495,14 @@
 	
 	
 	// node.id=1 and node.id=2 are the main inputs/outputs
-	if ( LiteGraph._global_graph_stack.length || node.id > 2) {
+	if ( LiteGraph._global_graph_stack.length ||
+	     !(
+		 !node.type.localeCompare("main/inputs") ||
+		     !node.type.localeCompare("main/outputs")
+		 
+	     )
+	   )
+	{
 	    if (!node.type.localeCompare("bus/add")) {		
 		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
 					       'name',
@@ -1559,7 +1539,7 @@
 						       100.0,
 						       1.0,
 						       0.0,
-						       _cyperus_util_create_new_dsp_sine_module,
+						       _cyperus_util_create_new_dsp_module,
 						       node);
 	    } else if (!node.type.localeCompare("dsp/processor/delay")) {
 		console.log('_cyperus.osc_add_module_delay()');
@@ -1569,7 +1549,7 @@
 							1.0,
 							1.0,
 							0.8,
-							_cyperus_util_create_new_dsp_delay_module,
+							_cyperus_util_create_new_dsp_module,
 							node);
 	    }
 	}
