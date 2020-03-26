@@ -1493,6 +1493,8 @@
 	// build current path
 	//
 	
+
+	console.log("node.type", node.type);
 	
 	// node.id=1 and node.id=2 are the main inputs/outputs
 	if ( LiteGraph._global_graph_stack.length ||
@@ -1536,7 +1538,7 @@
 		var path = _cyperus_util_get_current_bus_path();
 		
 		LiteGraph._cyperus.osc_add_module_sine(path,
-						       100.0,
+						       .06125,
 						       1.0,
 						       0.0,
 						       _cyperus_util_create_new_dsp_module,
@@ -1548,9 +1550,29 @@
 		LiteGraph._cyperus.osc_add_module_delay(path,
 							1.0,
 							1.0,
-							0.8,
+							0.5,
 							_cyperus_util_create_new_dsp_module,
 							node);
+	    } else if (!node.type.localeCompare("dsp/processor/envelope_follower")) {
+		console.log('_cyperus.osc_add_module_envelope_follower()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		LiteGraph._cyperus.osc_add_module_envelope_follower(path,
+								    1.0,
+								    1.0,
+								    1.0,
+								    _cyperus_util_create_new_dsp_module,
+								    node);
+	    } else if (!node.type.localeCompare("dsp/processor/filter_bandpass")) {
+		console.log('_cyperus.osc_add_module_filter_bandpass()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		LiteGraph._cyperus.osc_add_module_filter_bandpass(path,
+								  1.0,
+								  100.0,
+								  10.0,
+								  _cyperus_util_create_new_dsp_module,
+								  node);
 	    }
 	}
 	
