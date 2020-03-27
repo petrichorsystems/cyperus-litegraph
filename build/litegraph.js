@@ -1533,6 +1533,15 @@
 
 	    } else if (!node.type.localeCompare("bus/output")) {
 
+	    } else if (!node.type.localeCompare("dsp/generator/sawtooth")) {
+		console.log('_cyperus.osc_add_module_sawtooth()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		LiteGraph._cyperus.osc_add_module_sawtooth(path,
+							   .06125,
+							   1.0,
+							   _cyperus_util_create_new_dsp_module,
+							   node);
 	    } else if (!node.type.localeCompare("dsp/generator/sine")) {
 		console.log('_cyperus.osc_add_module_sine()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -1543,6 +1552,15 @@
 						       0.0,
 						       _cyperus_util_create_new_dsp_module,
 						       node);
+	    } else if (!node.type.localeCompare("dsp/generator/square")) {
+		console.log('_cyperus.osc_add_module_square()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		LiteGraph._cyperus.osc_add_module_square(path,
+							 .06125,
+							 1.0,
+							 _cyperus_util_create_new_dsp_module,
+							 node);
 	    } else if (!node.type.localeCompare("dsp/generator/triangle")) {
 		console.log('_cyperus.osc_add_module_triangle()');
 		var path = _cyperus_util_get_current_bus_path();
