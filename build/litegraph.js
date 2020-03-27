@@ -1543,6 +1543,15 @@
 						       0.0,
 						       _cyperus_util_create_new_dsp_module,
 						       node);
+	    } else if (!node.type.localeCompare("dsp/generator/triangle")) {
+		console.log('_cyperus.osc_add_module_triangle()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		LiteGraph._cyperus.osc_add_module_triangle(path,
+							   .06125,
+							   1.0,
+							   _cyperus_util_create_new_dsp_module,
+							   node);
 	    } else if (!node.type.localeCompare("dsp/processor/delay")) {
 		console.log('_cyperus.osc_add_module_delay()');
 		var path = _cyperus_util_get_current_bus_path();
