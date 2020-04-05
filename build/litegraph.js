@@ -2972,8 +2972,7 @@
 		console.log,
 		undefined
 	    )
-	} else
-	
+	}
     };
 
     // Execution *************************
