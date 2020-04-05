@@ -1590,66 +1590,90 @@
 		console.log('_cyperus.osc_add_module_square()');
 		var path = _cyperus_util_get_current_bus_path();
 		
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+
 		LiteGraph._cyperus.osc_add_module_square(path,
-							 .06125,
-							 1.0,
+							 "440.0",
+							 "1.0",
 							 _cyperus_util_create_new_dsp_module,
 							 node);
 	    } else if (!node.type.localeCompare("dsp/generator/triangle")) {
 		console.log('_cyperus.osc_add_module_triangle()');
 		var path = _cyperus_util_get_current_bus_path();
 		
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+
 		LiteGraph._cyperus.osc_add_module_triangle(path,
-							   .06125,
-							   1.0,
+							   "440",
+							   "1.0",
 							   _cyperus_util_create_new_dsp_module,
 							   node);
 	    } else if (!node.type.localeCompare("dsp/processor/delay")) {
 		console.log('_cyperus.osc_add_module_delay()');
 		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['time'] = "1.0";
+		node['properties']['feedback'] = "0.5";
 		
 		LiteGraph._cyperus.osc_add_module_delay(path,
-							1.0,
-							1.0,
-							0.5,
+							"1.0",
+							"1.0",
+							"0.5",
 							_cyperus_util_create_new_dsp_module,
 							node);
 	    } else if (!node.type.localeCompare("dsp/processor/envelope_follower")) {
 		console.log('_cyperus.osc_add_module_envelope_follower()');
 		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['attack'] = "1.0";
+		node['properties']['decay'] = "1.0";
+		node['properties']['scale'] = "1.0";
 		
 		LiteGraph._cyperus.osc_add_module_envelope_follower(path,
-								    1.0,
-								    1.0,
-								    1.0,
+								    "1.0",
+								    "1.0",
+								    "1.0",
 								    _cyperus_util_create_new_dsp_module,
 								    node);
 	    } else if (!node.type.localeCompare("dsp/processor/filter_bandpass")) {
 		console.log('_cyperus.osc_add_module_filter_bandpass()');
 		var path = _cyperus_util_get_current_bus_path();
 		
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['cutoff'] = "100.0";
+		node['properties']['q'] = "10.0";
+		
 		LiteGraph._cyperus.osc_add_module_filter_bandpass(path,
-								  1.0,
-								  100.0,
-								  10.0,
+								  "1.0",
+								  "100.0",
+								  "10.0",
 								  _cyperus_util_create_new_dsp_module,
 								  node);
 	    } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
 		console.log('_cyperus.osc_add_module_filter_highpass()');
 		var path = _cyperus_util_get_current_bus_path();
-		
+
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['cutoff'] = "100.0";
+
 		LiteGraph._cyperus.osc_add_module_filter_highpass(path,
-								  1.0,
-								  100.0,
+								  "1.0",
+								  "100.0",
 								  _cyperus_util_create_new_dsp_module,
 								  node);
 	    } else if (!node.type.localeCompare("dsp/processor/filter_lowpass")) {
 		console.log('_cyperus.osc_add_module_filter_lowpass()');
 		var path = _cyperus_util_get_current_bus_path();
-		
+
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['cutoff'] = "100.0";
+
 		LiteGraph._cyperus.osc_add_module_filter_lowpass(path,
-								  1.0,
-								  100.0,
+								  "1.0",
+								  "100.0",
 								  _cyperus_util_create_new_dsp_module,
 								  node);
 	    }
@@ -2848,7 +2872,17 @@
 	console.log(this);
 	
 	var current_path = _cyperus_util_get_current_bus_path().concat("?").concat(this.properties['id']);
-	if (!this.type.localeCompare("dsp/generator/sine")) {
+	if (!this.type.localeCompare("dsp/generator/sawtooth")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']);
+	    LiteGraph._cyperus.osc_edit_module_sawtooth(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/generator/sine")) {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
@@ -2860,17 +2894,85 @@
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/generator/sawtooth")) {
+	} else if (!this.type.localeCompare("dsp/generator/square")) {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
-	    LiteGraph._cyperus.osc_edit_module_sawtooth(
+	    console.log('phase', this.properties['phase']);	    
+	    LiteGraph._cyperus.osc_edit_module_square(
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
 		console.log,
 		undefined
 	    )
-	}
+	} else if (!this.type.localeCompare("dsp/generator/triangle")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']); 
+	    LiteGraph._cyperus.osc_edit_module_triangle(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/delay")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('time', this.properties['time']);
+	    console.log('feeback', this.properties['feedback']);	    
+	    LiteGraph._cyperus.osc_edit_module_delay(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/envelope_follower")) {
+	    console.log('attack', this.properties['attack']);
+	    console.log('decay', this.properties['decay']);
+	    console.log('scale', this.properties['scale']);	    
+	    LiteGraph._cyperus.osc_edit_module_envelope_follower(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/filter_bandpass")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('cutoff', this.properties['cutoff']);
+	    console.log('q', this.properties['q']);	    
+	    LiteGraph._cyperus.osc_edit_module_filter_bandpass(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/filter_highpass")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('cutoff', this.properties['cutoff']);
+	    LiteGraph._cyperus.osc_edit_module_filter_highpass(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/filter_lowpass")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('cutoff', this.properties['cutoff']);
+	    LiteGraph._cyperus.osc_edit_module_filter_lowpass(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else
 	
     };
 
