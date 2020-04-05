@@ -1413,6 +1413,33 @@
 		    cyperus_id);
 	    }
 	}
+
+	console.log('module_parameters ', node.properties['module_parameters']);
+	var module_parameters = node.properties['module_parameters'];
+	for( var i=0; i<module_parameters.length; i++ ) {
+	    module_parameter = module_parameters[i];
+	    node.addWidget(
+		module_parameter['param_type'],
+		module_parameter['param_name'],
+		node.properties[module_parameter['param_name']],
+		function(v) {
+		    if (!v) {
+		        return;
+                    }
+		    node.setProperty(module_parameter['param_name'],
+	                             v
+		    )
+		    
+		}
+	    )
+	}
+	
+	// node.graph.list_of_graphcanvas[0].drawNodeWidgets(
+	//     node,
+	//     0,
+	//     node.graph.list_of_graphcanvas[0].bgctx,
+	//     null
+	// );
     }
 
     function _cyperus_util_create_new_dsp_module(response, args) {
@@ -1536,6 +1563,9 @@
 	    } else if (!node.type.localeCompare("dsp/generator/sawtooth")) {
 		console.log('_cyperus.osc_add_module_sawtooth()');
 		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
 		
 		LiteGraph._cyperus.osc_add_module_sawtooth(path,
 							   .06125,
@@ -1545,11 +1575,15 @@
 	    } else if (!node.type.localeCompare("dsp/generator/sine")) {
 		console.log('_cyperus.osc_add_module_sine()');
 		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['phase'] = "0.0";
 		
 		LiteGraph._cyperus.osc_add_module_sine(path,
-						       .06125,
-						       1.0,
-						       0.0,
+						       "440.0",
+						       "1.0",
+						       "0.0",
 						       _cyperus_util_create_new_dsp_module,
 						       node);
 	    } else if (!node.type.localeCompare("dsp/generator/square")) {
@@ -1600,7 +1634,26 @@
 								  10.0,
 								  _cyperus_util_create_new_dsp_module,
 								  node);
+	    } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
+		console.log('_cyperus.osc_add_module_filter_highpass()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		LiteGraph._cyperus.osc_add_module_filter_highpass(path,
+								  1.0,
+								  100.0,
+								  _cyperus_util_create_new_dsp_module,
+								  node);
+	    } else if (!node.type.localeCompare("dsp/processor/filter_lowpass")) {
+		console.log('_cyperus.osc_add_module_filter_lowpass()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		LiteGraph._cyperus.osc_add_module_filter_lowpass(path,
+								  1.0,
+								  100.0,
+								  _cyperus_util_create_new_dsp_module,
+								  node);
 	    }
+
 	}
 	
         return node; //to chain actions
@@ -2777,14 +2830,48 @@
         if (!this.properties) {
             this.properties = {};
         }
-		if( value === this.properties[name] )
-			return;
-		var prev_value = this.properties[name];
+	if( value === this.properties[name] )
+	    return;
+	
+	var prev_value = this.properties[name];
         this.properties[name] = value;
+	
         if (this.onPropertyChanged) {
             if( this.onPropertyChanged(name, value, prev_value) === false ) //abort change
-				this.properties[name] = prev_value;
+		this.properties[name] = prev_value;
+	    
         }
+
+	console.log('name', name);
+	console.log('value', value);
+
+	console.log(this);
+	
+	var current_path = _cyperus_util_get_current_bus_path().concat("?").concat(this.properties['id']);
+	if (!this.type.localeCompare("dsp/generator/sine")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('phase', this.properties['phase']);	    
+	    LiteGraph._cyperus.osc_edit_module_sine(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/generator/sawtooth")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']);
+	    LiteGraph._cyperus.osc_edit_module_sawtooth(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	}
+	
     };
 
     // Execution *************************
@@ -8811,6 +8898,7 @@ LGraphNode.prototype.executeAction = function(action)
 
         for (var i = 0; i < widgets.length; ++i) {
             var w = widgets[i];
+	    
             var y = posY;
             if (w.y) {
                 y = w.y;
@@ -11839,7 +11927,7 @@ if (typeof exports != "undefined") {
                 if (!v) {
                     return;
                 }
-                that.setProperty("name",v);
+                node.setProperty("name",v);
             }
         );
         this.type_widget = this.addWidget(
@@ -11847,7 +11935,7 @@ if (typeof exports != "undefined") {
             "Type",
             this.properties.type,
             function(v) {
-				that.setProperty("type",v);
+		node.setProperty("type",v);
             }
         );
 
@@ -11856,7 +11944,7 @@ if (typeof exports != "undefined") {
             "Value",
             this.properties.value,
             function(v) {
-                that.setProperty("value",v);
+                node.setProperty("value",v);
             }
         );
 
