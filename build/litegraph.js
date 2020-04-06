@@ -1676,6 +1676,22 @@
 								  "100.0",
 								  _cyperus_util_create_new_dsp_module,
 								  node);
+	    } else if (!node.type.localeCompare("network/osc/transmit")) {
+		console.log('_cyperus.osc_add_module_osc_transmit()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		node['properties']['host'] = "127.0.0.1";
+		node['properties']['port'] = "6001";
+		node['properties']['path'] = "/default";
+		node['properties']['samplerate_divisor'] = 48;
+		
+		LiteGraph._cyperus.osc_add_module_osc_transmit(path,
+							       "127.0.0.1",
+							       "6001",
+							       "/default",
+							       48,
+							       _cyperus_util_create_new_dsp_module,
+							       node);
 	    }
 
 	}
@@ -2912,7 +2928,6 @@
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
-		this.widgets[2].value,
 		console.log,
 		undefined
 	    )
@@ -2969,6 +2984,20 @@
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("network/osc/transmit")) {
+	    console.log('host', this.properties['host']);
+	    console.log('port', this.properties['port']);
+	    console.log('path', this.properties['path']);
+	    console.log('samplerate_divisor', this.properties['samplerate_divisor']);
+	    LiteGraph._cyperus.osc_edit_module_osc_transmit(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		this.widgets[3].value,
 		console.log,
 		undefined
 	    )
