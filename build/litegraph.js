@@ -1664,18 +1664,20 @@
 								  "100.0",
 								  _cyperus_util_create_new_dsp_module,
 								  node);
-	    } else if (!node.type.localeCompare("dsp/processor/filter_lowpass")) {
-		console.log('_cyperus.osc_add_module_filter_lowpass()');
+	    } else if (!node.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
+		console.log('_cyperus.osc_add_module_filter_varslope_lowpass()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['amplitude'] = "1.0";
-		node['properties']['cutoff'] = "100.0";
+		node['properties']['slope'] = "10.0";
+		node['properties']['cutoff_freq'] = "100.0";
 
-		LiteGraph._cyperus.osc_add_module_filter_lowpass(path,
-								  "1.0",
-								  "100.0",
-								  _cyperus_util_create_new_dsp_module,
-								  node);
+		LiteGraph._cyperus.osc_add_module_filter_varslope_lowpass(path,
+									  "1.0",
+									  "10.0",
+									  "100.0",
+									  _cyperus_util_create_new_dsp_module,
+									  node);
 	    } else if (!node.type.localeCompare("network/osc/transmit")) {
 		console.log('_cyperus.osc_add_module_osc_transmit()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -2977,13 +2979,15 @@
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/processor/filter_lowpass")) {
+	} else if (!this.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
 	    console.log('amplitude', this.properties['amplitude']);
-	    console.log('cutoff', this.properties['cutoff']);
-	    LiteGraph._cyperus.osc_edit_module_filter_lowpass(
+	    console.log('slope', this.properties['slope']);
+	    console.log('cutoff_freq', this.properties['cutoff_freq']);
+	    LiteGraph._cyperus.osc_edit_module_filter_varslope_lowpass(
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
+		this.widgets[2].value,
 		console.log,
 		undefined
 	    )
