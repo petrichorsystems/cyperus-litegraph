@@ -1,6 +1,460 @@
 // Type definitions for litegraph.js 0.7.0
 // Project: litegraph.js
-// Definitions by: NateScarlet <https://github.com/NateScarlet>
+// Definitions by: NateScarlet <https://github.com/NateScarlet>    
+
+export class Cyperus {
+    constructor(url) {
+	this.url = url;
+	this.socket = new WebSocket(url);
+	this.osc = require('osc');
+	this.callback_queue = [];
+
+	console.log("Cyperus::constructor(url)");
+    }
+
+    initialize() {
+	var self = this;
+        self.socket.addEventListener("open", function (event) {
+	    console.log("Cyperus::initialize(), browser WebSocket connection");
+        });
+	
+        self.socket.addEventListener("message", function (oscMessage) {
+	    var dequeued = self.callback_queue.shift();
+	    var callback = dequeued['callback'];
+	    var args = dequeued['args'];
+	    self._recv(oscMessage, callback, args);
+        });
+    }
+
+    async _recv(message, callback, args) {
+	var self = this;
+	var response_raw = await message.data.arrayBuffer().catch((err) => { console.error(err); });
+	var response = self.osc.readMessage(response_raw);
+	callback(response['args'], args);
+    }
+    
+    _send(message, callback, args) {
+	var self = this;
+	self._waitForConnection(function () {
+            self.socket.send(self.osc.writePacket(message));
+            if (typeof callback !== 'undefined') {
+		self.callback_queue.push({'callback': callback,
+					  'args': args});
+            } else {
+		console.log('BARF');
+	    }
+	}, 1000);
+    };
+
+    _waitForConnection(callback, interval) {
+	var self = this;
+	if (self.socket.readyState === 1) {
+            callback();
+	} else {
+            // optional: implement backoff for interval here
+            setTimeout(function () {
+		self._waitForConnection(callback, interval);
+            }, interval);
+	}
+    };
+    
+    osc_list_main(callback, args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/list/main",
+		args: undefined
+	    },
+	    callback,
+	    args
+	);
+	// now, place the callback on the queue
+    }
+
+    osc_add_bus(path,
+		name,
+		input_bus_port_names,
+		output_bus_port_names,
+		callback,
+		args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/bus",
+		args: [path, name, input_bus_port_names, output_bus_port_names]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_list_bus(path,
+		 list_type,
+		 callback,
+		 args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/list/bus",
+		args: [path, list_type]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_list_bus_port(path,
+		      callback,
+		      args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/list/bus_port",
+		args: [path]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_list_module_port(path,
+			 callback,
+			 args) {
+	console.log('osc_list_module_port..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/list/module_port",
+		args: [path]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_add_connection(path_out,
+		       path_in,
+		       callback,
+		       args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/connection",
+		args: [path_out, path_in]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_remove_connection(path_out,
+			  path_in,
+			  callback,
+			  args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/remove/connection",
+		args: [path_out, path_in]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_add_module_sawtooth(path,
+			    frequency,
+			    amplitude,
+			    callback,
+			    args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/sawtooth",
+		args: [path, parseFloat(frequency), parseFloat(amplitude)]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_edit_module_sawtooth(path,
+			     frequency,
+			     amplitude,
+			     callback,
+			     args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/sawtooth",
+		args: [path, parseFloat(frequency), parseFloat(amplitude)]
+	    },
+	    callback,
+	    args
+	);
+    }
+    
+    osc_add_module_sine(path,
+			frequency,
+			amplitude,
+			phase,
+			callback,
+			 args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/sine",
+		args: [path, parseFloat(frequency), parseFloat(amplitude), parseFloat(phase)]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_edit_module_sine(path,
+			frequency,
+			amplitude,
+			phase,
+			callback,
+			 args) {
+	console.log('osc_edit_module_sine..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/sine",
+		args: [path, parseFloat(frequency), parseFloat(amplitude), parseFloat(phase)]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_add_module_square(path,
+			frequency,
+			amplitude,
+			callback,
+			 args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/square",
+		args: [path, parseFloat(frequency), parseFloat(amplitude)]
+	    },
+	    callback,
+	    args
+	);
+    }
+    
+    osc_add_module_triangle(path,
+			frequency,
+			amplitude,
+			callback,
+			 args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/triangle",
+		args: [path, parseFloat(frequency), parseFloat(amplitude)]
+	    },
+	    callback,
+	    args
+	);
+    }
+    
+    osc_edit_module_triangle(path,
+			     frequency,
+			     amplitude,
+			     callback,
+			     args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/triangle",
+		args: [path, parseFloat(frequency), parseFloat(amplitude)]
+	    },
+	    callback,
+	    args
+	);
+    }
+    
+    osc_add_module_delay(path,
+			 amplitude,
+			 time,
+			 feedback,
+			 callback,
+			 args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/delay",
+		args: [path, parseFloat(amplitude), parseFloat(time), parseFloat(feedback)]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    
+    osc_edit_module_delay(path,
+			  amplitude,
+			  time,
+			  feedback,
+			  callback,
+			  args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/delay",
+		args: [path, parseFloat(amplitude), parseFloat(time), parseFloat(feedback)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+
+    
+    osc_add_module_envelope_follower(path,
+				     attack,
+				     decay,
+				     scale,
+				     callback,
+				     args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/envelope_follower",
+		args: [path, parseFloat(attack), parseFloat(decay), parseFloat(scale)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+
+    
+    osc_edit_module_envelope_follower(path,
+				      attack,
+				      decay,
+				      scale,
+				      callback,
+				      args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/envelope_follower",
+		args: [path, parseFloat(attack), parseFloat(decay), parseFloat(scale)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+
+    osc_add_module_filter_bandpass(path,
+				   amplitude,
+				   cutoff_freq,
+				   q,
+				   callback,
+				   args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/bandpass",
+		args: [path, parseFloat(amplitude), parseFloat(cutoff_freq), parseFloat(q)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    osc_add_module_filter_highpass(path,
+				   amplitude,
+				   cutoff_freq,
+				   callback,
+				   args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/highpass",
+		args: [path, parseFloat(amplitude), parseFloat(cutoff_freq)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    osc_add_module_filter_varslope_lowpass(path,
+					   amplitude,
+					   slope,
+					   cutoff_freq,
+					   callback,
+					   args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/dsp/filter/varslope_lowpass",
+		args: [path, parseFloat(amplitude), parseFloat(slope), parseFloat(cutoff_freq)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    osc_edit_module_filter_varslope_lowpass(path,
+					    amplitude,
+					    slope,
+					    cutoff_freq,
+					    callback,
+					    args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/dsp/filter/varslope_lowpass",
+		args: [path, parseFloat(amplitude), parseFloat(slope), parseFloat(cutoff_freq)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+
+    osc_add_module_osc_transmit(path,
+				host,
+				port,
+				osc_path,
+				samplerate_divisor,
+				callback,
+				args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/osc_transmit",
+		args: [path, host, port, osc_path, parseInt(samplerate_divisor)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    
+    osc_edit_module_osc_transmit(path,
+				 host,
+				 port,
+				 osc_path,
+				 samplerate_divisor,
+				 callback,
+				 args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/osc_transmit",
+		args: [path, host, port, osc_path, parseInt(samplerate_divisor)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+
+    
+
+}
 
 export type Vector2 = [number, number];
 export type Vector4 = [number, number, number, number];
@@ -215,6 +669,10 @@ export const LiteGraph: {
     debug: boolean;
     catch_exceptions: boolean;
     throw_errors: boolean;
+
+
+    cyperus: new Cyperus('ws://10.0.0.152:8081'),
+    
     /** if set to true some nodes like Formula would be allowed to evaluate code that comes from unsafe sources (like node configuration), which could lead to exploits */
     allow_scripts: boolean;
     /** node types by string */

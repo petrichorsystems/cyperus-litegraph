@@ -1,3 +1,4 @@
+
 //Creates an interface to access extra features from a graph (like play, stop, live, etc)
 function Editor(container_id, options) {
     options = options || {};
@@ -18,7 +19,8 @@ function Editor(container_id, options) {
 
     var canvas = root.querySelector(".graphcanvas");
 
-    //create graph
+    //create graph    
+    // var graph = (this.graph = new LGraph(undefined, global_cyperus));
     var graph = (this.graph = new LGraph());
     var graphcanvas = (this.graphcanvas = new LGraphCanvas(canvas, graph));
     graphcanvas.background_image = "imgs/grid.png";
@@ -264,7 +266,7 @@ Editor.prototype.addMiniWindow = function(w, h) {
     });
     miniwindow.appendChild(close_button);
 
-    this.root.querySelector(".content").appendChild(miniwindow);
+   this.root.querySelector(".content").appendChild(miniwindow);
 };
 
 LiteGraph.Editor = Editor;

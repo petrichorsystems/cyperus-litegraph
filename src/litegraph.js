@@ -2,14 +2,13 @@
     // *************************************************************
     //   LiteGraph CLASS                                     *******
     // *************************************************************
-
+    
     /**
      * The Global Scope. It contains all the registered node classes.
      *
      * @class LiteGraph
      * @constructor
-     */
-
+     */    
     var LiteGraph = (global.LiteGraph = {
         VERSION: 0.4,
 
@@ -86,6 +85,11 @@
         proxy: null, //used to redirect calls
         node_images_path: "",
 
+        // cyperus-specific vars
+	_cyperus: undefined,
+        _global_graph_stack: [],
+        _litegraph_to_cyperus_bus_id_record: {},
+
         debug: false,
         catch_exceptions: true,
         throw_errors: true,
@@ -93,7 +97,7 @@
         registered_node_types: {}, //nodetypes by string
         node_types_by_file_extension: {}, //used for dropping files in the canvas
         Nodes: {}, //node types by classname
-		Globals: {}, //used to store vars between graphs
+	Globals: {}, //used to store vars between graphs
 
         searchbox_extras: {}, //used to add extra features to the search box
         auto_sort_node_types: false, // If set to true, will automatically sort node types / categories in the context menus
@@ -660,7 +664,7 @@
      * @param {Object} o data from previous serialization [optional]
      */
 
-    function LGraph(o) {
+    function LGraph(o, cyperus, litegraph_to_cyperus_ids) {
         if (LiteGraph.debug) {
             console.log("Graph created");
         }
@@ -670,6 +674,15 @@
         if (o) {
             this.configure(o);
         }
+
+	if (cyperus) {
+	    this._cyperus = cyperus;
+	    LiteGraph._cyperus = this.cyperus;
+	}
+
+	if (litegraph_to_cyperus_ids) {
+	    LiteGraph._litegraph_to_cyperus_bus_id_record = litegraph_to_cyperus_ids;
+	}
     }
 
     global.LGraph = LiteGraph.LGraph = LGraph;
@@ -1270,6 +1283,307 @@
         }
     };
 
+    function _cyperus_util_get_current_bus_path() {
+	var paths = [];
+
+	console.log(LiteGraph._global_graph_stack);
+	
+	for (var i = 0; i < LiteGraph._global_graph_stack.length; i++) {
+	    paths.push(LiteGraph._global_graph_stack[i]);
+	}
+	return "/".concat('', paths.join('/'));
+    }
+
+    function _cyperus_util_get_current_bus_id() {
+	return LiteGraph._global_graph_stack[LiteGraph._global_graph_stack.length - 1];
+    }
+
+    function _cyperus_util_store_litegraph_to_cyperus_id(graph_id,
+							 lg_node_id,
+							 lg_slot_type,
+							 lg_slot_no,
+							 cyperus_id) {
+	if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id]) {
+	    if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id]) {
+		if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type]) {
+		    if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no]){
+		    }
+		} else {
+		    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
+		    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
+		}
+	    } else {
+		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id] = {}
+		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
+		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
+	    }
+	} else {
+	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id] = {}
+	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id] = {}
+	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
+	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
+	}
+	LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] =  cyperus_id;
+    }
+								
+
+    function _cyperus_util_add_connection(response, args) {
+	console.log('response: ');
+	console.log(response);
+	console.log('args: ');
+	console.log(args);
+    }
+    
+    function _cyperus_util_create_bus_port_litegraph_nodes(bus_ports, args) {
+
+	var node = args['node'];
+	var my_id = args['my_id'];
+	var ins = [];
+	var outs = [];
+	var in_ids = []
+	var out_ids = []
+	var processing_ins = 0;
+	var processing_outs = 0;
+	for (var line of bus_ports[1].split('\n')) {
+	    if (line.includes('in:')) {
+		processing_ins = 1;
+		continue;
+	    }
+	    else if (processing_ins) {
+		if (line.includes('out:')) {
+		    processing_ins = 0;
+		    processing_outs = 1;
+		    continue;
+		}
+	    }
+	    if( line.localeCompare("")) {
+		if (processing_ins) {
+		    ins.push(line);
+		} else if (processing_outs) {
+		    outs.push(line);
+		}
+	    }
+	}
+
+	var node_idx = 0;
+	var i = 0;
+	for (var inval of ins) {
+	    node_idx++;
+
+	    var inval_split = inval.split('|');
+	    var id = inval_split[0];
+	    var name = inval_split[1];
+	    var node_bus_input = LiteGraph.createNode("bus/input");
+	    
+	    node_bus_input.properties = {
+		'id': id,
+		'name': name,
+		'is_bus_port': true
+	    }
+	    node_bus_input.widgets[0].value = name;
+	    node_bus_input.title = "input";
+	    node_bus_input.pos = [250,400];
+
+	    node.subgraph.add(node_bus_input);
+	    node.subgraph.addInput(name, "number", {'id': id});
+
+	    in_ids.push(id);
+	    
+	    _cyperus_util_store_litegraph_to_cyperus_id(
+		_cyperus_util_get_current_bus_id(),
+		my_id,
+		'input',
+		i,
+		id);
+	    
+	    _cyperus_util_store_litegraph_to_cyperus_id(
+		node.properties['id'],
+		node_idx,
+		'output',
+		i,
+		id);
+	    
+	    //_cyperus_util_store_litegraph_to_cyperus_id(
+	    // 	node.properties['id'],
+	    // 	node_idx,
+	    // 	'output',
+	    // 	i,
+	    // 	id);
+
+	    i++;
+	}
+;
+	var i = 0;
+	for (var outval of outs) {
+	    node_idx++;
+	    var outval_split = outval.split('|');
+	    var id = outval_split[0];
+	    var name = outval_split[1];
+	    var node_bus_output = LiteGraph.createNode("bus/output");
+	    
+	    node_bus_output.properties = {
+		'id': id,
+		'name': name,
+		'is_bus_port': true
+	    }
+	    node_bus_output.widgets[0].value = name;
+	    node_bus_output.title = "output";
+	    node_bus_output.pos = [1000,400];
+	    
+	    node.subgraph.add(node_bus_output);
+	    node.subgraph.addOutput(name, "number", {'id': id});
+
+	    out_ids.push(id);
+	    
+	    _cyperus_util_store_litegraph_to_cyperus_id(
+		_cyperus_util_get_current_bus_id(),
+		my_id,
+		'output',
+		i,
+		id);
+	    
+	    _cyperus_util_store_litegraph_to_cyperus_id(
+		node.properties['id'],
+		node_idx,
+		'input',
+		i,
+		id);
+	    i++;
+	}
+
+	node.properties['bus_input_ids'] = in_ids;
+	node.properties['bus_output_ids'] = out_ids;
+    }
+
+    function _cyperus_util_get_bus_descendants(response, args) {
+	var node = args['node'];
+   
+	var filtered = response[3].split('\n').filter(Boolean);
+	var temp_bus_uuid = filtered[filtered.length - 1].split('|')[0];
+	var bus_path = `${response[0]}/${temp_bus_uuid}`;
+
+	LiteGraph._cyperus.osc_list_bus(bus_path,
+					1,
+					_cyperus_util_store_new_bus_uuid,
+					args);
+    }
+    
+
+    function _cyperus_util_store_new_bus_uuid(response, args) {	
+	var node = args['node'];
+	var self = this;
+	var filtered = response[3].split('\n').filter(Boolean);
+
+	// get newest (last) bus id
+	var new_bus_uuid = filtered[filtered.length - 1].split('|')[0];
+	
+	var new_path = undefined;
+	if (LiteGraph._global_graph_stack.length == 0) {
+	    new_path = `/${new_bus_uuid}`;
+	} else {
+	    new_path = _cyperus_util_get_current_bus_path().concat('/', new_bus_uuid);
+	}
+	
+	node.properties['id'] = new_bus_uuid;
+	node.properties['is_bus'] = true;
+	LiteGraph._cyperus.osc_list_bus_port(new_path,
+					     _cyperus_util_create_bus_port_litegraph_nodes,
+					     args);
+    }
+
+
+    
+    function _cyperus_util_store_new_dsp_module_ports(response, args) {
+	var node = args;
+	var raw_ports = response[1].split('out:\n');
+
+	var raw_input_ports = raw_ports[0].split('\n').slice(1);
+	var raw_output_ports = raw_ports[1].split('\n');
+
+	console.log('raw_input_ports ', raw_input_ports);
+	console.log('raw_output_ports', raw_output_ports);
+
+	for (var i = 0; i < raw_input_ports.length; i++) {
+	    // empty string check
+	    if( raw_input_ports[i].includes('|') == false ) {
+		continue;
+	    }
+	    split_input_port = raw_input_ports[i].split('|');
+	    if( split_input_port.length > 1 ) {
+		var cyperus_id = split_input_port[0];
+		var port_name = split_input_port[1];
+		node.addInput(port_name, "number", {'id': cyperus_id});
+		_cyperus_util_store_litegraph_to_cyperus_id(
+		    _cyperus_util_get_current_bus_id(),
+		    node.id,
+		    "input",
+		    i,
+		    cyperus_id);   
+	    }
+	}
+
+	for (var i = 0; i < raw_output_ports.length; i++) {
+	    // empty string check
+	    if( raw_output_ports[i].includes('|') == false) {
+		continue;
+	    }
+	    split_output_port = raw_output_ports[i].split('|');
+	    if( split_output_port.length > 1 ) {
+		var cyperus_id = split_output_port[0];
+		var port_name = split_output_port[1];
+		node.addOutput(port_name, "number", {'id': cyperus_id });
+		_cyperus_util_store_litegraph_to_cyperus_id(
+		    _cyperus_util_get_current_bus_id(),
+		    node.id,
+		    "output",
+		    i,
+		    cyperus_id);
+	    }
+	}
+
+	console.log('module_parameters ', node.properties['module_parameters']);
+	var module_parameters = node.properties['module_parameters'];
+	for( var i=0; i<module_parameters.length; i++ ) {
+	    module_parameter = module_parameters[i];
+	    node.addWidget(
+		module_parameter['param_type'],
+		module_parameter['param_name'],
+		node.properties[module_parameter['param_name']],
+		function(v) {
+		    if (!v) {
+		        return;
+                    }
+		    node.setProperty(module_parameter['param_name'],
+	                             v
+		    )
+		    
+		}
+	    )
+	}
+	
+	// node.graph.list_of_graphcanvas[0].drawNodeWidgets(
+	//     node,
+	//     0,
+	//     node.graph.list_of_graphcanvas[0].bgctx,
+	//     null
+	// );
+    }
+
+    function _cyperus_util_create_new_dsp_module(response, args) {
+	var node = args;
+	var self = this;
+
+	// store id
+	node.properties['id'] = response[0];
+	
+	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[0]);
+
+	LiteGraph._cyperus.osc_list_module_port(module_path,
+						_cyperus_util_store_new_dsp_module_ports,
+						node);
+					       
+    }
+    
     /**
      * Adds a new node instance to this graph
      * @method add
@@ -1335,6 +1649,190 @@
         this.setDirtyCanvas(true);
         this.change();
 
+
+		//
+	// build current path
+	//
+	
+
+	console.log("node.type", node.type);
+	
+	// node.id=1 and node.id=2 are the main inputs/outputs
+	if ( LiteGraph._global_graph_stack.length ||
+	     !(
+		 !node.type.localeCompare("main/inputs") ||
+		     !node.type.localeCompare("main/outputs")
+		 
+	     )
+	   )
+	{
+	    if (!node.type.localeCompare("bus/add")) {		
+		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
+					       'name',
+					       'in0',
+					       'out0',
+					       console.log,
+					       node);
+		console.log('_cyperus.osc_list_bus()');
+		var list_type = undefined;
+		if( LiteGraph._global_graph_stack.length == 0 ) {
+		    LiteGraph._cyperus.osc_list_bus(_cyperus_util_get_current_bus_path(),
+						    1,
+						    _cyperus_util_store_new_bus_uuid,
+						    {'node': node,
+						     'my_id': this._nodes.length});
+		} else {
+		    LiteGraph._cyperus.osc_list_bus(_cyperus_util_get_current_bus_path(),
+						    2,
+						    _cyperus_util_get_bus_descendants,
+						    {'node': node,
+						     'my_id': this._nodes.length});
+		}
+
+
+	    } else if (!node.type.localeCompare("bus/input")) {
+
+	    } else if (!node.type.localeCompare("bus/output")) {
+
+	    } else if (!node.type.localeCompare("dsp/generator/sawtooth")) {
+		console.log('_cyperus.osc_add_module_sawtooth()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+		
+		LiteGraph._cyperus.osc_add_module_sawtooth(path,
+							   .06125,
+							   1.0,
+							   _cyperus_util_create_new_dsp_module,
+							   node);
+	    } else if (!node.type.localeCompare("dsp/generator/sine")) {
+		console.log('_cyperus.osc_add_module_sine()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['phase'] = "0.0";
+		
+		LiteGraph._cyperus.osc_add_module_sine(path,
+						       "440.0",
+						       "1.0",
+						       "0.0",
+						       _cyperus_util_create_new_dsp_module,
+						       node);
+	    } else if (!node.type.localeCompare("dsp/generator/square")) {
+		console.log('_cyperus.osc_add_module_square()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+
+		LiteGraph._cyperus.osc_add_module_square(path,
+							 "440.0",
+							 "1.0",
+							 _cyperus_util_create_new_dsp_module,
+							 node);
+	    } else if (!node.type.localeCompare("dsp/generator/triangle")) {
+		console.log('_cyperus.osc_add_module_triangle()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+
+		LiteGraph._cyperus.osc_add_module_triangle(path,
+							   "440",
+							   "1.0",
+							   _cyperus_util_create_new_dsp_module,
+							   node);
+	    } else if (!node.type.localeCompare("dsp/processor/delay")) {
+		console.log('_cyperus.osc_add_module_delay()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['time'] = "1.0";
+		node['properties']['feedback'] = "0.5";
+		
+		LiteGraph._cyperus.osc_add_module_delay(path,
+							"1.0",
+							"1.0",
+							"0.5",
+							_cyperus_util_create_new_dsp_module,
+							node);
+	    } else if (!node.type.localeCompare("dsp/processor/envelope_follower")) {
+		console.log('_cyperus.osc_add_module_envelope_follower()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['attack'] = "1.0";
+		node['properties']['decay'] = "1.0";
+		node['properties']['scale'] = "1.0";
+		
+		LiteGraph._cyperus.osc_add_module_envelope_follower(path,
+								    "1.0",
+								    "1.0",
+								    "1.0",
+								    _cyperus_util_create_new_dsp_module,
+								    node);
+	    } else if (!node.type.localeCompare("dsp/processor/filter_bandpass")) {
+		console.log('_cyperus.osc_add_module_filter_bandpass()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['cutoff'] = "100.0";
+		node['properties']['q'] = "10.0";
+		
+		LiteGraph._cyperus.osc_add_module_filter_bandpass(path,
+								  "1.0",
+								  "100.0",
+								  "10.0",
+								  _cyperus_util_create_new_dsp_module,
+								  node);
+	    } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
+		console.log('_cyperus.osc_add_module_filter_highpass()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['cutoff'] = "100.0";
+
+		LiteGraph._cyperus.osc_add_module_filter_highpass(path,
+								  "1.0",
+								  "100.0",
+								  _cyperus_util_create_new_dsp_module,
+								  node);
+	    } else if (!node.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
+		console.log('_cyperus.osc_add_module_filter_varslope_lowpass()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['amplitude'] = "1.0";
+		node['properties']['slope'] = "10.0";
+		node['properties']['cutoff_freq'] = "100.0";
+
+		LiteGraph._cyperus.osc_add_module_filter_varslope_lowpass(path,
+									  "1.0",
+									  "10.0",
+									  "100.0",
+									  _cyperus_util_create_new_dsp_module,
+									  node);
+	    } else if (!node.type.localeCompare("network/osc/transmit")) {
+		console.log('_cyperus.osc_add_module_osc_transmit()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		node['properties']['host'] = "127.0.0.1";
+		node['properties']['port'] = "6001";
+		node['properties']['path'] = "/default";
+		node['properties']['samplerate_divisor'] = 48;
+		
+		LiteGraph._cyperus.osc_add_module_osc_transmit(path,
+							       "127.0.0.1",
+							       "6001",
+							       "/default",
+							       48,
+							       _cyperus_util_create_new_dsp_module,
+							       node);
+	    }
+
+	}
+
+	
         return node; //to chain actions
     };
 
@@ -1606,7 +2104,7 @@
      * @param {String} type
      * @param {*} value [optional]
      */
-    LGraph.prototype.addInput = function(name, type, value) {
+    LGraph.prototype.addInput = function(name, type, value, cyperus_id) {
         var input = this.inputs[name];
         if (input) {
             //already exist
@@ -1614,7 +2112,7 @@
         }
 
 		this.beforeChange();
-        this.inputs[name] = { name: name, type: type, value: value };
+        this.inputs[name] = { name: name, type: type, value: value, id: cyperus_id };
         this._version++;
 		this.afterChange();
 
@@ -2562,6 +3060,136 @@
             if( this.onPropertyChanged(name, value, prev_value) === false ) //abort change
 				this.properties[name] = prev_value;
         }
+
+
+	// START CYPERUS CODE
+
+	console.log('name', name);
+	console.log('value', value);
+
+	console.log(this);
+	
+	var current_path = _cyperus_util_get_current_bus_path().concat("?").concat(this.properties['id']);
+	if (!this.type.localeCompare("dsp/generator/sawtooth")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']);
+	    LiteGraph._cyperus.osc_edit_module_sawtooth(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/generator/sine")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('phase', this.properties['phase']);	    
+	    LiteGraph._cyperus.osc_edit_module_sine(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/generator/square")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('phase', this.properties['phase']);	    
+	    LiteGraph._cyperus.osc_edit_module_square(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/generator/triangle")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']); 
+	    LiteGraph._cyperus.osc_edit_module_triangle(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/delay")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('time', this.properties['time']);
+	    console.log('feeback', this.properties['feedback']);	    
+	    LiteGraph._cyperus.osc_edit_module_delay(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/envelope_follower")) {
+	    console.log('attack', this.properties['attack']);
+	    console.log('decay', this.properties['decay']);
+	    console.log('scale', this.properties['scale']);	    
+	    LiteGraph._cyperus.osc_edit_module_envelope_follower(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/filter_bandpass")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('cutoff', this.properties['cutoff']);
+	    console.log('q', this.properties['q']);	    
+	    LiteGraph._cyperus.osc_edit_module_filter_bandpass(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/filter_highpass")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('cutoff', this.properties['cutoff']);
+	    LiteGraph._cyperus.osc_edit_module_filter_highpass(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
+	    console.log('amplitude', this.properties['amplitude']);
+	    console.log('slope', this.properties['slope']);
+	    console.log('cutoff_freq', this.properties['cutoff_freq']);
+	    LiteGraph._cyperus.osc_edit_module_filter_varslope_lowpass(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("network/osc/transmit")) {
+	    console.log('host', this.properties['host']);
+	    console.log('port', this.properties['port']);
+	    console.log('path', this.properties['path']);
+	    console.log('samplerate_divisor', this.properties['samplerate_divisor']);
+	    LiteGraph._cyperus.osc_edit_module_osc_transmit(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		this.widgets[3].value,
+		console.log,
+		undefined
+	    )
+	}
+
+	// END CYPERUS CODE
+
+	
 		if(this.widgets) //widgets could be linked to properties
 			for(var i = 0; i < this.widgets.length; ++i)
 			{
@@ -3758,6 +4386,74 @@
 			target_slot
 		);
 
+
+	    // START CYPERUS CODE
+	    
+	    var output_graph_id = undefined;
+	    
+	    if (LiteGraph._global_graph_stack.length) {
+		output_graph_id = _cyperus_util_get_current_bus_id();
+	    }
+
+
+	console.log('type: ');
+	console.log(this.type)
+	
+	    var cyperus_id_out = undefined;
+	    if (!this.type.localeCompare("main/inputs")) {
+		cyperus_id_out = this.properties['ids'][slot];
+	    } else {
+		cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]['output'][slot];
+	    }
+	    
+	    var input_graph_id = undefined;
+	    if (LiteGraph._global_graph_stack.length) {
+		input_graph_id = _cyperus_util_get_current_bus_id();
+	    }
+	    
+	    if (!target_node.type.localeCompare("main/outputs")) {
+		cyperus_id_in = target_node.properties['ids'][target_slot];
+	    } else {
+		cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
+	    }
+
+	    var current_bus_path = _cyperus_util_get_current_bus_path();
+	    if (!current_bus_path.localeCompare("/")) {
+		current_bus_path = "";
+	    }
+
+	    var connection_out_path = undefined;
+	    if (this.properties['is_bus_port']) {
+		connection_out_path = current_bus_path.concat(':', cyperus_id_out);
+	    } else if (this.properties['is_module']) {
+		connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
+	    } else if (this.properties['is_bus']) {
+		connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
+	    } else {
+		connection_out_path = cyperus_id_out;
+	    }
+	    
+	    var connection_in_path = undefined;
+	    if (target_node.properties['is_bus_port']) {
+		connection_in_path = current_bus_path.concat(':', cyperus_id_in);
+	    } else if (target_node.properties['is_module']) {
+		connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
+	    } else if (target_node.properties['is_bus']) {
+		connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
+	    } else {
+		connection_in_path = cyperus_id_in;
+	    }
+
+	    LiteGraph._cyperus.osc_add_connection(
+		connection_out_path,
+		connection_in_path,
+		console.log,
+		undefined
+	    );
+
+	// END CYPERUS CODE    
+
+	
 		//add to graph links list
 		this.graph.links[link_info.id] = link_info;
 
@@ -4016,6 +4712,78 @@
 					return false;
 				}
 
+
+
+	// START CYPERUS CODE
+	    
+            var origin_node = this.graph.getNodeById(link_info.origin_id);
+		   
+	    var output_graph_id = undefined;
+	    
+	    if (LiteGraph._global_graph_stack.length) {
+		output_graph_id = _cyperus_util_get_current_bus_id();
+	    }
+
+	    var cyperus_id_out = undefined;
+	    if (origin_node.type.includes("main/")) {
+		cyperus_id_out = origin_node.properties.ids[link_info.origin_slot];
+	    } else if(!origin_node.type.localeCompare("bus/input")) {
+		cyperus_id_out = origin_node.properties.id;
+	    } else {
+		cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][link_info.origin_id].output[link_info.origin_slot];
+	    }
+
+            var target_slot = link_info.target_slot;
+		
+	    var input_graph_id = undefined;
+	    if (LiteGraph._global_graph_stack.length) {
+		input_graph_id = _cyperus_util_get_current_bus_id();
+	    }
+	    
+	    if (!target_node.type.localeCompare("main/outputs")) {
+		cyperus_id_in = target_node.properties['ids'][target_slot];
+	    } else {
+		cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
+	    }
+
+	    var current_bus_path = _cyperus_util_get_current_bus_path();
+	    if (!current_bus_path.localeCompare("/")) {
+		current_bus_path = "";
+	    }
+
+	    var connection_out_path = undefined;
+	    if (origin_node.properties['is_bus_port']) {
+		connection_out_path = current_bus_path.concat(':', cyperus_id_out);
+	    } else if (origin_node.properties['is_module']) {
+		connection_out_path = current_bus_path.concat('?', origin_node.properties['id']).concat('>', cyperus_id_out);
+	    } else if (origin_node.properties['is_bus']) {
+		connection_out_path = current_bus_path.concat('/', origin_node.properties['id']).concat(':', cyperus_id_out);
+	    } else {
+		connection_out_path = cyperus_id_out;
+	    }
+
+	    var connection_in_path = undefined;
+	    if (target_node.properties['is_bus_port']) {
+		connection_in_path = current_bus_path.concat(':', cyperus_id_in);
+	    } else if (target_node.properties['is_module']) {
+		connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
+	    } else if (target_node.properties['is_bus']) {
+		connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
+	    } else {
+		connection_in_path = cyperus_id_in;
+	    }
+
+	    LiteGraph._cyperus.osc_remove_connection(
+		connection_out_path,
+		connection_in_path,
+		console.log,
+		undefined
+	    );
+
+	    // END CYPERUS CODE
+
+
+			    
 				//search in the inputs list for this link
 				for (var i = 0, l = output.links.length; i < l; i++) {
 					if (output.links[i] == link_id) {
@@ -4023,7 +4791,7 @@
 						break;
 					}
 				}
-
+			    
 				delete this.graph.links[link_id]; //remove from the pool
 				if (this.graph) {
 					this.graph._version++;
@@ -4059,7 +4827,10 @@
 
         this.setDirtyCanvas(false, true);
 		if(this.graph)
-	        this.graph.connectionChange(this);
+	            this.graph.connectionChange(this);
+
+
+	
         return true;
     };
 
@@ -4868,6 +5639,16 @@ LGraphNode.prototype.executeAction = function(action)
                 this._graph_stack = [];
             }
             this._graph_stack.push(this.graph);
+
+	    // START CYPERUS CODE
+
+	    console.log('graph._subgraph_node: ');
+	    console.log(graph._subgraph_node);
+	    LiteGraph._global_graph_stack.push(graph._subgraph_node.properties['id']);
+
+	    
+	    // END CYPERUS CODE
+	    
         }
 
         graph.attachCanvas(this);
@@ -4887,6 +5668,13 @@ LGraphNode.prototype.executeAction = function(action)
         }
         var subgraph_node = this.graph._subgraph_node;
         var graph = this._graph_stack.pop();
+
+	// START CYPERUS CODE
+
+	var popped_graph = LiteGraph._global_graph_stack.pop();
+	
+	// END CYPERUS CODE
+	
         this.selected_nodes = {};
         this.highlighted_links = {};
         graph.attachCanvas(this);
