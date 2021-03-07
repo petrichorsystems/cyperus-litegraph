@@ -595,10 +595,10 @@ class Cyperus {
 	    LiteGraph.global_main_outs = outs;
 	    let ret = {'in': ins, 'out': outs};
 	    
-	    var node_main_inputs = LiteGraph.createNode("main/inputs");
+	    var node_main_inputs = LiteGraph.createNode("cyperus/main/inputs");
 	    node_main_inputs.pos = [250,200];
 	    
-	    var node_main_outputs = LiteGraph.createNode("main/outputs");
+	    var node_main_outputs = LiteGraph.createNode("cyperus/main/outputs");
 	    node_main_outputs.pos = [1000,200];
 	    
 	    this.graph.add(node_main_inputs);
@@ -830,6 +830,7 @@ class Cyperus {
 
         createNode: function(type, title, options) {
             var base_class = this.registered_node_types[type];
+	    LiteGraph.debug = true;
             if (!base_class) {
                 if (LiteGraph.debug) {
                     console.log(
@@ -1882,7 +1883,7 @@ class Cyperus {
 	    var inval_split = inval.split('|');
 	    var id = inval_split[0];
 	    var name = inval_split[1];
-	    var node_bus_input = LiteGraph.createNode("bus/input");
+	    var node_bus_input = LiteGraph.createNode("cyperus/bus/input");
 	    
 	    node_bus_input.properties = {
 		'id': id,
@@ -1928,7 +1929,7 @@ class Cyperus {
 	    var outval_split = outval.split('|');
 	    var id = outval_split[0];
 	    var name = outval_split[1];
-	    var node_bus_output = LiteGraph.createNode("bus/output");
+	    var node_bus_output = LiteGraph.createNode("cyperus/bus/output");
 	    
 	    node_bus_output.properties = {
 		'id': id,
@@ -2159,7 +2160,7 @@ class Cyperus {
         this.change();
 
 
-		//
+	//
 	// build current path
 	//
 	
@@ -2169,13 +2170,13 @@ class Cyperus {
 	// node.id=1 and node.id=2 are the main inputs/outputs
 	if ( LiteGraph._global_graph_stack.length ||
 	     !(
-		 !node.type.localeCompare("main/inputs") ||
-		     !node.type.localeCompare("main/outputs")
+		 !node.type.localeCompare("cyperus/main/inputs") ||
+		     !node.type.localeCompare("cyperus/main/outputs")
 		 
 	     )
 	   )
 	{
-	    if (!node.type.localeCompare("bus/add")) {		
+	    if (!node.type.localeCompare("cyperus/bus/add")) {		
 		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
 					       'name',
 					       'in0',
@@ -2199,9 +2200,9 @@ class Cyperus {
 		}
 
 
-	    } else if (!node.type.localeCompare("bus/input")) {
+	    } else if (!node.type.localeCompare("cyperus/bus/input")) {
 
-	    } else if (!node.type.localeCompare("bus/output")) {
+	    } else if (!node.type.localeCompare("cyperus/bus/output")) {
 
 	    } else if (!node.type.localeCompare("dsp/generator/sawtooth")) {
 		console.log('_cyperus.osc_add_module_sawtooth()');
@@ -4910,7 +4911,7 @@ class Cyperus {
 	console.log(this.type)
 	
 	    var cyperus_id_out = undefined;
-	    if (!this.type.localeCompare("main/inputs")) {
+	    if (!this.type.localeCompare("cyperus/main/inputs")) {
 		cyperus_id_out = this.properties['ids'][slot];
 	    } else {
 		cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]['output'][slot];
@@ -4921,7 +4922,7 @@ class Cyperus {
 		input_graph_id = _cyperus_util_get_current_bus_id();
 	    }
 	    
-	    if (!target_node.type.localeCompare("main/outputs")) {
+	    if (!target_node.type.localeCompare("cyperus/main/outputs")) {
 		cyperus_id_in = target_node.properties['ids'][target_slot];
 	    } else {
 		cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
@@ -5237,7 +5238,7 @@ class Cyperus {
 	    var cyperus_id_out = undefined;
 	    if (origin_node.type.includes("main/")) {
 		cyperus_id_out = origin_node.properties.ids[link_info.origin_slot];
-	    } else if(!origin_node.type.localeCompare("bus/input")) {
+	    } else if(!origin_node.type.localeCompare("cyperus/bus/input")) {
 		cyperus_id_out = origin_node.properties.id;
 	    } else {
 		cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][link_info.origin_id].output[link_info.origin_slot];

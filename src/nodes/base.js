@@ -26,7 +26,7 @@
         this.enabled = true;
 
         //create inner graph
-        this.subgraph = new LiteGraph.LGraph(undefined, this._cyperus);
+        this.subgraph = new LiteGraph.LGraph(undefined, LiteGraph._cyperus);
         this.subgraph._subgraph_node = this;
         this.subgraph._is_subgraph = true;
 
@@ -44,8 +44,8 @@
         this.subgraph.onOutputRemoved = this.onSubgraphRemovedOutput.bind(this);
     }
 
-    Subgraph.title = "Subgraph";
-    Subgraph.desc = "Graph inside a node";
+    Subgraph.title = "add";
+    Subgraph.desc = "generic dsp bus";
     Subgraph.title_color = "#334";
 
     Subgraph.prototype.onGetInputs = function() {
@@ -371,7 +371,7 @@
 	}
 
     LiteGraph.Subgraph = Subgraph;
-    LiteGraph.registerNodeType("graph/subgraph", Subgraph);
+    LiteGraph.registerNodeType("cyperus/bus/add", Subgraph);
 
     //Input for a subgraph
     function GraphInput() {
@@ -419,8 +419,8 @@
         this.size = [180, 90];
     }
 
-    GraphInput.title = "Input";
-    GraphInput.desc = "Input of the graph";
+    GraphInput.title = "input";
+    GraphInput.desc = "input of the graph";
 
 	GraphInput.prototype.onConfigure = function()
 	{
@@ -531,7 +531,7 @@
     };
 
     LiteGraph.GraphInput = GraphInput;
-    LiteGraph.registerNodeType("graph/input", GraphInput);
+    LiteGraph.registerNodeType("cyperus/bus/input", GraphInput);
 
     //Output for a subgraph
     function GraphOutput() {
@@ -618,7 +618,7 @@
     };
 
     LiteGraph.GraphOutput = GraphOutput;
-    LiteGraph.registerNodeType("graph/output", GraphOutput);
+    LiteGraph.registerNodeType("cyperus/bus/output", GraphOutput);
 
     //Constant
     function ConstantNumber() {
