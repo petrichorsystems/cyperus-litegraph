@@ -1883,7 +1883,7 @@ class Cyperus {
 	    var inval_split = inval.split('|');
 	    var id = inval_split[0];
 	    var name = inval_split[1];
-	    var node_bus_input = LiteGraph.createNode("cyperus/bus/input");
+	    var node_bus_input = LiteGraph.createNode("cyperus/bus/input", LiteGraph.GraphInput);
 	    
 	    node_bus_input.properties = {
 		'id': id,
@@ -1929,7 +1929,7 @@ class Cyperus {
 	    var outval_split = outval.split('|');
 	    var id = outval_split[0];
 	    var name = outval_split[1];
-	    var node_bus_output = LiteGraph.createNode("cyperus/bus/output");
+	    var node_bus_output = LiteGraph.createNode("cyperus/bus/output", LiteGraph.GraphOutput);
 	    
 	    node_bus_output.properties = {
 		'id': id,
@@ -8269,7 +8269,8 @@ LGraphNode.prototype.executeAction = function(action)
 
 		//draws panel in the corner 
 		if (this._graph_stack && this._graph_stack.length) {
-			this.drawSubgraphPanel( ctx );
+		    this.drawSubgraphPanel( ctx );
+		    this.drawSubgraphPanelOutput( ctx );
 		}
 
 
@@ -8336,7 +8337,7 @@ LGraphNode.prototype.executeAction = function(action)
 			//input button clicked
 			if( this.drawButton( 20,y+2,w - 20, h - 2 ) )
 			{
-				var type = subnode.constructor.input_node_type || "graph/input";
+				var type = subnode.constructor.input_node_type || "cyperus/bus/input";
 				this.graph.beforeChange();
 				var newnode = LiteGraph.createNode( type );
 				if(newnode)
@@ -8428,6 +8429,97 @@ LGraphNode.prototype.executeAction = function(action)
 		return was_clicked;
 	}
 
+    /**
+     * draws the panel in the corner that shows OUTPUT subgraph properties
+     * @method drawSubgraphPanel
+     **/
+	LGraphCanvas.prototype.drawSubgraphPanelOutput = function(ctx) {
+		var subgraph = this.graph;
+		var subnode = subgraph._subgraph_node;
+		if(!subnode)
+		{
+			console.warn("subgraph without subnode");
+			return;
+		}
+
+		var num = subnode.outputs ? subnode.outputs.length : 0;
+		var w = 300;
+		var h = Math.floor(LiteGraph.NODE_SLOT_HEIGHT * 1.6);
+
+		ctx.fillStyle = "#111";
+		ctx.globalAlpha = 0.8;
+		ctx.beginPath();
+		ctx.roundRect(this.canvas.width - w - 10, 10,w, (num + 1) * h + 50,8 );
+		ctx.fill();
+		ctx.globalAlpha = 1;
+
+		ctx.fillStyle = "#888";
+		ctx.font = "14px Arial";
+		ctx.textAlign = "left";
+		ctx.fillText( "Graph Outputs", this.canvas.width - w, 34 );
+		var pos = this.mouse;
+
+		if( this.drawButton( this.canvas.width - 40, 20,20,20, "X", "#151515" ) )
+		{
+			this.closeSubgraph();
+			return;
+		}
+
+		var y = 50;
+		ctx.font = "20px Arial";
+		if(subnode.outputs)
+		for(var i = 0; i < subnode.outputs.length; ++i)
+		{
+			var output = subnode.outputs[i];
+			if(output.not_subgraph_output)
+				continue;
+
+			//output button clicked
+			if( this.drawButton(this.canvas.width - w,y+2,w - 20, h - 2 ) )
+			{
+				var type = subnode.constructor.output_node_type || "cyperus/bus/output";
+				this.graph.beforeChange();
+				var newnode = LiteGraph.createNode( type );
+				if(newnode)
+				{
+					subgraph.add( newnode );
+					this.block_click = false;
+					this.last_click_position = null;
+					this.selectNodes([newnode]);
+					this.node_dragged = newnode;
+					this.dragging_canvas = false;
+					newnode.setProperty("name",output.name);
+					newnode.setProperty("type",output.type);
+					this.node_dragged.pos[0] = this.graph_mouse[0] - 5;
+					this.node_dragged.pos[1] = this.graph_mouse[1] - 5;
+					this.graph.afterChange();
+				}
+				else
+					console.error("graph output node not found:",type);
+			}
+
+			ctx.fillStyle = "#9C9";
+			ctx.beginPath();
+			ctx.arc(this.canvas.width - 20 - 16,y + h * 0.5,5,0,2*Math.PI);
+			ctx.fill();
+
+			ctx.fillStyle = "#AAA";
+			ctx.fillText( output.name, this.canvas.width - w + 30, y + h*0.75 );
+			var tw = ctx.measureText( output.name );
+			ctx.fillStyle = "#777";
+			ctx.fillText( output.type, this.canvas.width - w + 30 + tw.width + 10, y + h*0.75 );
+
+			y += h;
+		}
+
+		//add + button
+		if( this.drawButton( this.canvas.width - w, y+2,w - 20, h - 2, "+", "#151515", "#222" ) )
+		{
+			this.showSubgraphPropertiesDialogOutput( subnode );
+		}
+	}
+
+    
     /**
      * draws some useful stats in the corner of the canvas
      * @method renderInfo
@@ -11841,24 +11933,81 @@ LGraphNode.prototype.executeAction = function(action)
 
 		inner_refresh();
 	    this.canvas.parentNode.appendChild(panel);
-		return panel;
+	    return panel;
 	}
 
-	LGraphCanvas.prototype.checkPanels = function()
+	LGraphCanvas.prototype.showSubgraphPropertiesDialogOutput = function(node)
 	{
-		if(!this.canvas)
-			return;
-		var panels = this.canvas.parentNode.querySelectorAll(".litegraph.dialog");
-		for(var i = 0; i < panels.length; ++i)
-		{
-			var panel = panels[i];
-			if( !panel.node )
-				continue;
-			if( !panel.node.graph || panel.graph != this.graph )
-				panel.close();
-		}
-	}
+		console.log("showing subgraph properties dialog");
 
+		var old_panel = this.canvas.parentNode.querySelector(".subgraph_dialog");
+		if(old_panel)
+			old_panel.close();
+
+		var panel = this.createPanel("Subgraph Outputs",{closable:true, width: 500});
+		panel.node = node;
+		panel.classList.add("subgraph_dialog");
+
+		function inner_refresh()
+		{
+			panel.clear();
+
+			//show currents
+			if(node.outputs)
+				for(var i = 0; i < node.outputs.length; ++i)
+				{
+					var output = node.outputs[i];
+					if(output.not_subgraph_output)
+						continue;
+					var html = "<button>&#10005;</button> <span class='bullet_icon'></span><span class='name'></span><span class='type'></span>";
+					var elem = panel.addHTML(html,"subgraph_property");
+					elem.dataset["name"] = output.name;
+					elem.dataset["slot"] = i;
+					elem.querySelector(".name").innerText = output.name;
+					elem.querySelector(".type").innerText = output.type;
+					elem.querySelector("button").addEventListener("click",function(e){
+						node.removeOutput( Number( this.parentNode.dataset["slot"] ) );
+						inner_refresh();
+					});
+				}
+		}
+
+		//add extra
+		var html = " + <span class='label'>Name</span><input class='name'/><span class='label'>Type</span><input class='type'></output><button>+</button>";
+		var elem = panel.addHTML(html,"subgraph_property extra", true);
+		elem.querySelector("button").addEventListener("click", function(e){
+			var elem = this.parentNode;
+			var name = elem.querySelector(".name").value;
+			var type = elem.querySelector(".type").value;
+			if(!name || node.findOutputSlot(name) != -1)
+				return;
+			node.addOutput(name,type);
+			elem.querySelector(".name").value = "";
+			elem.querySelector(".type").value = "";
+			inner_refresh();
+		});
+
+		inner_refresh();
+	    this.canvas.parentNode.appendChild(panel);
+	    return panel;
+	}
+    
+    LGraphCanvas.prototype.checkPanels = function()
+    {
+	if(!this.canvas)
+	    return;
+	var panels = this.canvas.parentNode.querySelectorAll(".litegraph.dialog");
+	for(var i = 0; i < panels.length; ++i)
+	{
+	    var panel = panels[i];
+	    if( !panel.node )
+		continue;
+	    if( !panel.node.graph || panel.graph != this.graph )
+		panel.close();
+	}
+    }
+
+    
     LGraphCanvas.onMenuNodeCollapse = function(value, options, e, menu, node) {
 		node.graph.beforeChange(node);
         node.collapse();
@@ -12007,7 +12156,7 @@ LGraphNode.prototype.executeAction = function(action)
 		if( !nodes_list.length )
 			nodes_list = [ node ];
 
-		var subgraph_node = LiteGraph.createNode("graph/subgraph");
+		var subgraph_node = LiteGraph.createNode("cyperus/bus/add");
 		subgraph_node.pos = node.pos.concat();
 		graph.add(subgraph_node);
 
@@ -12318,7 +12467,7 @@ LGraphNode.prototype.executeAction = function(action)
             } else if (v.content == "Disconnect Links") {
                 var info = v.slot;
                 if (info.output) {
-                    node.disconnectOutput(info.slot);
+                    node.disconnectOutputo(info.slot);
                 } else if (info.input) {
                     node.disconnectInput(info.slot);
                 }

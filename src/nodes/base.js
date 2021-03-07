@@ -590,8 +590,8 @@
         this.size = [180, 60];
     }
 
-    GraphOutput.title = "Output";
-    GraphOutput.desc = "Output of the graph";
+    GraphOutput.title = "output";
+    GraphOutput.desc = "output of the graph";
 
     GraphOutput.prototype.onExecute = function() {
         this._value = this.getInputData(0);
