@@ -19,7 +19,7 @@ function Editor(container_id, options) {
 
     var canvas = root.querySelector(".graphcanvas");
 
-    //create graph    
+    //create graph
     // var graph = (this.graph = new LGraph(undefined, global_cyperus));
     var graph = (this.graph = new LGraph());
     var graphcanvas = (this.graphcanvas = new LGraphCanvas(canvas, graph));

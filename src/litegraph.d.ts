@@ -5,10 +5,15 @@
 export class Cyperus {
     constructor(url) {
 	this.url = url;
-	this.socket = new WebSocket(url);
+	//this.socket = new WebSocket(url);
 	this.osc = require('osc');
 	this.callback_queue = [];
 
+	this.udp_port = new osc.UDPPort({
+	    localAddress: "10.0.0.152",
+	    localPort: 8081
+	});
+	
 	console.log("Cyperus::constructor(url)");
     }
 
@@ -669,9 +674,6 @@ export const LiteGraph: {
     debug: boolean;
     catch_exceptions: boolean;
     throw_errors: boolean;
-
-
-    cyperus: new Cyperus('ws://10.0.0.152:8081'),
     
     /** if set to true some nodes like Formula would be allowed to evaluate code that comes from unsafe sources (like node configuration), which could lead to exploits */
     allow_scripts: boolean;
