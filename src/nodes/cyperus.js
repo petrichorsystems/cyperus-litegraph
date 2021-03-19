@@ -323,6 +323,26 @@ class CyperusNetworkOscTransmitNode extends LGraphNode {
   }
 }
 
+// movement/osc/metronome
+class CyperusMovementOscMetronomeNode extends LGraphNode {
+  type = 'movement/osc/metronome';
+  title = 'osc metronome';
+  constructor(title) {
+    super(title)
+      this.properties = { precision: 1, is_module: true};
+      this.properties['module_parameters'] = [
+	  {
+	      param_name: "frequency",
+	      param_type: "text",
+	      param: this.properties.frequency
+	  },
+      ];
+      this.onExecute = () => {
+	  console.log("executing..\n");
+      }
+  }
+}
+    
 //register in the system
 LiteGraph.registerNodeType("cyperus/main/inputs", MainInputsNode );
 LiteGraph.registerNodeType("cyperus/main/outputs", MainOutputsNode );
@@ -338,6 +358,7 @@ LiteGraph.registerNodeType("dsp/processor/filter_varslope_lowpass", CyperusDspFi
 
 LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
 
+LiteGraph.registerNodeType("movement/osc/metronome", CyperusMovementOscMetronomeNode );
 
 
     

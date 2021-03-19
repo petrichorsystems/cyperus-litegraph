@@ -4,7 +4,6 @@ class Cyperus {
 	this.socket = new WebSocket(url);
 	this.osc = osc;
 	this.callback_queue = [];
-
 	console.log("Cyperus::constructor(url)");
     }
 
@@ -53,7 +52,7 @@ class Cyperus {
             }, interval);
 	}
     };
-    
+
     osc_list_main(callback, args) {
 	console.log("Cyperus::osc_list_main()");
 	var self = this;
@@ -450,7 +449,36 @@ class Cyperus {
 	);				     
     }
 
+    osc_add_module_movement_osc_metronome(path,
+					  frequency,
+					  callback,
+					  args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/movement/osc/osc_metronome",
+		args: [path, parseFloat(frequency)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
     
+    
+    osc_edit_module_osc_metronome(path,
+				 frequency,
+				 callback,
+				 args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/movement/osc/osc_metronome",
+		args: [parseFloat(frequency)],
+	    },
+	    callback,
+	    args
+	);				     
+    }    
 
 }
 
@@ -2005,6 +2033,27 @@ class Cyperus {
     
     function _cyperus_util_store_new_dsp_module_ports(response, args) {
 	var node = args;
+
+	console.log('module_parameters ', node.properties['module_parameters']);
+	var module_parameters = node.properties['module_parameters'];
+	for( var i=0; i<module_parameters.length; i++ ) {
+	    module_parameter = module_parameters[i];
+	    node.addWidget(
+		module_parameter['param_type'],
+		module_parameter['param_name'],
+		node.properties[module_parameter['param_name']],
+		function(v) {
+		    if (!v) {
+		        return;
+                    }
+		    node.setProperty(module_parameter['param_name'],
+	                             v
+		    )
+		    
+		}
+	    )
+	}
+
 	var raw_ports = response[1].split('out:\n');
 
 	var raw_input_ports = raw_ports[0].split('\n').slice(1);
@@ -2013,6 +2062,7 @@ class Cyperus {
 	console.log('raw_input_ports ', raw_input_ports);
 	console.log('raw_output_ports', raw_output_ports);
 
+	
 	for (var i = 0; i < raw_input_ports.length; i++) {
 	    // empty string check
 	    if( raw_input_ports[i].includes('|') == false ) {
@@ -2049,26 +2099,6 @@ class Cyperus {
 		    i,
 		    cyperus_id);
 	    }
-	}
-
-	console.log('module_parameters ', node.properties['module_parameters']);
-	var module_parameters = node.properties['module_parameters'];
-	for( var i=0; i<module_parameters.length; i++ ) {
-	    module_parameter = module_parameters[i];
-	    node.addWidget(
-		module_parameter['param_type'],
-		module_parameter['param_name'],
-		node.properties[module_parameter['param_name']],
-		function(v) {
-		    if (!v) {
-		        return;
-                    }
-		    node.setProperty(module_parameter['param_name'],
-	                             v
-		    )
-		    
-		}
-	    )
 	}
 	
 	// node.graph.list_of_graphcanvas[0].drawNodeWidgets(
@@ -2338,6 +2368,16 @@ class Cyperus {
 							       48,
 							       _cyperus_util_create_new_dsp_module,
 							       node);
+	    } else if (!node.type.localeCompare("movement/osc/metronome")) {
+		console.log('_cyperus.osc_add_module_movement_osc_metronome()');
+		var path = _cyperus_util_get_current_bus_path();
+		
+		node['properties']['frequency'] = "1.0";
+		
+		LiteGraph._cyperus.osc_add_module_movement_osc_metronome(path,
+									 1.0,
+									 _cyperus_util_create_new_dsp_module,
+									 node);
 	    }
 
 	}
@@ -3692,6 +3732,14 @@ class Cyperus {
 		this.widgets[1].value,
 		this.widgets[2].value,
 		this.widgets[3].value,
+		console.log,
+		undefined
+	    )
+	}  else if (!this.type.localeCompare("movement/osc/metronome")) {
+	    console.log('frequency', this.properties['frequency']);
+	    LiteGraph._cyperus.osc_edit_module_osc_transmit(
+		current_path,
+		this.widgets[0].value,
 		console.log,
 		undefined
 	    )
