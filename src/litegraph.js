@@ -4,6 +4,7 @@ class Cyperus {
 	this.socket = new WebSocket(url);
 	this.osc = osc;
 	this.callback_queue = [];
+	this.listeners = {};
 	console.log("Cyperus::constructor(url)");
     }
 
@@ -13,21 +14,31 @@ class Cyperus {
 	    console.log("Cyperus::initialize(), browser WebSocket connection");
         });
 	
-        self.socket.addEventListener("message", function (oscMessage) {
-	    var dequeued = self.callback_queue.shift();
-	    var callback = dequeued['callback'];
-	    var args = dequeued['args'];
-	    self._recv(oscMessage, callback, args);
+        self.socket.addEventListener("message", function (oscMessage) {	    
+	    self._recv(oscMessage);
         });
     }
 
-    async _recv(message, callback, args) {
+    async _recv(message) {
 	var self = this;
+	
 	var response_raw = await message.data.arrayBuffer().catch((err) => { console.error(err); });
-	var response = self.osc.readMessage(response_raw);
-	callback(response['args'], args);
+	var response = this.osc.readMessage(response_raw);
+
+	if( response['address'].includes('cyperus/listener/') ) {
+	    var split_response = response['address'].split('/');
+	    var module_id = split_response[split_response.length - 1];
+	    var clbk_data = this.listeners[module_id]
+	    clbk_data[0](clbk_data[1]);
+	    
+	} else {
+	    var dequeued = self.callback_queue.shift();
+	    var callback = dequeued['callback'];
+	    var args = dequeued['args'];
+	    callback(response['args'], args);
+	}
     }
-    
+
     _send(message, callback, args) {
 	var self = this;
 	self._waitForConnection(function () {
@@ -53,6 +64,10 @@ class Cyperus {
 	}
     };
 
+    register_listener(module_id, callback, module_node) {
+	this.listeners[module_id] = [callback, module_node];
+    }
+    
     osc_list_main(callback, args) {
 	console.log("Cyperus::osc_list_main()");
 	var self = this;
@@ -2115,6 +2130,10 @@ class Cyperus {
 
 	// store id
 	node.properties['id'] = response[0];
+
+	if( node.properties['listener'] ) {
+	    LiteGraph._cyperus.register_listener(response[0], node.listener_callback, node);
+	}
 	
 	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[0]);
 
@@ -2371,8 +2390,9 @@ class Cyperus {
 	    } else if (!node.type.localeCompare("movement/osc/metronome")) {
 		console.log('_cyperus.osc_add_module_movement_osc_metronome()');
 		var path = _cyperus_util_get_current_bus_path();
-		
+
 		node['properties']['frequency'] = "1.0";
+		node.properties['listener'] = true;
 		
 		LiteGraph._cyperus.osc_add_module_movement_osc_metronome(path,
 									 1.0,

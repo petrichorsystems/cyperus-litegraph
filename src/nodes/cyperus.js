@@ -341,6 +341,10 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
 	  console.log("executing..\n");
       }
   }
+
+    listener_callback(parent_node) {
+	console.log('CyperusMovementOscMetronomeNode::listener_callback()');
+    }
 }
     
 //register in the system
