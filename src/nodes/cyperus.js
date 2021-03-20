@@ -332,18 +332,126 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
       this.properties = { precision: 1, is_module: true};
       this.properties['module_parameters'] = [
 	  {
-	      param_name: "frequency",
+	      param_name: "beats_per_minute",
 	      param_type: "text",
-	      param: this.properties.frequency
+	      param: this.properties.beats_per_minute
 	  },
       ];
       this.onExecute = () => {
-	  console.log("executing..\n");
+	  this.setDirtyCanvas(true, false);
       }
+      this._initMetroAnimation();
   }
 
-    listener_callback(parent_node) {
-	console.log('CyperusMovementOscMetronomeNode::listener_callback()');
+    osc_listener_callback(node) {
+	node.redraw_trigger = 1;
+    }
+
+    _initMetroAnimation = function() {
+	this.anim_pos = 0;
+	this.anim_max = 120;
+    }
+    
+    _resetMetroAnimation = function() {
+	this.anim_pos = 0;
+    }
+
+    _stepMetroAnimation = function(ctx) {	
+	var step_val = 1.0 / this.anim_max;
+
+	var color_val = step_val * this.anim_pos * 191;
+	var color_val_rev = 191 - color_val;
+        ctx.fillStyle = `rgba(${color_val_rev},${color_val},${color_val+64},0.5)`;
+	
+	this.anim_pos = this.anim_pos + 1;
+    }
+    
+    onDrawForeground = function(ctx) {
+	
+	if (this.flags.collapsed) {
+            return;
+        }
+
+        if (this.value == -1) {
+            this.value =
+                (this.properties.value - this.properties.min) /
+                (this.properties.max - this.properties.min);
+        }
+
+        var center_x = this.size[0] * 1.0 *.5;
+        var center_y = this.size[1] * 1.0 + 75;
+        var radius = Math.min(this.size[0], this.size[1]) * 1.0 - 5;
+        var w = Math.floor(radius * 0.05);
+
+        ctx.globalAlpha = 1;
+        ctx.save();
+        ctx.translate(center_x, center_y);
+        ctx.rotate(Math.PI * 0.75);
+
+        //bg
+	
+        //inner
+	if( this.redraw_trigger ) {
+	    this._resetMetroAnimation();
+	    this._stepMetroAnimation(ctx);
+	    this.redraw_trigger = 0;
+	} else {
+	    this._stepMetroAnimation(ctx);
+	}
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, 0, Math.PI * 2.0);
+        ctx.fill();
+
+        //value
+        // ctx.strokeStyle = "black";
+        // ctx.fillStyle = this.properties.color;
+        // ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(
+            0,
+            0,
+            radius - 4,
+            0,
+            Math.PI * 1.5 * Math.max(0.01, this.value)
+        );
+        ctx.closePath();
+        ctx.fill();
+        //ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 1;
+        ctx.restore();
+
+	ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+        ctx.beginPath();
+        ctx.arc(center_x, center_y, radius * 0.75, 0, Math.PI * 2, true);
+        ctx.fill();
+
+        //miniball
+        ctx.fillStyle = this.mouseOver ? "white" : this.properties.color;
+        ctx.beginPath();
+        var angle = this.value * Math.PI * 1.5 + Math.PI * 0.75;
+        ctx.arc(
+            center_x + Math.cos(angle) * radius * 0.65,
+            center_y + Math.sin(angle) * radius * 0.65,
+            radius * 0.05,
+            0,
+            Math.PI * 2,
+            true
+        );
+        ctx.fill();
+
+        //text
+        ctx.fillStyle = this.mouseOver ? "white" : "#AAA";
+        ctx.font = Math.floor(radius * 0.250) + "px Arial";
+        ctx.textAlign = "center";
+	
+        ctx.fillText(
+            `${this.properties['beats_per_minute']}bpm`,
+            center_x,
+            center_y + radius * 0.10
+        );
     }
 }
     

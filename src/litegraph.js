@@ -64,7 +64,7 @@ class Cyperus {
 	}
     };
 
-    register_listener(module_id, callback, module_node) {
+    register_osc_listener(module_id, callback, module_node) {
 	this.listeners[module_id] = [callback, module_node];
     }
     
@@ -465,14 +465,14 @@ class Cyperus {
     }
 
     osc_add_module_movement_osc_metronome(path,
-					  frequency,
+					  beats_per_minute,
 					  callback,
 					  args) {
 	var self = this;
 	self._send(
 	    {
 		address: "/cyperus/add/module/movement/osc/osc_metronome",
-		args: [path, parseFloat(frequency)],
+		args: [path, parseFloat(beats_per_minute)],
 	    },
 	    callback,
 	    args
@@ -481,14 +481,14 @@ class Cyperus {
     
     
     osc_edit_module_osc_metronome(path,
-				 frequency,
+				 beats_per_minute,
 				 callback,
 				 args) {
 	var self = this;
 	self._send(
 	    {
 		address: "/cyperus/edit/module/movement/osc/osc_metronome",
-		args: [parseFloat(frequency)],
+		args: [path, parseFloat(beats_per_minute)],
 	    },
 	    callback,
 	    args
@@ -2132,7 +2132,7 @@ class Cyperus {
 	node.properties['id'] = response[0];
 
 	if( node.properties['listener'] ) {
-	    LiteGraph._cyperus.register_listener(response[0], node.listener_callback, node);
+	    LiteGraph._cyperus.register_osc_listener(response[0], node.osc_listener_callback, node);
 	}
 	
 	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[0]);
@@ -2391,11 +2391,11 @@ class Cyperus {
 		console.log('_cyperus.osc_add_module_movement_osc_metronome()');
 		var path = _cyperus_util_get_current_bus_path();
 
-		node['properties']['frequency'] = "1.0";
+		node['properties']['beats_per_minute'] = "60.0";
 		node.properties['listener'] = true;
 		
 		LiteGraph._cyperus.osc_add_module_movement_osc_metronome(path,
-									 1.0,
+									 60.0,
 									 _cyperus_util_create_new_dsp_module,
 									 node);
 	    }
@@ -3756,8 +3756,8 @@ class Cyperus {
 		undefined
 	    )
 	}  else if (!this.type.localeCompare("movement/osc/metronome")) {
-	    console.log('frequency', this.properties['frequency']);
-	    LiteGraph._cyperus.osc_edit_module_osc_transmit(
+	    console.log('beats_per_minute', this.properties['beats_per_minute']);
+	    LiteGraph._cyperus.osc_edit_module_osc_metronome(
 		current_path,
 		this.widgets[0].value,
 		console.log,
