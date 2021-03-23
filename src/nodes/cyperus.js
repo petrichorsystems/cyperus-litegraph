@@ -1,8 +1,144 @@
 (function(global) {
     var LiteGraph = global.LiteGraph;
 
+    var tmp_area = new Float32Array(4);
+
+    
+class CyperusNode extends LGraphNode {
+        _drawNodeShape = function(
+        node,
+        ctx,
+        size,
+        selected,
+        mouse_over
+	) {
+	    var fgcolor = node.color || node.constructor.color || LiteGraph.NODE_DEFAULT_COLOR;
+            // var bgcolor = node.bgcolor || node.constructor.bgcolor || LiteGraph.NODE_DEFAULT_BGCOLOR;
+	    var bgcolor = "black";
+	    
+            ctx.shadowColor = LiteGraph.DEFAULT_SHADOW_COLOR;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 3;
+	    
+	    ctx.beginPath();
+	    
+        //bg rect
+        ctx.strokeStyle = fgcolor;
+        ctx.fillStyle = bgcolor;
+
+        //render node area depending on shape
+        var shape =
+            node._shape || node.constructor.shape || LiteGraph.ROUND_SHAPE;
+
+        var area = tmp_area;
+        area[0] = size[0]; //x
+        area[1] = size[1] + 10; //y
+        area[2] = size[2] + 1; //w
+        area[3] = size[3]; //h
+
+        var old_alpha = ctx.globalAlpha;
+
+        //full node shape
+        //if(node.flags.collapsed)
+        {
+            ctx.beginPath();
+            if (shape == LiteGraph.BOX_SHAPE) {
+                ctx.fillRect(area[0], area[1], area[2], area[3]);
+            } else if (
+                shape == LiteGraph.ROUND_SHAPE ||
+                shape == LiteGraph.CARD_SHAPE
+            ) {
+                ctx.roundRect(
+                    area[0],
+                    area[1],
+                    area[2],
+                    area[3],
+                    this.round_radius,
+                    shape == LiteGraph.CARD_SHAPE ? 0 : this.round_radius
+                );
+            } else if (shape == LiteGraph.CIRCLE_SHAPE) {
+                ctx.arc(
+                    size[0] * 0.5,
+                    size[1] * 0.5,
+                    size[0] * 0.5,
+                    0,
+                    Math.PI * 2
+                );
+            }
+            ctx.fill();
+
+			//separator
+			if(!node.flags.collapsed)
+			{
+				ctx.shadowColor = "transparent";
+				ctx.fillStyle = "rgba(0,0,0,0.2)";
+				ctx.fillRect(0, -1, area[2], 2);
+			}
+        }
+        ctx.shadowColor = "transparent";
+
+        if (node.onDrawBackground) {
+            node.onDrawBackground(ctx, this, this.canvas, this.graph_mouse );
+        }
+
+
+        //render selection marker
+        if (selected) {
+            if (node.onBounding) {
+                node.onBounding(area);
+            }
+
+
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.8;
+            ctx.beginPath();
+            if (shape == LiteGraph.BOX_SHAPE) {
+                ctx.rect(
+                    -6 + area[0],
+                    -6 + area[1],
+                    12 + area[2],
+                    12 + area[3]
+                );
+            } else if (
+                shape == LiteGraph.ROUND_SHAPE ||
+                (shape == LiteGraph.CARD_SHAPE && node.flags.collapsed)
+            ) {
+                ctx.roundRect(
+                    -6 + area[0],
+                    -6 + area[1],
+                    12 + area[2],
+                    12 + area[3],
+                    this.round_radius * 2
+                );
+            } else if (shape == LiteGraph.CARD_SHAPE) {
+                ctx.roundRect(
+                    -6 + area[0],
+                    -6 + area[1],
+                    12 + area[2],
+                    12 + area[3],
+                    this.round_radius * 2,
+                    2
+                );
+            } else if (shape == LiteGraph.CIRCLE_SHAPE) {
+                ctx.arc(
+                    size[0] * 0.5,
+                    size[1] * 0.5,
+                    size[0] * 0.5 + 6,
+                    0,
+                    Math.PI * 2
+                );
+            }
+            ctx.strokeStyle = LiteGraph.NODE_BOX_OUTLINE_COLOR;
+            ctx.stroke();
+            ctx.strokeStyle = fgcolor;
+            ctx.globalAlpha = 1;
+        }
+    };
+}
+    
 // main/inputs
-class MainInputsNode extends LGraphNode {
+class MainInputsNode extends CyperusNode {
     type = 'cyperus/main/inputs'
     title = 'inputs'
     constructor(title) {
@@ -24,7 +160,7 @@ class MainInputsNode extends LGraphNode {
 }
 
 // main/outputs
-class MainOutputsNode extends LGraphNode {
+class MainOutputsNode extends CyperusNode {
   type = 'cyperus/main/outputs'
   title = 'outputs'
   constructor(title) {
@@ -46,7 +182,7 @@ class MainOutputsNode extends LGraphNode {
 
 
 // dsp/generator/sawtooth
-class CyperusDspSawtoothNode extends LGraphNode {
+class CyperusDspSawtoothNode extends CyperusNode {
   type = 'dsp/generator/sawtooth';
   title = 'sawtooth';
   constructor(title) {
@@ -70,7 +206,7 @@ class CyperusDspSawtoothNode extends LGraphNode {
 }
 
 // dsp/generator/sine
-class CyperusDspSineNode extends LGraphNode {
+class CyperusDspSineNode extends CyperusNode {
     type = 'dsp/generator/sine';
     title = 'sine';
     constructor(title) {	
@@ -101,7 +237,7 @@ class CyperusDspSineNode extends LGraphNode {
 }
 
 // dsp/generator/square
-class CyperusDspSquareNode extends LGraphNode {
+class CyperusDspSquareNode extends CyperusNode {
   type = 'dsp/generator/square';
   title = 'square';
   constructor(title) {
@@ -126,7 +262,7 @@ class CyperusDspSquareNode extends LGraphNode {
 }
 
 // dsp/generator/triangle
-class CyperusDspTriangleNode extends LGraphNode {
+class CyperusDspTriangleNode extends CyperusNode {
   type = 'dsp/generator/triangle';
   title = 'triangle';
   constructor(title) {
@@ -150,7 +286,7 @@ class CyperusDspTriangleNode extends LGraphNode {
 }
 
 // dsp/processor/delay
-class CyperusDspDelayNode extends LGraphNode {
+class CyperusDspDelayNode extends CyperusNode {
   type = 'dsp/processor/delay';
   title = 'delay';
   constructor(title) {
@@ -179,7 +315,7 @@ class CyperusDspDelayNode extends LGraphNode {
 }
 
 // dsp/processor/envelope_follower
-class CyperusDspEnvelopeFollowerNode extends LGraphNode {
+class CyperusDspEnvelopeFollowerNode extends CyperusNode {
   type = 'dsp/processor/envelope_follower';
   title = 'envelope_follower';
   constructor(title) {
@@ -208,7 +344,7 @@ class CyperusDspEnvelopeFollowerNode extends LGraphNode {
 }
 
 // dsp/processor/filter_bandpass
-class CyperusDspFilterBandpassNode extends LGraphNode {
+class CyperusDspFilterBandpassNode extends CyperusNode {
   type = 'dsp/processor/filter_bandpass';
   title = 'filter_bandpass';
   constructor(title) {
@@ -237,7 +373,7 @@ class CyperusDspFilterBandpassNode extends LGraphNode {
 }
 
 // dsp/processor/filter_highpass
-class CyperusDspFilterHighpassNode extends LGraphNode {
+class CyperusDspFilterHighpassNode extends CyperusNode {
   type = 'dsp/processor/filter_highpass';
   title = 'filter_highpass';
   constructor(title) {
@@ -261,7 +397,7 @@ class CyperusDspFilterHighpassNode extends LGraphNode {
 }
 
 // dsp/processor/filter_varslope_lowpass
-class CyperusDspFilterVarslopeLowpassNode extends LGraphNode {
+class CyperusDspFilterVarslopeLowpassNode extends CyperusNode {
   type = 'dsp/processor/filter_varslope_lowpass';
   title = 'filter_varslope_lowpass';
   constructor(title) {
@@ -290,7 +426,7 @@ class CyperusDspFilterVarslopeLowpassNode extends LGraphNode {
 }
 
 // network/osc/transmit
-class CyperusNetworkOscTransmitNode extends LGraphNode {
+class CyperusNetworkOscTransmitNode extends CyperusNode {
   type = 'network/osc/transmit';
   title = 'osc transmitter';
   constructor(title) {
@@ -324,7 +460,7 @@ class CyperusNetworkOscTransmitNode extends LGraphNode {
 }
 
 // movement/osc/metronome
-class CyperusMovementOscMetronomeNode extends LGraphNode {
+class CyperusMovementOscMetronomeNode extends CyperusNode {
   type = 'movement/osc/metronome';
   title = 'osc metronome';
   constructor(title) {
@@ -341,6 +477,7 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
 	  this.setDirtyCanvas(true, false);
       }
       this._initMetroAnimation();
+
   }
 
     osc_listener_callback(node) {
@@ -349,7 +486,7 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
 
     _initMetroAnimation = function() {
 	this.anim_pos = 0;
-	this.anim_max = 120;
+	this.anim_duration = 300;
     }
     
     _resetMetroAnimation = function() {
@@ -357,7 +494,7 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
     }
 
     _stepMetroAnimation = function(ctx) {	
-	var step_val = 1.0 / this.anim_max;
+	var step_val = 1.0 / this.anim_duration;
 
 	var color_val = step_val * this.anim_pos * 191;
 	var color_val_rev = 191 - color_val;
@@ -378,8 +515,8 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
                 (this.properties.max - this.properties.min);
         }
 
-        var center_x = this.size[0] * 1.0 *.5;
-        var center_y = this.size[1] * 1.0 + 75;
+        var center_x = this.size[0] * -1.0 *.5 + 48
+        var center_y = this.size[1] * 1.0 - 45;
         var radius = Math.min(this.size[0], this.size[1]) * 1.0 - 5;
         var w = Math.floor(radius * 0.05);
 
@@ -389,7 +526,7 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
         ctx.rotate(Math.PI * 0.75);
 
         //bg
-	
+
         //inner
 	if( this.redraw_trigger ) {
 	    this._resetMetroAnimation();
@@ -454,6 +591,98 @@ class CyperusMovementOscMetronomeNode extends LGraphNode {
         );
     }
 }
+
+// audio/analysis/transient_detector
+class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
+  type = 'cyperus/audio/analysis/transient_detector';
+  title = 'transient detector';
+  constructor(title) {
+    super(title)
+      this.properties = { precision: 1, is_module: true};
+      this.properties['module_parameters'] = [
+	  {
+	      param_name: "sensitivity",
+	      param_type: "text",
+	      param: this.properties.sensitivity
+	  },
+	  {
+	      param_name: "attack_ms",
+	      param_type: "text",
+	      param: this.properties.attack_ms
+	  },
+	  {
+	      param_name: "decay_ms",
+	      param_type: "text",
+	      param: this.properties.decay_ms
+	  },
+	  {
+	      param_name: "scale",
+	      param_type: "text",
+	      param: this.properties.scale
+	  }
+      ];
+      this.onExecute = () => {
+	  this.setDirtyCanvas(true, false);
+      }
+      this._initAnimation();
+  }
+
+    osc_listener_callback(node) {
+	node.redraw_trigger = 1;
+    }
+
+    _initAnimation = function() {
+	this.anim_pos = 0;
+	this.anim_duration = 200;
+    }
+    
+    _resetAnimation = function() {
+	this.anim_pos = 0;
+    }
+
+    _stepAnimation = function(ctx) {
+	if( this.anim_pos >= this.anim_duration ) {
+	    /* do stuff */
+	    return;
+	}
+	var step_val = 1.0 / this.anim_duration;
+	var progress = step_val * this.anim_pos;
+
+	var time_fraction = 1 - this.anim_pos / this.anim_duration;
+	var time_fraction_forw = 1 - time_fraction;
+	
+	ctx.moveTo(0, 130);
+	ctx.beginPath();
+
+	var x_coeff = 0.0;
+	for (let a = 0, b = 1, result; 1; a += b, b /= 2) {
+	    if (time_fraction >= (7 - 4 * a) / 11) {
+		x_coeff = -Math.pow((11 - 6 * a - 11 * time_fraction) / 4, 2) + Math.pow(b, 2);
+		break;
+	    }
+	}
+	var x_pos = x_coeff * this.anim_duration;
+
+	var x_width = x_coeff * 10 * 10;
+	
+	ctx.roundRect(210 - x_pos, 190, x_width, 5);
+	    
+	ctx.fillStyle = "white";
+	ctx.fill();
+	
+	this.anim_pos = this.anim_pos + 1;
+    }
+    
+    onDrawForeground = function(ctx) {
+	
+	if (this.flags.collapsed) {
+            return;
+        }
+	
+	this._drawNodeShape(this, ctx, [0, 130, 210, 100], false, false);
+	this._stepAnimation(ctx);
+    }
+}
     
 //register in the system
 LiteGraph.registerNodeType("cyperus/main/inputs", MainInputsNode );
@@ -471,7 +700,7 @@ LiteGraph.registerNodeType("dsp/processor/filter_varslope_lowpass", CyperusDspFi
 LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
 
 LiteGraph.registerNodeType("movement/osc/metronome", CyperusMovementOscMetronomeNode );
-
+LiteGraph.registerNodeType("audio/analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );
 
     
 })(this);

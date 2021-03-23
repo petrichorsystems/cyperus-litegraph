@@ -495,6 +495,43 @@ class Cyperus {
 	);				     
     }    
 
+    osc_add_module_audio_analysis_transient_detector(path,
+						     sensitivity,
+						     attack_ms,
+						     decay_ms,
+						     scale,
+						     callback,
+						     args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/audio/analysis/transient_detector",
+		args: [path, parseFloat(sensitivity), parseFloat(attack_ms), parseFloat(decay_ms), parseFloat(scale)],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    
+    osc_edit_module_audio_analysis_transient_detector(path,
+						      sensitivity,
+						      attack_ms,
+						      decay_ms,
+						      scale,
+						      callback,
+						      args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/audio/analysis/transient_detector",
+		args: [path, parseFloat(sensitivity), parseFloat(attack_ms), parseFloat(decay_ms), parseFloat(scale)],
+	    },
+	    callback,
+	    args
+	);				     
+    }    
+
 }
 
 
@@ -2398,6 +2435,23 @@ class Cyperus {
 									 60.0,
 									 _cyperus_util_create_new_dsp_module,
 									 node);
+	    } else if (!node.type.localeCompare("audio/analysis/transient_detector")) {
+		console.log('_cyperus.osc_add_moodule_audio_analysis_transient_detector()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['sensitivity'] = "0.50";
+		node['properties']['attack_ms'] = "5.0";
+		node['properties']['decay_ms'] = "5.0";
+		node['properties']['scale'] = "1.0";
+		node.properties['listener'] = true;
+		
+		LiteGraph._cyperus.osc_add_module_audio_analysis_transient_detector(path,
+										    0.5,
+										    5.0,
+										    5.0,
+										    1.0,
+										    _cyperus_util_create_new_dsp_module,
+										    node);
 	    }
 
 	}
@@ -3757,9 +3811,23 @@ class Cyperus {
 	    )
 	}  else if (!this.type.localeCompare("movement/osc/metronome")) {
 	    console.log('beats_per_minute', this.properties['beats_per_minute']);
-	    LiteGraph._cyperus.osc_edit_module_osc_metronome(
+	    LiteGraph._cyperus.osc_edit_module_movement_osc_metronome(
 		current_path,
 		this.widgets[0].value,
+		console.log,
+		undefined
+	    )
+	}  else if (!this.type.localeCompare("audio/analysis/transient_detector")) {
+	    console.log('sensitivity', this.properties['sensitivity']);
+	    console.log('attack_ms', this.properties['attack_ms']);
+	    console.log('decay_ms', this.properties['decay_ms']);
+	    console.log('scale', this.properties['scale']);
+	    LiteGraph._cyperus.osc_edit_module_audio_analysis_transient_detector(
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		this.widgets[3].value,
 		console.log,
 		undefined
 	    )
