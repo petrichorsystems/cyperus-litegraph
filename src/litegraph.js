@@ -1,11 +1,18 @@
 class Cyperus {
-    constructor(url) {
+    constructor(url) {        
 	this.url = url;
 	this.socket = new WebSocket(url);
 	this.osc = osc;
 	this.callback_queue = [];
 	this.listeners = {};
 	console.log("Cyperus::constructor(url)");
+    }
+
+    
+    uuidv4() {
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
     }
 
     initialize() {
@@ -42,7 +49,12 @@ class Cyperus {
     _send(message, callback, args) {
 	var self = this;
 	self._waitForConnection(function () {
-            self.socket.send(self.osc.writePacket(message));
+            console.log("WRITE");
+            self.socket.send(self.osc.writePacket(message,
+                                                  {
+                                                      metadata: false,
+                                                      unpackSingleArgs: true
+                                                  }));
             if (typeof callback !== 'undefined') {
 		self.callback_queue.push({'callback': callback,
 					  'args': args});
@@ -74,7 +86,12 @@ class Cyperus {
 	self._send(
 	    {
 		address: "/cyperus/list/main",
-		args: undefined
+		args: [
+                    {
+                        type: "s",
+                        value: this.uuidv4()
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -84,6 +101,7 @@ class Cyperus {
     }
 
     osc_add_bus(path,
+                request_id,
 		name,
 		input_bus_port_names,
 		output_bus_port_names,
@@ -93,22 +111,64 @@ class Cyperus {
 	self._send(
 	    {
 		address: "/cyperus/add/bus",
-		args: [path, name, input_bus_port_names, output_bus_port_names]
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "s",
+                        value: name
+                    },
+                    {
+                        type: "s",
+                        value: input_bus_port_names
+                    },
+                    {
+                        type: "s",
+                        value: output_bus_port_names
+                    }
+                ]
 	    },
 	    callback,
 	    args
 	);
     }
 
-    osc_list_bus(path,
-		 list_type,
-		 callback,
-		 args) {
+    osc_list_bus(
+        request_id,
+        path,
+	list_type,
+	callback,
+	args) {
 	var self = this;
+
+        console.log('listing bus..')
+        console.log(request_id);
+        console.log(path);
+        console.log(list_type);
+        
 	self._send(
 	    {
 		address: "/cyperus/list/bus",
-		args: [path, list_type]
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "i",
+                        value: list_type
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -647,7 +707,14 @@ class Cyperus {
 
 
 
-	_cyperus_parse_mains: function(mains, arg) {
+	_cyperus_parse_mains: function(resp, arg) {
+
+            console.log(resp);
+            
+            let request_id = resp[0];
+            let error_code = resp[1];
+            let mains = resp[2]['value'];
+            
 	    let ins = [];
 	    let outs = [];
 	    let processing_ins = 0;
@@ -1264,7 +1331,7 @@ class Cyperus {
 	    this._cyperus = cyperus;
 	    LiteGraph._cyperus = this._cyperus;
 	} else {
-	    this._cyperus = new Cyperus('ws://10.0.0.152:8081');
+	    this._cyperus = new Cyperus('ws://127.0.0.1:8081');
 	    LiteGraph._cyperus = this._cyperus;
 	    this._cyperus.initialize();
 	    this._cyperus.osc_list_main(LiteGraph._cyperus_parse_mains, undefined);
@@ -2047,21 +2114,27 @@ class Cyperus {
 
     function _cyperus_util_get_bus_descendants(response, args) {
 	var node = args['node'];
-   
+        
 	var filtered = response[3].split('\n').filter(Boolean);
 	var temp_bus_uuid = filtered[filtered.length - 1].split('|')[0];
 	var bus_path = `${response[0]}/${temp_bus_uuid}`;
 
-	LiteGraph._cyperus.osc_list_bus(bus_path,
-					1,
-					_cyperus_util_store_new_bus_uuid,
-					args);
+	LiteGraph._cyperus.osc_list_bus(
+            LiteGraph._cyperus.uuidv4(),
+            bus_path,
+	    1,
+	    _cyperus_util_store_new_bus_uuid,
+	    args);
     }
     
 
     function _cyperus_util_store_new_bus_uuid(response, args) {	
 	var node = args['node'];
 	var self = this;
+
+        console.log('response')
+        console.log(response)
+        
 	var filtered = response[3].split('\n').filter(Boolean);
 
 	// get newest (last) bus id
@@ -2264,6 +2337,7 @@ class Cyperus {
 	{
 	    if (!node.type.localeCompare("cyperus/bus/add")) {		
 		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
+                                               LiteGraph._cyperus.uuidv4(),
 					       'name',
 					       'in0',
 					       'out0',
@@ -2272,17 +2346,21 @@ class Cyperus {
 		console.log('_cyperus.osc_list_bus()');
 		var list_type = undefined;
 		if( LiteGraph._global_graph_stack.length == 0 ) {
-		    LiteGraph._cyperus.osc_list_bus(_cyperus_util_get_current_bus_path(),
-						    1,
-						    _cyperus_util_store_new_bus_uuid,
-						    {'node': node,
-						     'my_id': this._nodes.length});
+		    LiteGraph._cyperus.osc_list_bus(
+                        LiteGraph._cyperus.uuidv4(),
+                        _cyperus_util_get_current_bus_path(),
+			1,
+			_cyperus_util_store_new_bus_uuid,
+			{'node': node,
+			 'my_id': this._nodes.length});
 		} else {
-		    LiteGraph._cyperus.osc_list_bus(_cyperus_util_get_current_bus_path(),
-						    2,
-						    _cyperus_util_get_bus_descendants,
-						    {'node': node,
-						     'my_id': this._nodes.length});
+		    LiteGraph._cyperus.osc_list_bus(
+                        LiteGraph._cyperus.uuidv4(),
+                        _cyperus_util_get_current_bus_path(),
+			2,
+			_cyperus_util_get_bus_descendants,
+			{'node': node,
+			 'my_id': this._nodes.length});
 		}
 
 
