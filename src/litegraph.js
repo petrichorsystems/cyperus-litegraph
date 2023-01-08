@@ -52,7 +52,7 @@ class Cyperus {
             console.log("WRITE");
             self.socket.send(self.osc.writePacket(message,
                                                   {
-                                                      metadata: false,
+                                                      metadata: true,
                                                       unpackSingleArgs: true
                                                   }));
             if (typeof callback !== 'undefined') {
@@ -175,14 +175,24 @@ class Cyperus {
 	);
     }
 
-    osc_list_bus_port(path,
+    osc_list_bus_port(request_id,
+                      path,
 		      callback,
 		      args) {
 	var self = this;
 	self._send(
 	    {
 		address: "/cyperus/list/bus_port",
-		args: [path]
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -713,7 +723,7 @@ class Cyperus {
             
             let request_id = resp[0];
             let error_code = resp[1];
-            let mains = resp[2]['value'];
+            let mains = resp[2];
             
 	    let ins = [];
 	    let outs = [];
@@ -2001,7 +2011,10 @@ class Cyperus {
 	var out_ids = []
 	var processing_ins = 0;
 	var processing_outs = 0;
-	for (var line of bus_ports[1].split('\n')) {
+
+        console.log(bus_ports);
+        
+	for (var line of bus_ports[3].split('\n')) {
 	    if (line.includes('in:')) {
 		processing_ins = 1;
 		continue;
@@ -2124,7 +2137,8 @@ class Cyperus {
             bus_path,
 	    1,
 	    _cyperus_util_store_new_bus_uuid,
-	    args);
+	    args
+        );
     }
     
 
@@ -2135,7 +2149,7 @@ class Cyperus {
         console.log('response')
         console.log(response)
         
-	var filtered = response[3].split('\n').filter(Boolean);
+	var filtered = response[5].split('\n').filter(Boolean);
 
 	// get newest (last) bus id
 	var new_bus_uuid = filtered[filtered.length - 1].split('|')[0];
@@ -2149,9 +2163,11 @@ class Cyperus {
 	
 	node.properties['id'] = new_bus_uuid;
 	node.properties['is_bus'] = true;
-	LiteGraph._cyperus.osc_list_bus_port(new_path,
-					     _cyperus_util_create_bus_port_litegraph_nodes,
-					     args);
+	LiteGraph._cyperus.osc_list_bus_port(
+            LiteGraph._cyperus.uuidv4(),
+            new_path,
+	    _cyperus_util_create_bus_port_litegraph_nodes,
+	    args);
     }
 
 
