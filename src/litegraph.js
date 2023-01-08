@@ -199,7 +199,8 @@ class Cyperus {
 	);
     }
 
-    osc_list_module_port(path,
+    osc_list_module_port(request_id,
+                         path,
 			 callback,
 			 args) {
 	console.log('osc_list_module_port..');
@@ -207,29 +208,54 @@ class Cyperus {
 	self._send(
 	    {
 		address: "/cyperus/list/module_port",
-		args: [path]
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    }
+                ]
 	    },
 	    callback,
 	    args
 	);
     }
 
-    osc_add_connection(path_out,
-		       path_in,
-		       callback,
-		       args) {
+    osc_add_connection(
+        request_id,
+        path_out,
+	path_in,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
 		address: "/cyperus/add/connection",
-		args: [path_out, path_in]
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path_out
+                    },
+                    {
+                        type: "s",
+                        value: path_in
+                    }
+                ]
 	    },
 	    callback,
 	    args
 	);
     }
 
-    osc_remove_connection(path_out,
+    osc_remove_connection(request_id,
+                          path_out,
 			  path_in,
 			  callback,
 			  args) {
@@ -237,7 +263,16 @@ class Cyperus {
 	self._send(
 	    {
 		address: "/cyperus/remove/connection",
-		args: [path_out, path_in]
+		args: [
+                    {
+                        type: "s",
+                        value: path_out
+                    },
+                    {
+                        type: "s",
+                        value: path_in
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -276,35 +311,81 @@ class Cyperus {
 	);
     }
     
-    osc_add_module_sine(path,
-			frequency,
-			amplitude,
-			phase,
-			callback,
-			 args) {
+    osc_add_module_audio_oscillator_sine(
+        request_id,
+        path,
+	frequency,
+	amplitude,
+	phase,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/sine",
-		args: [path, parseFloat(frequency), parseFloat(amplitude), parseFloat(phase)]
+		address: "/cyperus/add/module/audio/oscillator/sine",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: frequency
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    },
+                    {
+                        type: "f",
+                        value: phase
+                    }
+                ]
 	    },
 	    callback,
 	    args
 	);
     }
 
-    osc_edit_module_sine(path,
-			frequency,
-			amplitude,
-			phase,
-			callback,
-			 args) {
-	console.log('osc_edit_module_sine..');
+    osc_edit_module_audio_oscillator_sine(
+        request_id,
+        path,
+	frequency,
+	amplitude,
+	phase,
+	callback,
+	args) {
+	console.log('osc_edit_module_audio_oscillator_sine..');
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/sine",
-		args: [path, parseFloat(frequency), parseFloat(amplitude), parseFloat(phase)]
+		address: "/cyperus/edit/module/audio/oscillator/sine",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: frequency
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    },
+                    {
+                        type: "f",
+                        value: phase
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -2174,7 +2255,7 @@ class Cyperus {
     
     function _cyperus_util_store_new_dsp_module_ports(response, args) {
 	var node = args;
-
+        
 	console.log('module_parameters ', node.properties['module_parameters']);
 	var module_parameters = node.properties['module_parameters'];
 	for( var i=0; i<module_parameters.length; i++ ) {
@@ -2194,8 +2275,8 @@ class Cyperus {
 		}
 	    )
 	}
-
-	var raw_ports = response[1].split('out:\n');
+        
+	var raw_ports = response[3].split('out:\n');
 
 	var raw_input_ports = raw_ports[0].split('\n').slice(1);
 	var raw_output_ports = raw_ports[1].split('\n');
@@ -2253,19 +2334,21 @@ class Cyperus {
     function _cyperus_util_create_new_dsp_module(response, args) {
 	var node = args;
 	var self = this;
-
+        
 	// store id
-	node.properties['id'] = response[0];
+	node.properties['id'] = response[2];
 
 	if( node.properties['listener'] ) {
 	    LiteGraph._cyperus.register_osc_listener(response[0], node.osc_listener_callback, node);
 	}
 	
-	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[0]);
+	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[2]);
 
-	LiteGraph._cyperus.osc_list_module_port(module_path,
-						_cyperus_util_store_new_dsp_module_ports,
-						node);
+	LiteGraph._cyperus.osc_list_module_port(
+            LiteGraph._cyperus.uuidv4(),
+            module_path,
+	    _cyperus_util_store_new_dsp_module_ports,
+	    node);
 					       
     }
     
@@ -2397,19 +2480,21 @@ class Cyperus {
 							   _cyperus_util_create_new_dsp_module,
 							   node);
 	    } else if (!node.type.localeCompare("dsp/generator/sine")) {
-		console.log('_cyperus.osc_add_module_sine()');
+		console.log('_cyperus.osc_add_module_audio_oscillator_sine()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['phase'] = "0.0";
 		
-		LiteGraph._cyperus.osc_add_module_sine(path,
-						       "440.0",
-						       "1.0",
-						       "0.0",
-						       _cyperus_util_create_new_dsp_module,
-						       node);
+		LiteGraph._cyperus.osc_add_module_audio_oscillator_sine(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+		    "440.0",
+		    "1.0",
+		    "0.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
 	    } else if (!node.type.localeCompare("dsp/generator/square")) {
 		console.log('_cyperus.osc_add_module_square()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -3802,7 +3887,8 @@ class Cyperus {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
-	    LiteGraph._cyperus.osc_edit_module_sine(
+	    LiteGraph._cyperus.osc_edit_module_audio_oscillator_sine(
+                LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
@@ -5185,12 +5271,13 @@ class Cyperus {
 		connection_in_path = cyperus_id_in;
 	    }
 
-	    LiteGraph._cyperus.osc_add_connection(
-		connection_out_path,
-		connection_in_path,
-		console.log,
-		undefined
-	    );
+	LiteGraph._cyperus.osc_add_connection(
+            LiteGraph._cyperus.uuidv4(),
+	    connection_out_path,
+	    connection_in_path,
+	    console.log,
+	    undefined
+	);
 
 	// END CYPERUS CODE    
 
@@ -5514,12 +5601,13 @@ class Cyperus {
 		connection_in_path = cyperus_id_in;
 	    }
 
-	    LiteGraph._cyperus.osc_remove_connection(
-		connection_out_path,
-		connection_in_path,
-		console.log,
-		undefined
-	    );
+	                    LiteGraph._cyperus.osc_remove_connection(
+                                LiteGraph._cyperus.uuidv4(),
+		                connection_out_path,
+		                connection_in_path,
+		                console.log,
+		                undefined
+	                    );
 
 	    // END CYPERUS CODE
 
