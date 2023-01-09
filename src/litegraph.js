@@ -468,7 +468,28 @@ class Cyperus {
 	self._send(
 	    {
 		address: "/cyperus/edit/module/delay",
-		args: [path, parseFloat(amplitude), parseFloat(time), parseFloat(feedback)],
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    },
+                    {
+                        type: "f",
+                        value: time
+                    },
+                    {
+                        type: "f",
+                        value: feedback
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -476,17 +497,39 @@ class Cyperus {
     }
 
     
-    osc_add_module_envelope_follower(path,
-				     attack,
-				     decay,
-				     scale,
-				     callback,
-				     args) {
+    osc_add_module_motion_envelope_follower(request_id,
+                                            path,
+				            attack,
+				            decay,
+				            scale,
+				            callback,
+				            args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/envelope_follower",
-		args: [path, parseFloat(attack), parseFloat(decay), parseFloat(scale)],
+		address: "/cyperus/add/module/motion/envelope/follower",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: attack
+                    },
+                    {
+                        type: "f",
+                        value: decay
+                    },
+                    {
+                        type: "f",
+                        value: scale
+                    }
+                ],
 	    },
 	    callback,
 	    args
@@ -494,17 +537,39 @@ class Cyperus {
     }
 
     
-    osc_edit_module_envelope_follower(path,
-				      attack,
-				      decay,
-				      scale,
-				      callback,
-				      args) {
+    osc_edit_module_motion_envelope_follower(request_id,
+                                             path,
+				             attack,
+				             decay,
+				             scale,
+				             callback,
+				             args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/envelope_follower",
-		args: [path, parseFloat(attack), parseFloat(decay), parseFloat(scale)],
+		address: "/cyperus/edit/module/motion/envelope/follower",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: attack
+                    },
+                    {
+                        type: "f",
+                        value: decay
+                    },
+                    {
+                        type: "f",
+                        value: scale
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -2479,7 +2544,7 @@ class Cyperus {
 							   1.0,
 							   _cyperus_util_create_new_dsp_module,
 							   node);
-	    } else if (!node.type.localeCompare("dsp/generator/sine")) {
+	    } else if (!node.type.localeCompare("audio/oscillator/sine")) {
 		console.log('_cyperus.osc_add_module_audio_oscillator_sine()');
 		var path = _cyperus_util_get_current_bus_path();
 
@@ -2533,20 +2598,22 @@ class Cyperus {
 						       "0.5",
 						       _cyperus_util_create_new_dsp_module,
 						       node);
-	    } else if (!node.type.localeCompare("dsp/processor/envelope_follower")) {
-		console.log('_cyperus.osc_add_module_envelope_follower()');
+	    } else if (!node.type.localeCompare("motion/envelope/follower")) {
+		console.log('_cyperus.osc_add_module_motion_envelope_follower()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['attack'] = "1.0";
 		node['properties']['decay'] = "1.0";
 		node['properties']['scale'] = "1.0";
 		
-		LiteGraph._cyperus.osc_add_module_envelope_follower(path,
-								    "1.0",
-								    "1.0",
-								    "1.0",
-								    _cyperus_util_create_new_dsp_module,
-								    node);
+		LiteGraph._cyperus.osc_add_module_motion_envelope_follower(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+		    "1.0",
+		    "1.0",
+		    "1.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
 	    } else if (!node.type.localeCompare("dsp/processor/filter_bandpass")) {
 		console.log('_cyperus.osc_add_module_filter_bandpass()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -3883,7 +3950,7 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/generator/sine")) {
+	} else if (!this.type.localeCompare("audio/oscillator/sine")) {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
@@ -3929,11 +3996,12 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/processor/envelope_follower")) {
+	} else if (!this.type.localeCompare("motion/envelope/follower")) {
 	    console.log('attack', this.properties['attack']);
 	    console.log('decay', this.properties['decay']);
 	    console.log('scale', this.properties['scale']);	    
-	    LiteGraph._cyperus.osc_edit_module_envelope_follower(
+	    LiteGraph._cyperus.osc_edit_module_motion_envelope_follower(
+                LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,

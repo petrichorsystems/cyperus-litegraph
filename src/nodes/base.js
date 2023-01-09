@@ -16,7 +16,7 @@
         this.setOutputData(1, this.graph.globaltime);
     };
 
-    LiteGraph.registerNodeType("basic/time", Time);
+    // LiteGraph.registerNodeType("basic/time", Time);
 
     //Subgraph: a node that contains a graph
     function Subgraph() {
@@ -653,7 +653,7 @@
         this.outputs[0].label = this.properties["value"].toFixed(3);
     };
 
-    LiteGraph.registerNodeType("basic/const", ConstantNumber);
+    // LiteGraph.registerNodeType("basic/const", ConstantNumber);
 
     function ConstantBoolean() {
         this.addOutput("", "boolean");
@@ -682,7 +682,7 @@
 		this.setValue( !this.properties.value );
 	}
 
-    LiteGraph.registerNodeType("basic/boolean", ConstantBoolean);
+    // LiteGraph.registerNodeType("basic/boolean", ConstantBoolean);
 
     function ConstantString() {
         this.addOutput("", "string");
@@ -714,7 +714,7 @@
 		reader.readAsText(file);
 	}
 
-    LiteGraph.registerNodeType("basic/string", ConstantString);
+    // LiteGraph.registerNodeType("basic/string", ConstantString);
 
     function ConstantObject() {
         this.addOutput("obj", "object");
@@ -729,7 +729,7 @@
         this.setOutputData(0, this._object);
     };
 
-    LiteGraph.registerNodeType( "basic/object", ConstantObject );
+    // LiteGraph.registerNodeType( "basic/object", ConstantObject );
 
     function ConstantFile() {
         this.addInput("url", "");
@@ -827,7 +827,7 @@
 			return reader.readAsBinaryString(file);
 	}
 
-    LiteGraph.registerNodeType("basic/file", ConstantFile);
+    // LiteGraph.registerNodeType("basic/file", ConstantFile);
 
 	//to store json objects
     function ConstantData() {
@@ -862,7 +862,7 @@
 
 	ConstantData.prototype.setValue = ConstantNumber.prototype.setValue;
 
-    LiteGraph.registerNodeType("basic/data", ConstantData);
+    // LiteGraph.registerNodeType("basic/data", ConstantData);
 
 	//to store json objects
     function ConstantArray() {
@@ -912,7 +912,7 @@
 
 	ConstantArray.prototype.setValue = ConstantNumber.prototype.setValue;
 
-    LiteGraph.registerNodeType("basic/array", ConstantArray);
+    // LiteGraph.registerNodeType("basic/array", ConstantArray);
 
 	function SetArray()
 	{
@@ -938,7 +938,7 @@
 		this.setOutputData(0,arr);
     };
 
-    LiteGraph.registerNodeType("basic/set_array", SetArray );
+    // LiteGraph.registerNodeType("basic/set_array", SetArray );
 
     function ArrayElement() {
         this.addInput("array", "array,table,string");
@@ -960,7 +960,7 @@
         this.setOutputData(0, array[Math.floor(Number(index))] );
     };
 
-    LiteGraph.registerNodeType("basic/array[]", ArrayElement);
+    // LiteGraph.registerNodeType("basic/array[]", ArrayElement);
 
     function TableElement() {
         this.addInput("table", "table");
@@ -991,7 +991,7 @@
 	        this.setOutputData(0, null );
     };
 
-    LiteGraph.registerNodeType("basic/table[][]", TableElement);
+    // LiteGraph.registerNodeType("basic/table[][]", TableElement);
 
     function ObjectProperty() {
         this.addInput("obj", "");
@@ -1029,7 +1029,7 @@
         }
     };
 
-    LiteGraph.registerNodeType("basic/object_property", ObjectProperty);
+    // LiteGraph.registerNodeType("basic/object_property", ObjectProperty);
 
     function ObjectKeys() {
         this.addInput("obj", "");
@@ -1047,7 +1047,7 @@
         }
     };
 
-    LiteGraph.registerNodeType("basic/object_keys", ObjectKeys);
+    // LiteGraph.registerNodeType("basic/object_keys", ObjectKeys);
 
 
 	function SetObject()
@@ -1074,7 +1074,7 @@
 		this.setOutputData(0,obj);
     };
 
-    LiteGraph.registerNodeType("basic/set_object", SetObject );
+    // LiteGraph.registerNodeType("basic/set_object", SetObject );
 
 
     function MergeObjects() {
@@ -1105,7 +1105,7 @@
 		this.setOutputData(0,C);
     };
 
-    LiteGraph.registerNodeType("basic/merge_objects", MergeObjects );
+    // LiteGraph.registerNodeType("basic/merge_objects", MergeObjects );
 
     //Store as variable
     function Variable() {
@@ -1162,7 +1162,7 @@
         return this.properties.varname;
     };
 
-    LiteGraph.registerNodeType("basic/variable", Variable);
+    // LiteGraph.registerNodeType("basic/variable", Variable);
 
     function length(v) {
         if(v && v.length != null)
@@ -1170,12 +1170,12 @@
 		return 0;
     }
 
-    LiteGraph.wrapFunctionAsNode(
-        "basic/length",
-        length,
-        [""],
-        "number"
-    );
+    // LiteGraph.wrapFunctionAsNode(
+    //     "basic/length",
+    //     length,
+    //     [""],
+    //     "number"
+    // );
 
 	function DownloadData() {
         this.size = [60, 30];
@@ -1235,7 +1235,7 @@
         return this.title;
     };
 
-    LiteGraph.registerNodeType("basic/download", DownloadData);
+    // LiteGraph.registerNodeType("basic/download", DownloadData);
 
 
 
@@ -1284,7 +1284,7 @@
         this.inputs[0].label = Watch.toString(this.value);
     };
 
-    LiteGraph.registerNodeType("basic/watch", Watch);
+    // LiteGraph.registerNodeType("basic/watch", Watch);
 
     //in case one type doesnt match other type but you want to connect them anyway
     function Cast() {
@@ -1300,7 +1300,7 @@
         this.setOutputData(0, this.getInputData(0));
     };
 
-    LiteGraph.registerNodeType("basic/cast", Cast);
+    // LiteGraph.registerNodeType("basic/cast", Cast);
 
     //Show value inside the debug console
     function Console() {
@@ -1340,7 +1340,7 @@
         ];
     };
 
-    LiteGraph.registerNodeType("basic/console", Console);
+    // LiteGraph.registerNodeType("basic/console", Console);
 
     //Show value inside the debug console
     function Alert() {
@@ -1368,7 +1368,7 @@
         }, 10);
     };
 
-    LiteGraph.registerNodeType("basic/alert", Alert);
+    // LiteGraph.registerNodeType("basic/alert", Alert);
 
     //Execites simple code
     function NodeScript() {
@@ -1452,5 +1452,5 @@
         return [["C", ""]];
     };
 
-    LiteGraph.registerNodeType("basic/script", NodeScript);
+    // LiteGraph.registerNodeType("basic/script", NodeScript);
 })(this);

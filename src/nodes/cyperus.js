@@ -205,10 +205,10 @@ class CyperusDspSawtoothNode extends CyperusNode {
   }
 }
 
-// dsp/generator/sine
-class CyperusDspSineNode extends CyperusNode {
-    type = 'dsp/generator/sine';
-    title = 'sine';
+// audio/oscillator/sine
+class sine extends CyperusNode {
+    type = 'audio/oscillator/sine';
+    title = 'sine_oscillator';
     constructor(title) {	
 	super(title);
 	this.properties = { name: '', frequency: 0, amplitude: 1.0, phase: 0.0, precision: 1, is_module: true, 'module_parameters': []};
@@ -314,10 +314,10 @@ class CyperusDspDelayNode extends CyperusNode {
   }
 }
 
-// dsp/processor/envelope_follower
-class CyperusDspEnvelopeFollowerNode extends CyperusNode {
-  type = 'dsp/processor/envelope_follower';
-  title = 'envelope_follower';
+// motion/envelope/follower
+class follower extends CyperusNode {
+  type = 'motion/envelope/follower';
+  title = 'env_follower';
   constructor(title) {
     super(title)
       this.properties = { precision: 1, is_module: true};
@@ -648,7 +648,7 @@ class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
 	var step_val = 1.0 / this.anim_duration;
 	var progress = step_val * this.anim_pos;
 
-	var time_fraction = this.anim_pos / this.anim_duration;
+	var time_fraction = 1 - (this.anim_pos / this.anim_duration);
 	
 	ctx.moveTo(0, 130);
 	ctx.beginPath();
@@ -658,50 +658,20 @@ class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
 	var height;
 
 	x_pos = 0;
-	if( this.anim_pos < 23 ) {
-	    var new_width = Math.pow(this.anim_pos, 2);
-	    if( new_width > 210 ) {
-		width = 210;
-	    } else {
-		width = new_width;
+
+	var x_coeff = 0;
+	for (let a = 0, b = 1, result; 1; a += b, b /= 2) {
+	    if (time_fraction >= (7 - 4 * a) / 11) {
+		x_coeff = -Math.pow((11 - 6 * a - 11 * time_fraction) / 4, 2) + Math.pow(b, 2);
+		break;
 	    }
-
-	    if( width > 150 ) {
-		x_pos = width - 150;
-		width = width - x_pos;
-	    }
-	    height = 5;
-	} else if( this.anim_pos >= 23 && this.anim_pos < 38) {
-	    x_pos = 60;
-	    var width = 150;
-
-	    var x_coeff = Math.pow((this.anim_pos - 23) / 15, 2);
-
-	    width = (1 - x_coeff) * 150;
-	    x_pos = 40 + (150 - width);
-	    
-	    height = 5;
-	} else if( this.anim_pos >= 38 && this.anim_pos < 48) {
-	    width = 20;
-	    x_pos = 170;
-
-	    var x_coeff = Math.pow((this.anim_pos - 38) / 10, 2);
-
-	    width = (1 - x_coeff) * 40;
-	    x_pos = 210 - width;
-
-	    height = 5;
-
-	    console.log(width);
-	    console.log(x_pos);
-	} else {
-	    width = 5;
-	    x_pos = 205;
 	}
+	x_pos = (1 - x_coeff) * this.anim_duration;
+	width = 10 * 10 * x_coeff;
 	
 	ctx.roundRect(x_pos, 210, width, height);
 	    
-	ctx.fillStyle = "white";
+	ctx.fillStyle = "rgba(0, 191, 255, 1.0)";
 	ctx.fill();
 	
 	this.anim_pos = this.anim_pos + 1;
@@ -722,11 +692,11 @@ class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
 LiteGraph.registerNodeType("cyperus/main/inputs", MainInputsNode );
 LiteGraph.registerNodeType("cyperus/main/outputs", MainOutputsNode );
 LiteGraph.registerNodeType("dsp/generator/sawtooth", CyperusDspSawtoothNode );
-LiteGraph.registerNodeType("dsp/generator/sine", CyperusDspSineNode );
+LiteGraph.registerNodeType("audio/oscillator/sine", sine );
 LiteGraph.registerNodeType("dsp/generator/square", CyperusDspSquareNode );
 LiteGraph.registerNodeType("dsp/generator/triangle", CyperusDspTriangleNode );
 LiteGraph.registerNodeType("dsp/processor/delay", CyperusDspDelayNode );
-LiteGraph.registerNodeType("dsp/processor/envelope_follower", CyperusDspEnvelopeFollowerNode );
+LiteGraph.registerNodeType("motion/envelope/follower", follower );
 LiteGraph.registerNodeType("dsp/processor/filter_bandpass", CyperusDspFilterBandpassNode );
 LiteGraph.registerNodeType("dsp/processor/filter_highpass", CyperusDspFilterHighpassNode );
 LiteGraph.registerNodeType("dsp/processor/filter_varslope_lowpass", CyperusDspFilterVarslopeLowpassNode );
