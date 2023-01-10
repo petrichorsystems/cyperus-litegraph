@@ -285,10 +285,10 @@ class CyperusDspTriangleNode extends CyperusNode {
   }
 }
 
-// dsp/processor/delay
-class CyperusDspDelayNode extends CyperusNode {
-  type = 'dsp/processor/delay';
-  title = 'delay';
+// audio/delay/simple
+class simple extends CyperusNode {
+  type = 'audio/delay/simple';
+  title = 'delay simple';
   constructor(title) {
     super(title)
       this.properties = { precision: 1, is_module: true};
@@ -695,7 +695,7 @@ LiteGraph.registerNodeType("dsp/generator/sawtooth", CyperusDspSawtoothNode );
 LiteGraph.registerNodeType("audio/oscillator/sine", sine );
 LiteGraph.registerNodeType("dsp/generator/square", CyperusDspSquareNode );
 LiteGraph.registerNodeType("dsp/generator/triangle", CyperusDspTriangleNode );
-LiteGraph.registerNodeType("dsp/processor/delay", CyperusDspDelayNode );
+LiteGraph.registerNodeType("audio/delay/simple", simple );
 LiteGraph.registerNodeType("motion/envelope/follower", follower );
 LiteGraph.registerNodeType("dsp/processor/filter_bandpass", CyperusDspFilterBandpassNode );
 LiteGraph.registerNodeType("dsp/processor/filter_highpass", CyperusDspFilterHighpassNode );

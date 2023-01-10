@@ -440,17 +440,40 @@ class Cyperus {
 	);
     }
     
-    osc_add_module_delay(path,
-			 amplitude,
-			 time,
-			 feedback,
-			 callback,
-			 args) {
+    osc_add_module_audio_delay_simple(
+        request_id,
+        path,
+	amplitude,
+	time,
+	feedback,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/delay",
-		args: [path, parseFloat(amplitude), parseFloat(time), parseFloat(feedback)]
+		address: "/cyperus/add/module/audio/delay/simple",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    },
+                    {
+                        type: "f",
+                        value: time
+                    },
+                    {
+                        type: "f",
+                        value: feedback
+                    }
+                ]
 	    },
 	    callback,
 	    args
@@ -458,16 +481,18 @@ class Cyperus {
     }
 
     
-    osc_edit_module_delay(path,
-			  amplitude,
-			  time,
-			  feedback,
-			  callback,
-			  args) {
+    osc_edit_module_audio_delay_simple(
+        request_id,
+        path,
+	amplitude,
+	time,
+	feedback,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/delay",
+		address: "/cyperus/edit/module/audio/delay/simple",
 		args: [
                     {
                         type: "s",
@@ -2584,20 +2609,22 @@ class Cyperus {
 							   "1.0",
 							   _cyperus_util_create_new_dsp_module,
 							   node);
-	    } else if (!node.type.localeCompare("dsp/processor/delay")) {
-		console.log('_cyperus.osc_add_module_delay()');
+	    } else if (!node.type.localeCompare("audio/delay/simple")) {
+		console.log('_cyperus.osc_add_module_audio_delay_simple()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['time'] = "1.0";
 		node['properties']['feedback'] = "0.5";
 		
-		LiteGraph._cyperus.osc_add_module_delay(path,
-						       "1.0",
-						       "1.0",
-						       "0.5",
-						       _cyperus_util_create_new_dsp_module,
-						       node);
+		LiteGraph._cyperus.osc_add_module_audio_delay_simple(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+		    "1.0",
+		    "1.0",
+		    "0.5",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
 	    } else if (!node.type.localeCompare("motion/envelope/follower")) {
 		console.log('_cyperus.osc_add_module_motion_envelope_follower()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -3984,11 +4011,12 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/processor/delay")) {
+	} else if (!this.type.localeCompare("audio/delay/simple")) {
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('time', this.properties['time']);
 	    console.log('feeback', this.properties['feedback']);	    
-	    LiteGraph._cyperus.osc_edit_module_delay(
+	    LiteGraph._cyperus.osc_edit_module_audio_delay_simple(
+                LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
