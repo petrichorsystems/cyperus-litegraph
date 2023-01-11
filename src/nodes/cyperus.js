@@ -317,7 +317,7 @@ class simple extends CyperusNode {
 // motion/envelope/follower
 class follower extends CyperusNode {
   type = 'motion/envelope/follower';
-  title = 'env_follower';
+  title = 'env follower';
   constructor(title) {
     super(title)
       this.properties = { precision: 1, is_module: true};
@@ -325,7 +325,7 @@ class follower extends CyperusNode {
 	  {
 	      param_name: "attack",
 	      param_type: "text",
-	      param: this.properties.frequency
+	      param: this.properties.attack
 	  },
 	  {
 	      param_name: "decay",
