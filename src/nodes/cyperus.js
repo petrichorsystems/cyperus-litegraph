@@ -180,34 +180,9 @@ class MainOutputsNode extends CyperusNode {
   }
 }
 
-
-// dsp/generator/sawtooth
-class CyperusDspSawtoothNode extends CyperusNode {
-  type = 'dsp/generator/sawtooth';
-  title = 'sawtooth';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-      this.properties['module_parameters'] = [
-	  {
-	      param_name: "frequency",
-	      param_type: "text",
-	      param: this.properties.frequency
-	  },
-	  {
-	      param_name: "amplitude",
-	      param_type: "text",
-	      param: this.properties.amplitude		    
-	  }
-      ];
-    this.onExecute = () => {
-    }
-  }
-}
-
-// audio/oscillator/sine
+// oscillator/sine
 class sine extends CyperusNode {
-    type = 'audio/oscillator/sine';
+    type = 'oscillator/sine';
     title = 'sine_oscillator';
     constructor(title) {	
 	super(title);
@@ -236,34 +211,9 @@ class sine extends CyperusNode {
     }
 }
 
-// dsp/generator/square
-class CyperusDspSquareNode extends CyperusNode {
-  type = 'dsp/generator/square';
-  title = 'square';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-
-      this.properties['module_parameters'] = [
-	  {
-	      param_name: "frequency",
-	      param_type: "text",
-	      param: this.properties.frequency
-	  },
-	  {
-	      param_name: "amplitude",
-	      param_type: "text",
-	      param: this.properties.amplitude		    
-	  }
-      ];
-      this.onExecute = () => {
-    }
-  }
-}
-
-// dsp/generator/triangle
-class CyperusDspTriangleNode extends CyperusNode {
-  type = 'dsp/generator/triangle';
+// oscillator/sine
+class triangle extends CyperusNode {
+  type = 'oscillator/sine';
   title = 'triangle';
   constructor(title) {
     super(title)
@@ -285,9 +235,9 @@ class CyperusDspTriangleNode extends CyperusNode {
   }
 }
 
-// audio/delay/simple
+// delay/simple
 class simple extends CyperusNode {
-  type = 'audio/delay/simple';
+  type = 'delay/simple';
   title = 'delay simple';
   constructor(title) {
     super(title)
@@ -314,9 +264,9 @@ class simple extends CyperusNode {
   }
 }
 
-// motion/envelope/follower
+// envelope/follower
 class follower extends CyperusNode {
-  type = 'motion/envelope/follower';
+  type = 'envelope/follower';
   title = 'env follower';
   constructor(title) {
     super(title)
@@ -340,88 +290,6 @@ class follower extends CyperusNode {
       ];
       this.onExecute = () => {
       }
-  }
-}
-
-// dsp/processor/filter_bandpass
-class CyperusDspFilterBandpassNode extends CyperusNode {
-  type = 'dsp/processor/filter_bandpass';
-  title = 'filter_bandpass';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-            this.properties['module_parameters'] = [
-	  {
-	      param_name: "amplitude",
-	      param_type: "text",
-	      param: this.properties.frequency
-	  },
-	  {
-	      param_name: "cutoff",
-	      param_type: "text",
-	      param: this.properties.amplitude		    
-	  },
-	  {
-	      param_name: "q",
-	      param_type: "text",
-	      param: this.properties.amplitude		    
-	  }
-      ];
-    this.onExecute = () => {
-    }
-  }
-}
-
-// dsp/processor/filter_highpass
-class CyperusDspFilterHighpassNode extends CyperusNode {
-  type = 'dsp/processor/filter_highpass';
-  title = 'filter_highpass';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-      this.properties['module_parameters'] = [
-	  {
-	      param_name: "amplitude",
-	      param_type: "text",
-	      param: this.properties.frequency
-	  },
-	  {
-	      param_name: "cutoff",
-	      param_type: "text",
-	      param: this.properties.amplitude		    
-	  }
-      ]
-      this.onExecute = () => {
-      }
-  }
-}
-
-// dsp/processor/filter_varslope_lowpass
-class CyperusDspFilterVarslopeLowpassNode extends CyperusNode {
-  type = 'dsp/processor/filter_varslope_lowpass';
-  title = 'filter_varslope_lowpass';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-      this.properties['module_parameters'] = [
-	  {
-	      param_name: "amplitude",
-	      param_type: "text",
-	      param: this.properties.frequency
-	  },
-	  {
-	      param_name: "slope",
-	      param_type: "text",
-	      param: this.properties.frequency
-	  },
-	  {
-	      param_name: "cutoff_freq",
-	      param_type: "text",
-	      param: this.properties.amplitude		    
-	  }
-      ]
-      this.onExecute = () => {
-    }
   }
 }
 
@@ -459,9 +327,9 @@ class CyperusNetworkOscTransmitNode extends CyperusNode {
   }
 }
 
-// movement/osc/metronome
-class CyperusMovementOscMetronomeNode extends CyperusNode {
-  type = 'movement/osc/metronome';
+// osc/metronome
+class metronome extends CyperusNode {
+  type = 'osc/metronome';
   title = 'osc metronome';
   constructor(title) {
     super(title)
@@ -592,9 +460,9 @@ class CyperusMovementOscMetronomeNode extends CyperusNode {
     }
 }
 
-// audio/analysis/transient_detector
+// analysis/transient_detector
 class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
-  type = 'cyperus/audio/analysis/transient_detector';
+  type = 'cyperus/analysis/transient_detector';
   title = 'transient detector';
   constructor(title) {
     super(title)
@@ -691,18 +559,12 @@ class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
 //register in the system
 LiteGraph.registerNodeType("cyperus/main/inputs", MainInputsNode );
 LiteGraph.registerNodeType("cyperus/main/outputs", MainOutputsNode );
-LiteGraph.registerNodeType("dsp/generator/sawtooth", CyperusDspSawtoothNode );
-LiteGraph.registerNodeType("audio/oscillator/sine", sine );
-LiteGraph.registerNodeType("dsp/generator/square", CyperusDspSquareNode );
-LiteGraph.registerNodeType("dsp/generator/triangle", CyperusDspTriangleNode );
-LiteGraph.registerNodeType("audio/delay/simple", simple );
-LiteGraph.registerNodeType("motion/envelope/follower", follower );
-LiteGraph.registerNodeType("dsp/processor/filter_bandpass", CyperusDspFilterBandpassNode );
-LiteGraph.registerNodeType("dsp/processor/filter_highpass", CyperusDspFilterHighpassNode );
-LiteGraph.registerNodeType("dsp/processor/filter_varslope_lowpass", CyperusDspFilterVarslopeLowpassNode );
+LiteGraph.registerNodeType("oscillator/sine", sine );
+LiteGraph.registerNodeType("delay/simple", simple );
+LiteGraph.registerNodeType("envelope/follower", follower );
 LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
-LiteGraph.registerNodeType("movement/osc/metronome", CyperusMovementOscMetronomeNode );
-LiteGraph.registerNodeType("audio/analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );
+LiteGraph.registerNodeType("osc/metronome", metronome );
+LiteGraph.registerNodeType("analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );
     
 })(this);
 

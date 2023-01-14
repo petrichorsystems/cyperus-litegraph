@@ -311,7 +311,7 @@ class Cyperus {
 	);
     }
     
-    osc_add_module_audio_oscillator_sine(
+    osc_add_module_oscillator_sine(
         request_id,
         path,
 	frequency,
@@ -322,7 +322,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/audio/oscillator/sine",
+		address: "/cyperus/add/module/oscillator/sine",
 		args: [
                     {
                         type: "s",
@@ -351,7 +351,7 @@ class Cyperus {
 	);
     }
 
-    osc_edit_module_audio_oscillator_sine(
+    osc_edit_module_oscillator_sine(
         request_id,
         path,
 	frequency,
@@ -359,11 +359,11 @@ class Cyperus {
 	phase,
 	callback,
 	args) {
-	console.log('osc_edit_module_audio_oscillator_sine..');
+	console.log('osc_edit_module_oscillator_sine..');
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/audio/oscillator/sine",
+		address: "/cyperus/edit/module/oscillator/sine",
 		args: [
                     {
                         type: "s",
@@ -408,39 +408,77 @@ class Cyperus {
 	);
     }
     
-    osc_add_module_triangle(path,
-			frequency,
-			amplitude,
-			callback,
-			 args) {
+    osc_add_module_oscillator_triangle(
+        request_id,
+        path,
+	frequency,
+	amplitude,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/triangle",
-		args: [path, parseFloat(frequency), parseFloat(amplitude)]
+		address: "/cyperus/add/module/oscillator/triangle",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: frequency
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    }
+                ]
 	    },
 	    callback,
 	    args
 	);
     }
     
-    osc_edit_module_triangle(path,
-			     frequency,
-			     amplitude,
-			     callback,
-			     args) {
+    osc_edit_module_oscillator_triangle(
+        request_id,
+        path,
+	frequency,
+	amplitude,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/triangle",
-		args: [path, parseFloat(frequency), parseFloat(amplitude)]
+		address: "/cyperus/edit/module/oscillator/triangle",
+                args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: frequency
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    }
+                ]
 	    },
 	    callback,
 	    args
 	);
     }
     
-    osc_add_module_audio_delay_simple(
+    osc_add_module_delay_simple(
         request_id,
         path,
 	amplitude,
@@ -451,7 +489,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/audio/delay/simple",
+		address: "/cyperus/add/module/delay/simple",
 		args: [
                     {
                         type: "s",
@@ -481,7 +519,7 @@ class Cyperus {
     }
 
     
-    osc_edit_module_audio_delay_simple(
+    osc_edit_module_delay_simple(
         request_id,
         path,
 	amplitude,
@@ -492,7 +530,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/audio/delay/simple",
+		address: "/cyperus/edit/module/delay/simple",
 		args: [
                     {
                         type: "s",
@@ -522,7 +560,7 @@ class Cyperus {
     }
 
     
-    osc_add_module_motion_envelope_follower(request_id,
+    osc_add_module_envelope_follower(request_id,
                                             path,
 				            attack,
 				            decay,
@@ -532,7 +570,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/motion/envelope/follower",
+		address: "/cyperus/add/module/envelope/follower",
 		args: [
                     {
                         type: "s",
@@ -562,7 +600,7 @@ class Cyperus {
     }
 
     
-    osc_edit_module_motion_envelope_follower(request_id,
+    osc_edit_module_envelope_follower(request_id,
                                              path,
 				             attack,
 				             decay,
@@ -572,7 +610,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/motion/envelope/follower",
+		address: "/cyperus/edit/module/envelope/follower",
 		args: [
                     {
                         type: "s",
@@ -736,7 +774,7 @@ class Cyperus {
 	);				     
     }    
 
-    osc_add_module_audio_analysis_transient_detector(path,
+    osc_add_module_analysis_transient_detector(path,
 						     sensitivity,
 						     attack_ms,
 						     decay_ms,
@@ -746,7 +784,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/audio/analysis/transient_detector",
+		address: "/cyperus/add/module/analysis/transient_detector",
 		args: [path, parseFloat(sensitivity), parseFloat(attack_ms), parseFloat(decay_ms), parseFloat(scale)],
 	    },
 	    callback,
@@ -755,7 +793,7 @@ class Cyperus {
     }
     
     
-    osc_edit_module_audio_analysis_transient_detector(path,
+    osc_edit_module_analysis_transient_detector(path,
 						      sensitivity,
 						      attack_ms,
 						      decay_ms,
@@ -765,7 +803,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/audio/analysis/transient_detector",
+		address: "/cyperus/edit/module/analysis/transient_detector",
 		args: [path, parseFloat(sensitivity), parseFloat(attack_ms), parseFloat(decay_ms), parseFloat(scale)],
 	    },
 	    callback,
@@ -2569,15 +2607,15 @@ class Cyperus {
 							   1.0,
 							   _cyperus_util_create_new_dsp_module,
 							   node);
-	    } else if (!node.type.localeCompare("audio/oscillator/sine")) {
-		console.log('_cyperus.osc_add_module_audio_oscillator_sine()');
+	    } else if (!node.type.localeCompare("oscillator/sine")) {
+		console.log('_cyperus.osc_add_module_oscillator_sine()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['phase'] = "0.0";
 		
-		LiteGraph._cyperus.osc_add_module_audio_oscillator_sine(
+		LiteGraph._cyperus.osc_add_module_oscillator_sine(
                     LiteGraph._cyperus.uuidv4(),
                     path,
 		    "440.0",
@@ -2609,15 +2647,15 @@ class Cyperus {
 							   "1.0",
 							   _cyperus_util_create_new_dsp_module,
 							   node);
-	    } else if (!node.type.localeCompare("audio/delay/simple")) {
-		console.log('_cyperus.osc_add_module_audio_delay_simple()');
+	    } else if (!node.type.localeCompare("delay/simple")) {
+		console.log('_cyperus.osc_add_module_delay_simple()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['time'] = "1.0";
 		node['properties']['feedback'] = "0.5";
 		
-		LiteGraph._cyperus.osc_add_module_audio_delay_simple(
+		LiteGraph._cyperus.osc_add_module_delay_simple(
                     LiteGraph._cyperus.uuidv4(),
                     path,
 		    "1.0",
@@ -2625,15 +2663,15 @@ class Cyperus {
 		    "0.5",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
-	    } else if (!node.type.localeCompare("motion/envelope/follower")) {
-		console.log('_cyperus.osc_add_module_motion_envelope_follower()');
+	    } else if (!node.type.localeCompare("envelope/follower")) {
+		console.log('_cyperus.osc_add_module_envelope_follower()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['attack'] = "1.0";
 		node['properties']['decay'] = "1.0";
 		node['properties']['scale'] = "1.0";
 		
-		LiteGraph._cyperus.osc_add_module_motion_envelope_follower(
+		LiteGraph._cyperus.osc_add_module_envelope_follower(
                     LiteGraph._cyperus.uuidv4(),
                     path,
 		    "1.0",
@@ -2708,8 +2746,8 @@ class Cyperus {
 									 60.0,
 									 _cyperus_util_create_new_dsp_module,
 									 node);
-	    } else if (!node.type.localeCompare("audio/analysis/transient_detector")) {
-		console.log('_cyperus.osc_add_moodule_audio_analysis_transient_detector()');
+	    } else if (!node.type.localeCompare("analysis/transient_detector")) {
+		console.log('_cyperus.osc_add_moodule_analysis_transient_detector()');
 		var path = _cyperus_util_get_current_bus_path();
 
 		node['properties']['sensitivity'] = "0.50";
@@ -2718,13 +2756,13 @@ class Cyperus {
 		node['properties']['scale'] = "1.0";
 		node.properties['listener'] = true;
 		
-		LiteGraph._cyperus.osc_add_module_audio_analysis_transient_detector(path,
-										    0.5,
-										    5.0,
-										    5.0,
-										    1.0,
-										    _cyperus_util_create_new_dsp_module,
-										    node);
+		LiteGraph._cyperus.osc_add_module_analysis_transient_detector(path,
+									      0.5,
+									      5.0,
+									      5.0,
+									      1.0,
+									      _cyperus_util_create_new_dsp_module,
+									      node);
 	    }
 
 	}
@@ -3977,11 +4015,11 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("audio/oscillator/sine")) {
+	} else if (!this.type.localeCompare("oscillator/sine")) {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
-	    LiteGraph._cyperus.osc_edit_module_audio_oscillator_sine(
+	    LiteGraph._cyperus.osc_edit_module_oscillator_sine(
                 LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
@@ -4011,11 +4049,11 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("audio/delay/simple")) {
+	} else if (!this.type.localeCompare("delay/simple")) {
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('time', this.properties['time']);
 	    console.log('feeback', this.properties['feedback']);	    
-	    LiteGraph._cyperus.osc_edit_module_audio_delay_simple(
+	    LiteGraph._cyperus.osc_edit_module_delay_simple(
                 LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
@@ -4024,11 +4062,11 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("motion/envelope/follower")) {
+	} else if (!this.type.localeCompare("envelope/follower")) {
 	    console.log('attack', this.properties['attack']);
 	    console.log('decay', this.properties['decay']);
 	    console.log('scale', this.properties['scale']);	    
-	    LiteGraph._cyperus.osc_edit_module_motion_envelope_follower(
+	    LiteGraph._cyperus.osc_edit_module_envelope_follower(
                 LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
@@ -4093,12 +4131,12 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	}  else if (!this.type.localeCompare("audio/analysis/transient_detector")) {
+	}  else if (!this.type.localeCompare("analysis/transient_detector")) {
 	    console.log('sensitivity', this.properties['sensitivity']);
 	    console.log('attack_ms', this.properties['attack_ms']);
 	    console.log('decay_ms', this.properties['decay_ms']);
 	    console.log('scale', this.properties['scale']);
-	    LiteGraph._cyperus.osc_edit_module_audio_analysis_transient_detector(
+	    LiteGraph._cyperus.osc_edit_module_analysis_transient_detector(
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
