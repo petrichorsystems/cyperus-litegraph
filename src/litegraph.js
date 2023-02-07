@@ -639,17 +639,79 @@ class Cyperus {
 	);				     
     }
 
-    osc_add_module_filter_bandpass(path,
-				   amplitude,
-				   cutoff_freq,
+    osc_add_module_filter_bandpass(request_id,
+                                   path,
+				   cutoff_frequency,
 				   q,
+				   amplitude,                                   
 				   callback,
 				   args) {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/bandpass",
-		args: [path, parseFloat(amplitude), parseFloat(cutoff_freq), parseFloat(q)],
+		address: "/cyperus/add/module/filter/bandpass",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: cutoff_frequency
+                    },
+                    {
+                        type: "f",
+                        value: q
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    },
+                ],
+	    },
+	    callback,
+	    args
+	);				     
+    }
+
+    osc_edit_module_filter_bandpass(request_id,
+                                    path,
+				    cutoff_frequency,
+                         	    q,
+                                    amplitude,
+				    callback,
+				    args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/filter/bandpass",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: cutoff_frequency
+                    },
+                    {
+                        type: "f",
+                        value: q
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    },
+                    
+                ],
 	    },
 	    callback,
 	    args
@@ -2635,18 +2697,20 @@ class Cyperus {
 							 "1.0",
 							 _cyperus_util_create_new_dsp_module,
 							 node);
-	    } else if (!node.type.localeCompare("dsp/generator/triangle")) {
-		console.log('_cyperus.osc_add_module_triangle()');
+	    } else if (!node.type.localeCompare("oscillator/triangle")) {
+		console.log('_cyperus.osc_add_module_oscillator_triangle()');
 		var path = _cyperus_util_get_current_bus_path();
 		
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
 
-		LiteGraph._cyperus.osc_add_module_triangle(path,
-							   "440",
-							   "1.0",
-							   _cyperus_util_create_new_dsp_module,
-							   node);
+		LiteGraph._cyperus.osc_add_module_oscillator_triangle(
+                    LiteGraph._cyperus.uuidv4(), 
+                    path,
+		    "440",
+		    "1.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
 	    } else if (!node.type.localeCompare("delay/simple")) {
 		console.log('_cyperus.osc_add_module_delay_simple()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -2679,20 +2743,22 @@ class Cyperus {
 		    "1.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
-	    } else if (!node.type.localeCompare("dsp/processor/filter_bandpass")) {
+	    } else if (!node.type.localeCompare("filter/bandpass")) {
 		console.log('_cyperus.osc_add_module_filter_bandpass()');
 		var path = _cyperus_util_get_current_bus_path();
 		
-		node['properties']['amplitude'] = "1.0";
-		node['properties']['cutoff'] = "100.0";
+		node['properties']['cutoff_frequency'] = "100.0";
 		node['properties']['q'] = "10.0";
+		node['properties']['amplitude'] = "1.0";                
 		
-		LiteGraph._cyperus.osc_add_module_filter_bandpass(path,
-								  "1.0",
-								  "100.0",
-								  "10.0",
-								  _cyperus_util_create_new_dsp_module,
-								  node);
+		LiteGraph._cyperus.osc_add_module_filter_bandpass(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+		    "100.0",
+		    "10.0",
+                    "1.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
 	    } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
 		console.log('_cyperus.osc_add_module_filter_highpass()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -4039,10 +4105,11 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/generator/triangle")) {
+	} else if (!this.type.localeCompare("oscillator/triangle")) {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']); 
-	    LiteGraph._cyperus.osc_edit_module_triangle(
+	    LiteGraph._cyperus.osc_edit_module_oscillator_triangle(
+                LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,
@@ -4075,11 +4142,12 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/processor/filter_bandpass")) {
+	} else if (!this.type.localeCompare("filter/bandpass")) {
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('cutoff', this.properties['cutoff']);
 	    console.log('q', this.properties['q']);	    
 	    LiteGraph._cyperus.osc_edit_module_filter_bandpass(
+                LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
 		this.widgets[1].value,

@@ -293,6 +293,36 @@ class follower extends CyperusNode {
   }
 }
 
+// filter/bandpass
+class bandpass extends CyperusNode {
+  type = 'filter/bandpass';
+  title = 'filter bandpass';
+  constructor(title) {
+    super(title)
+      this.properties = { precision: 1, is_module: true};
+      this.properties['module_parameters'] = [
+	  {
+	      param_name: "cutoff_frequency",
+	      param_type: "text",
+	      param: this.properties.time		    
+	  },
+	  {
+	      param_name: "q",
+	      param_type: "text",
+	      param: this.properties.feedback
+	  },
+	  {
+	      param_name: "amplitude",
+	      param_type: "text",
+	      param: this.properties.amplitude
+	  }          
+      ];
+    this.onExecute = () => {
+    }
+  }
+}
+
+    
 // network/osc/transmit
 class CyperusNetworkOscTransmitNode extends CyperusNode {
   type = 'network/osc/transmit';
@@ -560,11 +590,13 @@ class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
 LiteGraph.registerNodeType("cyperus/main/inputs", MainInputsNode );
 LiteGraph.registerNodeType("cyperus/main/outputs", MainOutputsNode );
 LiteGraph.registerNodeType("oscillator/sine", sine );
+LiteGraph.registerNodeType("oscillator/triangle", triangle );
 LiteGraph.registerNodeType("delay/simple", simple );
 LiteGraph.registerNodeType("envelope/follower", follower );
-LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
-LiteGraph.registerNodeType("osc/metronome", metronome );
-LiteGraph.registerNodeType("analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );
+LiteGraph.registerNodeType("filter/bandpass", bandpass);    
+// LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
+// LiteGraph.registerNodeType("osc/metronome", metronome );
+// LiteGraph.registerNodeType("analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );
     
 })(this);
 
