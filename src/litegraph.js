@@ -36,7 +36,7 @@ class Cyperus {
 	    var split_response = response['address'].split('/');
 	    var module_id = split_response[split_response.length - 1];
 	    var clbk_data = this.listeners[module_id]
-	    clbk_data[0](clbk_data[1]);
+	    clbk_data[0](clbk_data[1], response);
 	    
 	} else {
 	    var dequeued = self.callback_queue.shift();
@@ -835,6 +835,67 @@ class Cyperus {
 	    args
 	);				     
     }    
+
+    osc_add_module_osc_float(request_id,
+                            path,
+			    value,
+			    callback,
+			    args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/osc/float",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: value
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    
+    osc_edit_module_osc_float(request_id,
+                              path,
+			      value,
+			      callback,
+			      args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/osc/float",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },                    
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: value
+                    }                    
+                ],
+	    },
+	    callback,
+	    args
+	);				     
+    }    
+
+
 
     osc_add_module_analysis_transient_detector(path,
 						     sensitivity,
@@ -2513,12 +2574,12 @@ class Cyperus {
 	    }
 	}
 	
-	// node.graph.list_of_graphcanvas[0].drawNodeWidgets(
-	//     node,
-	//     0,
-	//     node.graph.list_of_graphcanvas[0].bgctx,
-	//     null
-	// );
+	node.graph.list_of_graphcanvas[0].drawNodeWidgets(
+	    node,
+	    0,
+	    node.graph.list_of_graphcanvas[0].bgctx,
+	    null
+	);
     }
 
     function _cyperus_util_create_new_dsp_module(response, args) {
@@ -2529,7 +2590,7 @@ class Cyperus {
 	node.properties['id'] = response[2];
 
 	if( node.properties['listener'] ) {
-	    LiteGraph._cyperus.register_osc_listener(response[0], node.osc_listener_callback, node);
+	    LiteGraph._cyperus.register_osc_listener(response[2], node.osc_listener_callback, node);
 	}
 	
 	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[2]);
@@ -2812,6 +2873,20 @@ class Cyperus {
 									 60.0,
 									 _cyperus_util_create_new_dsp_module,
 									 node);
+	    } else if (!node.type.localeCompare("osc/float")) {
+		console.log('_cyperus.osc_add_module_osc_float()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['value'] = "0.0";
+		node.properties['listener'] = true;
+		
+		LiteGraph._cyperus.osc_add_module_osc_float(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+		    0.0,
+		    _cyperus_util_create_new_dsp_module,
+		    node);
+                
 	    } else if (!node.type.localeCompare("analysis/transient_detector")) {
 		console.log('_cyperus.osc_add_moodule_analysis_transient_detector()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -4050,16 +4125,25 @@ class Cyperus {
      * @param {*} value
      */
     LGraphNode.prototype.setProperty = function(name, value) {
+        console.log('this.properties');
+        console.log(this.properties);
+        console.log('this.type');
+        console.log(this.type);
+        
         if (!this.properties) {
             this.properties = {};
         }
-		if( value === this.properties[name] )
-			return;
-		var prev_value = this.properties[name];
+
+        if  (this.type.localeCompare("osc/float"))
+	    if( value === this.properties[name] ) {
+	        return;
+            }
+        
+	var prev_value = this.properties[name];
         this.properties[name] = value;
         if (this.onPropertyChanged) {
             if( this.onPropertyChanged(name, value, prev_value) === false ) //abort change
-				this.properties[name] = prev_value;
+		this.properties[name] = prev_value;
         }
 
 
@@ -4199,6 +4283,15 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
+	}  else if (!this.type.localeCompare("osc/float")) {
+	    console.log('value', this.properties['value']);
+	    LiteGraph._cyperus.osc_edit_module_osc_float(
+                LiteGraph._cyperus.uuidv4(),
+		current_path,
+		this.properties.value,
+		console.log,
+		undefined
+	    )            
 	}  else if (!this.type.localeCompare("analysis/transient_detector")) {
 	    console.log('sensitivity', this.properties['sensitivity']);
 	    console.log('attack_ms', this.properties['attack_ms']);
@@ -10703,6 +10796,85 @@ LGraphNode.prototype.executeAction = function(action)
 						ctx.restore();
                     }
                     break;
+                case "knob":
+                    // if (this.flags.collapsed) {
+                    //     return;
+                    // }
+
+                    // if (node.value == -1) {
+                    //     node.value =
+                    //         (node.properties.value - node.properties.min) /
+                    //         (node.properties.max - node.properties.min);
+                    // }
+
+                    // var center_x = width * 0.5;
+                    // var center_y = H * 0.5;
+                    // var radius = Math.min(width, H) * 0.5 - 5;
+                    // var w = Math.floor(radius * 0.05);
+
+                    // ctx.globalAlpha = 1;
+                    // ctx.save();
+                    // ctx.translate(center_x, center_y);
+                    // ctx.rotate(Math.PI * 0.75);
+
+                    // //bg
+                    // ctx.fillStyle = "rgba(0,0,0,0.5)";
+                    // ctx.beginPath();
+                    // ctx.moveTo(0, 0);
+                    // ctx.arc(0, 0, radius, 0, Math.PI * 1.5);
+                    // ctx.fill();
+
+                    // //value
+                    // ctx.strokeStyle = "black";
+                    // ctx.fillStyle = node.properties.color;
+                    // ctx.lineWidth = 2;
+                    // ctx.beginPath();
+                    // ctx.moveTo(0, 0);
+                    // ctx.arc(
+                    //     0,
+                    //     0,
+                    //     radius - 4,
+                    //     0,
+                    //     Math.PI * 1.5 * Math.max(0.01, node.value)
+                    // );
+                    // ctx.closePath();
+                    // ctx.fill();
+                    // //ctx.stroke();
+                    // ctx.lineWidth = 1;
+                    // ctx.globalAlpha = 1;
+                    // ctx.restore();
+
+                    // //inner
+                    // ctx.fillStyle = "black";
+                    // ctx.beginPath();
+                    // ctx.arc(center_x, center_y, radius * 0.75, 0, Math.PI * 2, true);
+                    // ctx.fill();
+
+                    // //miniball
+                    // ctx.fillStyle = node.mouseOver ? "white" : node.properties.color;
+                    // ctx.beginPath();
+                    // var angle = node.value * Math.PI * 1.5 + Math.PI * 0.75;
+                    // ctx.arc(
+                    //     center_x + Math.cos(angle) * radius * 0.65,
+                    //     center_y + Math.sin(angle) * radius * 0.65,
+                    //     radius * 0.05,
+                    //     0,
+                    //     Math.PI * 2,
+                    //     true
+                    // );
+                    // ctx.fill();
+
+                    // //text
+                    // ctx.fillStyle = node.mouseOver ? "white" : "#AAA";
+                    // ctx.font = Math.floor(radius * 0.5) + "px Arial";
+                    // ctx.textAlign = "center";
+                    // // ctx.fillText(
+                    // //     node.properties.value.toFixed(node.properties.precision),
+                    // //     center_x,
+                    // //     center_y + radius * 0.15
+                    // // );
+     
+                    break;
                 default:
                     if (w.draw) {
                         w.draw(ctx, node, widget_width, y, H);
@@ -10774,8 +10946,16 @@ LGraphNode.prototype.executeAction = function(action)
 							inner_value_change(w, w.value);
 						}, 20);
 					}
-					this.dirty_canvas = true;
-					break;
+			                this.dirty_canvas = true;
+                            
+                                        // if (event.type == "mousedown") {
+	         			//     this.prompt("Value",w.value,function(v) {
+		      		        //     this.value = v;
+		    		        //     inner_value_change(this, v);
+				        // }.bind(w),
+					//    event,w.options ? w.options.multiline : false );
+			                // }
+			                break;
 				case "number":
 				case "combo":
 					var old_value = w.value;
@@ -10881,7 +11061,59 @@ LGraphNode.prototype.executeAction = function(action)
 							event,w.options ? w.options.multiline : false );
 					}
 					break;
-				default:
+                                // case "knob":
+
+                                //     if (event.type == "mousedown") {
+
+                                //         console.log('w');
+                                //         console.log(w);
+
+                                //             w.center = [node.size[0] * 0.5, node.size[1] * 0.5 + 20];
+                                //             w.radius = node.size[0] * 0.5;
+                                //             if (
+                                //                 event.canvasY - node.pos[1] < 20 ||
+                                //                 LiteGraph.distance(
+                                //                     [event.canvasX, event.canvasY],
+                                //                     [node.pos[0] + node.center[0], node.pos[1] + node.center[1]]
+                                //                 ) > w.radius
+                                //             ) {
+                                //                 return false;
+                                //             }
+                                //             w.oldmouse = [event.canvasX - node.pos[0], event.canvasY - node.pos[1]];
+                                //             w.captureInput(true);
+                                //     }
+
+                                //     if (event.type == "mousemove") {
+                                //         if (!w.oldmouse) {
+                                //             return;
+                                //         }
+
+                                //         var m = [e.canvasX - w.pos[0], e.canvasY - w.pos[1]];
+
+                                //         var v = w.value;
+                                //         v -= (m[1] - w.oldmouse[1]) * 0.01;
+                                //         if (v > 1.0) {
+                                //             v = 1.0;
+                                //         } else if (v < 0.0) {
+                                //             v = 0.0;
+                                //         }
+                                //         w.value = v;
+                                //         w.properties.value =
+                                //             w.properties.min +
+                                //             (w.properties.max - w.properties.min) * w.value;
+                                //         w.oldmouse = m;
+                                //         this.dirty_canvas = true;
+                                //     }
+
+                                //     if (event.type == "mouseup") {
+                                //         if (w.oldmouse) {
+                                //             w.oldmouse = null;
+                                //             w.captureInput(false);
+                                //         }
+                                //     }
+                            
+                                //     break;
+			        default:
 					if (w.mouse) {
 						this.dirty_canvas = w.mouse(event, [x, y], node);
 					}
