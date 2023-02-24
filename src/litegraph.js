@@ -49,7 +49,6 @@ class Cyperus {
     _send(message, callback, args) {
 	var self = this;
 	self._waitForConnection(function () {
-            console.log("WRITE");
             self.socket.send(self.osc.writePacket(message,
                                                   {
                                                       metadata: true,
@@ -455,6 +454,77 @@ class Cyperus {
 	    {
 		address: "/cyperus/edit/module/oscillator/triangle",
                 args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: frequency
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_add_module_oscillator_clock(
+        request_id,
+        path,
+	frequency,
+	amplitude,
+	callback,
+	args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/oscillator/clock",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: frequency
+                    },
+                    {
+                        type: "f",
+                        value: amplitude
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_edit_module_oscillator_clock(
+        request_id,
+        path,
+	frequency,
+	amplitude,
+	callback,
+	args) {
+	console.log('osc_edit_module_oscillator_clock..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/oscillator/clock",
+		args: [
                     {
                         type: "s",
                         value: request_id
@@ -934,6 +1004,126 @@ class Cyperus {
 	);				     
     }    
 
+    osc_add_module_utils_counter(request_id,
+                                 path,
+                                 reset,
+                                 start,
+                                 step_size,
+                                 min,
+                                 max,
+                                 direction,
+                                 auto_reset,
+			         callback,
+			         args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/utils/counter",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: reset
+                    },                    
+                    {
+                        type: "f",
+                        value: start
+                    },
+                    {
+                        type: "f",
+                        value: step_size
+                    },
+                    {
+                        type: "f",
+                        value: min
+                    },
+                    {
+                        type: "f",
+                        value: max
+                    },
+                    {
+                        type: "f",
+                        value: direction
+                    },
+                    {
+                        type: "f",
+                        value: auto_reset
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    
+    osc_edit_module_utils_counter(request_id,
+                                  path,
+                                  reset,
+                                  start,
+                                  step_size,
+                                  min,
+                                  max,
+                                  direction,
+                                  auto_reset,
+			          callback,
+			          args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/utils/counter",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },                    
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: reset
+                    },                    
+                    {
+                        type: "f",
+                        value: start
+                    },
+                    {
+                        type: "f",
+                        value: step_size
+                    },
+                    {
+                        type: "f",
+                        value: min
+                    },
+                    {
+                        type: "f",
+                        value: max
+                    },
+                    {
+                        type: "f",
+                        value: direction
+                    },
+                    {
+                        type: "f",
+                        value: auto_reset
+                    }     
+                ],
+	    },
+	    callback,
+	    args
+	);				     
+    }    
+
+    
 }
 
 
@@ -2737,6 +2927,8 @@ class Cyperus {
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['phase'] = "0.0";
+
+                node['properties']['listener'] = true;
 		
 		LiteGraph._cyperus.osc_add_module_oscillator_sine(
                     LiteGraph._cyperus.uuidv4(),
@@ -2772,6 +2964,22 @@ class Cyperus {
 		    "1.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
+	    } else if (!node.type.localeCompare("oscillator/clock")) {
+		console.log('_cyperus.osc_add_module_oscillator_clock()');
+		var path = _cyperus_util_get_current_bus_path();
+
+		node['properties']['frequency'] = "440.0";
+		node['properties']['amplitude'] = "1.0";
+
+                node['properties']['listener'] = true;
+		
+		LiteGraph._cyperus.osc_add_module_oscillator_clock(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+		    "440.0",
+		    "1.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);                
 	    } else if (!node.type.localeCompare("delay/simple")) {
 		console.log('_cyperus.osc_add_module_delay_simple()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -2904,7 +3112,33 @@ class Cyperus {
 									      1.0,
 									      _cyperus_util_create_new_dsp_module,
 									      node);
-	    }
+	    } else if (!node.type.localeCompare("utils/counter")) {
+		console.log('_cyperus.osc_add_module_utils_counter()');
+		var path = _cyperus_util_get_current_bus_path();
+
+                node['properties']['reset'] = "0.0";
+		node['properties']['start'] = "0.0";
+		node['properties']['step_size'] = "1.0";
+		node['properties']['min'] = "0.0";
+                node['properties']['max'] = "16.0";
+                node['properties']['direction'] = "1.0";
+                node['properties']['auto_reset'] = "0.0";
+
+                node['properties']['listener'] = true;
+		
+		LiteGraph._cyperus.osc_add_module_utils_counter(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+                    "0.0",
+                    "0.0",
+                    "1.0",
+                    "0.0",
+                    "16.0",
+                    "1.0",
+                    "0.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
+            }
 
 	}
 
@@ -4125,11 +4359,6 @@ class Cyperus {
      * @param {*} value
      */
     LGraphNode.prototype.setProperty = function(name, value) {
-        console.log('this.properties');
-        console.log(this.properties);
-        console.log('this.type');
-        console.log(this.type);
-        
         if (!this.properties) {
             this.properties = {};
         }
@@ -4148,11 +4377,6 @@ class Cyperus {
 
 
 	// START CYPERUS CODE
-
-	console.log('name', name);
-	console.log('value', value);
-
-	console.log(this);
 	
 	var current_path = _cyperus_util_get_current_bus_path().concat("?").concat(this.properties['id']);
 	if (!this.type.localeCompare("dsp/generator/sawtooth")) {
@@ -4193,6 +4417,17 @@ class Cyperus {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']); 
 	    LiteGraph._cyperus.osc_edit_module_oscillator_triangle(
+                LiteGraph._cyperus.uuidv4(),
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		console.log,
+		undefined
+	    )
+	} else if (!this.type.localeCompare("oscillator/clock")) {
+	    console.log('frequency', this.properties['frequency']);
+	    console.log('amplitude', this.properties['amplitude']);	    
+	    LiteGraph._cyperus.osc_edit_module_oscillator_clock(
                 LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
@@ -4306,7 +4541,28 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	}
+	} else if (!this.type.localeCompare("utils/counter")) {
+            console.log('reset', this.properties['reset']);
+	    console.log('start', this.properties['start']);
+	    console.log('step_size', this.properties['step_size']);
+	    console.log('min', this.properties['min']);
+	    console.log('max', this.properties['max']);
+	    console.log('direction', this.properties['direction']);
+	    console.log('auto_reset', this.properties['auto_reset']);	                
+	    LiteGraph._cyperus.osc_edit_module_utils_counter(
+                LiteGraph._cyperus.uuidv4(),
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+		this.widgets[3].value,
+		this.widgets[4].value,
+		this.widgets[5].value,
+                this.widgets[6].value,
+		console.log,
+		undefined
+	    )
+        }
         
 	// END CYPERUS CODE
 
