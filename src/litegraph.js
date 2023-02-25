@@ -1192,6 +1192,64 @@ class Cyperus {
 	);				     
     }    
 
+    osc_add_module_utils_spigot(request_id,
+                               path,
+                               open,
+			       callback,
+			       args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/utils/spigot",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: open
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    
+    osc_edit_module_utils_spigot(request_id,
+                                 path,
+                                 open,
+			         callback,
+			         args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/utils/spigot",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },                    
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: open
+                    }
+                ],
+	    },
+	    callback,
+	    args
+	);				     
+    }    
     
     
 }
@@ -3224,7 +3282,22 @@ class Cyperus {
                     "1.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
+	    } else if (!node.type.localeCompare("utils/spigot")) {
+		console.log('_cyperus.osc_add_module_utils_spigot()');
+		var path = _cyperus_util_get_current_bus_path();
+
+                node['properties']['open'] = "0.0";
+
+                node['properties']['listener'] = true;
+		
+		LiteGraph._cyperus.osc_add_module_utils_spigot(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+                    "0.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
             }
+
             
 	}
 
@@ -4659,7 +4732,17 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
+        } else if (!this.type.localeCompare("utils/spigot")) {
+            console.log('open', this.properties['open']);
+ 	    LiteGraph._cyperus.osc_edit_module_utils_spigot(
+                LiteGraph._cyperus.uuidv4(),
+		current_path,
+		this.widgets[0].value,
+		console.log,
+		undefined
+	    )
         }
+        
         
 	// END CYPERUS CODE
 

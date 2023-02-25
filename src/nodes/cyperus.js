@@ -944,6 +944,38 @@ class equals extends CyperusNode {
 
 }
 
+
+// utils/spigot
+class spigot extends CyperusNode {
+    type = 'utils/spigot';
+    title = 'utils_spigot';
+    constructor(title) {	
+	super(title);
+	this.properties = {
+            name: '',
+            open: 0.0,
+            precision: 1,
+            is_module: true,
+            'module_parameters': []};
+
+	this.properties['module_parameters'] = [
+		{
+		    param_name: "open",
+		    param_type: "text",
+		    param: this.properties.open
+		}
+	];
+	this.onExecute = () => {
+	}
+    }
+
+    osc_listener_callback(node, response) {
+        var value = response['args'];
+        console.log('utils/spigot osc_listener_callback()');
+        node.widgets[0].value = value[0].toFixed(8);
+    }
+
+}
     
 //register in the system
 LiteGraph.registerNodeType("cyperus/main/inputs", MainInputsNode );
@@ -956,7 +988,8 @@ LiteGraph.registerNodeType("envelope/follower", follower );
 LiteGraph.registerNodeType("filter/bandpass", bandpass);
 LiteGraph.registerNodeType("osc/float", osc_float);
 LiteGraph.registerNodeType("utils/counter", counter);
-LiteGraph.registerNodeType("utils/equals", equals);        
+LiteGraph.registerNodeType("utils/equals", equals);
+LiteGraph.registerNodeType("utils/spigot", spigot);            
 // LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
 // LiteGraph.registerNodeType("osc/metronome", metronome );
 // LiteGraph.registerNodeType("analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );
