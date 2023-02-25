@@ -1123,6 +1123,76 @@ class Cyperus {
 	);				     
     }    
 
+    osc_add_module_utils_equals(request_id,
+                                path,
+                                x,
+                                y,
+			        callback,
+			        args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/utils/equals",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: x
+                    },                    
+                    {
+                        type: "f",
+                        value: y
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);				     
+    }
+    
+    
+    osc_edit_module_utils_equals(request_id,
+                                 path,
+                                 x,
+                                 y,
+			         callback,
+			         args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/utils/equals",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id,
+                    },                    
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "f",
+                        value: x
+                    },                    
+                    {
+                        type: "f",
+                        value: y
+                    }
+                ],
+	    },
+	    callback,
+	    args
+	);				     
+    }    
+
+    
     
 }
 
@@ -3138,8 +3208,24 @@ class Cyperus {
                     "0.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
-            }
+	    } else if (!node.type.localeCompare("utils/equals")) {
+		console.log('_cyperus.osc_add_module_utils_equals()');
+		var path = _cyperus_util_get_current_bus_path();
 
+                node['properties']['x'] = "0.0";
+		node['properties']['y'] = "1.0";
+
+                node['properties']['listener'] = true;
+		
+		LiteGraph._cyperus.osc_add_module_utils_equals(
+                    LiteGraph._cyperus.uuidv4(),
+                    path,
+                    "0.0",
+                    "1.0",
+		    _cyperus_util_create_new_dsp_module,
+		    node);
+            }
+            
 	}
 
 	
@@ -4549,7 +4635,7 @@ class Cyperus {
 	    console.log('max', this.properties['max']);
 	    console.log('direction', this.properties['direction']);
 	    console.log('auto_reset', this.properties['auto_reset']);	                
-	    LiteGraph._cyperus.osc_edit_module_utils_counter(
+ 	    LiteGraph._cyperus.osc_edit_module_utils_counter(
                 LiteGraph._cyperus.uuidv4(),
 		current_path,
 		this.widgets[0].value,
@@ -4559,6 +4645,17 @@ class Cyperus {
 		this.widgets[4].value,
 		this.widgets[5].value,
                 this.widgets[6].value,
+		console.log,
+		undefined
+	    )
+        } else if (!this.type.localeCompare("utils/equals")) {
+            console.log('x', this.properties['x']);
+	    console.log('y', this.properties['y']);
+ 	    LiteGraph._cyperus.osc_edit_module_utils_equals(
+                LiteGraph._cyperus.uuidv4(),
+		current_path,
+		this.widgets[0].value,
+		this.widgets[1].value,
 		console.log,
 		undefined
 	    )
