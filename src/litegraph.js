@@ -5897,14 +5897,14 @@ class Cyperus {
             return null;
         }
 
-		var changed = false;
+	var changed = false;
 
-        //if there is something already plugged there, disconnect
-        if (target_node.inputs[target_slot].link != null) {
-			this.graph.beforeChange();
-            target_node.disconnectInput(target_slot);
-			changed = true;
-        }
+        // //if there is something already plugged there, disconnect
+        // if (target_node.inputs[target_slot].link != null) {
+	// 		this.graph.beforeChange();
+        //     target_node.disconnectInput(target_slot);
+	// 		changed = true;
+        // }
 
         //why here??
         //this.setDirtyCanvas(false,true);
@@ -5918,90 +5918,90 @@ class Cyperus {
                 return null;
             }
         }
-
+        
         var input = target_node.inputs[target_slot];
         var link_info = null;
-
-		//this slots cannot be connected (different types)
+        
+	//this slots cannot be connected (different types)
         if (!LiteGraph.isValidConnection(output.type, input.type))
-		{
-	        this.setDirtyCanvas(false, true);
-			if(changed)
-		        this.graph.connectionChange(this, link_info);
-			return null;
-		}
-
-		if(!changed)
-			this.graph.beforeChange();
-
-		//create link class
-		link_info = new LLink(
-			++this.graph.last_link_id,
-			input.type,
-			this.id,
-			slot,
-			target_node.id,
-			target_slot
-		);
-
-    
-	    // START CYPERUS CODE
-	    
-	    var output_graph_id = undefined;
-	    
-	    if (LiteGraph._global_graph_stack.length) {
-		output_graph_id = _cyperus_util_get_current_bus_id();
-	    }
-
-
+	{
+	    this.setDirtyCanvas(false, true);
+	    if(changed)
+		this.graph.connectionChange(this, link_info);
+	    return null;
+	}
+        
+	if(!changed)
+	    this.graph.beforeChange();
+        
+	//create link class
+	link_info = new LLink(
+	    ++this.graph.last_link_id,
+	    input.type,
+	    this.id,
+	    slot,
+	    target_node.id,
+	    target_slot
+	);
+        
+        
+	// START CYPERUS CODE
+	
+	var output_graph_id = undefined;
+	
+	if (LiteGraph._global_graph_stack.length) {
+	    output_graph_id = _cyperus_util_get_current_bus_id();
+	}
+        
+        
 	console.log('type: ');
 	console.log(this.type)
 	
-	    var cyperus_id_out = undefined;
-	    if (!this.type.localeCompare("cyperus/main/inputs")) {
-		cyperus_id_out = this.properties['ids'][slot];
-	    } else {
-		cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]['output'][slot];
-	    }
-	    
-	    var input_graph_id = undefined;
-	    if (LiteGraph._global_graph_stack.length) {
-		input_graph_id = _cyperus_util_get_current_bus_id();
-	    }
-	    
-	    if (!target_node.type.localeCompare("cyperus/main/outputs")) {
-		cyperus_id_in = target_node.properties['ids'][target_slot];
-	    } else {
-		cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
-	    }
-
-	    var current_bus_path = _cyperus_util_get_current_bus_path();
-	    if (!current_bus_path.localeCompare("/")) {
-		current_bus_path = "";
-	    }
-
-	    var connection_out_path = undefined;
-	    if (this.properties['is_bus_port']) {
-		connection_out_path = current_bus_path.concat(':', cyperus_id_out);
-	    } else if (this.properties['is_module']) {
-		connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
-	    } else if (this.properties['is_bus']) {
-		connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
-	    } else {
-		connection_out_path = cyperus_id_out;
-	    }
-	    
-	    var connection_in_path = undefined;
-	    if (target_node.properties['is_bus_port']) {
-		connection_in_path = current_bus_path.concat(':', cyperus_id_in);
-	    } else if (target_node.properties['is_module']) {
-		connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
-	    } else if (target_node.properties['is_bus']) {
-		connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
-	    } else {
-		connection_in_path = cyperus_id_in;
-	    }
-
+	var cyperus_id_out = undefined;
+	if (!this.type.localeCompare("cyperus/main/inputs")) {
+	    cyperus_id_out = this.properties['ids'][slot];
+	} else {
+	    cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]['output'][slot];
+	}
+	
+	var input_graph_id = undefined;
+	if (LiteGraph._global_graph_stack.length) {
+	    input_graph_id = _cyperus_util_get_current_bus_id();
+	}
+	
+	if (!target_node.type.localeCompare("cyperus/main/outputs")) {
+	    cyperus_id_in = target_node.properties['ids'][target_slot];
+	} else {
+	    cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
+	}
+        
+	var current_bus_path = _cyperus_util_get_current_bus_path();
+	if (!current_bus_path.localeCompare("/")) {
+	    current_bus_path = "";
+	}
+        
+	var connection_out_path = undefined;
+	if (this.properties['is_bus_port']) {
+	    connection_out_path = current_bus_path.concat(':', cyperus_id_out);
+	} else if (this.properties['is_module']) {
+	    connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
+	} else if (this.properties['is_bus']) {
+	    connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
+	} else {
+	    connection_out_path = cyperus_id_out;
+	}
+	
+	var connection_in_path = undefined;
+	if (target_node.properties['is_bus_port']) {
+	    connection_in_path = current_bus_path.concat(':', cyperus_id_in);
+	} else if (target_node.properties['is_module']) {
+	    connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
+	} else if (target_node.properties['is_bus']) {
+	    connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
+	} else {
+	    connection_in_path = cyperus_id_in;
+	}
+        
 	LiteGraph._cyperus.osc_add_connection(
             LiteGraph._cyperus.uuidv4(),
 	    connection_out_path,
@@ -6009,62 +6009,62 @@ class Cyperus {
 	    console.log,
 	    undefined
 	);
-
+        
 	// END CYPERUS CODE    
-
+        
 	
-		//add to graph links list
-		this.graph.links[link_info.id] = link_info;
-
-		//connect in output
-		if (output.links == null) {
-			output.links = [];
-		}
-		output.links.push(link_info.id);
-		//connect in input
-		target_node.inputs[target_slot].link = link_info.id;
-		if (this.graph) {
-			this.graph._version++;
-		}
-		if (this.onConnectionsChange) {
-			this.onConnectionsChange(
-				LiteGraph.OUTPUT,
-				slot,
-				true,
-				link_info,
-				output
-			);
-		} //link_info has been created now, so its updated
-		if (target_node.onConnectionsChange) {
-			target_node.onConnectionsChange(
-				LiteGraph.INPUT,
-				target_slot,
-				true,
-				link_info,
-				input
-			);
-		}
-		if (this.graph && this.graph.onNodeConnectionChange) {
-			this.graph.onNodeConnectionChange(
-				LiteGraph.INPUT,
-				target_node,
-				target_slot,
-				this,
-				slot
-			);
-			this.graph.onNodeConnectionChange(
-				LiteGraph.OUTPUT,
-				this,
-				slot,
-				target_node,
-				target_slot
-			);
-		}
-
+	//add to graph links list
+	this.graph.links[link_info.id] = link_info;
+        
+	//connect in output
+	if (output.links == null) {
+	    output.links = [];
+	}
+	output.links.push(link_info.id);
+	//connect in input
+	target_node.inputs[target_slot].link = link_info.id;
+	if (this.graph) {
+	    this.graph._version++;
+	}
+	if (this.onConnectionsChange) {
+	    this.onConnectionsChange(
+		LiteGraph.OUTPUT,
+		slot,
+		true,
+		link_info,
+		output
+	    );
+	} //link_info has been created now, so its updated
+	if (target_node.onConnectionsChange) {
+	    target_node.onConnectionsChange(
+		LiteGraph.INPUT,
+		target_slot,
+		true,
+		link_info,
+		input
+	    );
+	}
+	if (this.graph && this.graph.onNodeConnectionChange) {
+	    this.graph.onNodeConnectionChange(
+		LiteGraph.INPUT,
+		target_node,
+		target_slot,
+		this,
+		slot
+	    );
+	    this.graph.onNodeConnectionChange(
+		LiteGraph.OUTPUT,
+		this,
+		slot,
+		target_node,
+		target_slot
+	    );
+	}
+        
         this.setDirtyCanvas(false, true);
-		this.graph.afterChange();
-		this.graph.connectionChange(this, link_info);
-
+	this.graph.afterChange();
+	this.graph.connectionChange(this, link_info);
+        
         return link_info;
     };
 
@@ -6344,52 +6344,52 @@ class Cyperus {
 
 
 			    
-				//search in the inputs list for this link
-				for (var i = 0, l = output.links.length; i < l; i++) {
-					if (output.links[i] == link_id) {
-						output.links.splice(i, 1);
-						break;
-					}
+			    //search in the inputs list for this link
+			    for (var i = 0, l = output.links.length; i < l; i++) {
+				if (output.links[i] == link_id) {
+				    output.links.splice(i, 1);
+				    break;
 				}
+			    }
 			    
-				delete this.graph.links[link_id]; //remove from the pool
-				if (this.graph) {
-					this.graph._version++;
-				}
-				if (this.onConnectionsChange) {
-					this.onConnectionsChange(
-						LiteGraph.INPUT,
-						slot,
-						false,
-						link_info,
-						input
-					);
-				}
-				if (target_node.onConnectionsChange) {
-					target_node.onConnectionsChange(
-						LiteGraph.OUTPUT,
-						i,
-						false,
-						link_info,
-						output
-					);
-				}
-				if (this.graph && this.graph.onNodeConnectionChange) {
-					this.graph.onNodeConnectionChange(
-						LiteGraph.OUTPUT,
-						target_node,
-						i
-					);
-					this.graph.onNodeConnectionChange(LiteGraph.INPUT, this, slot);
-				}
+			    delete this.graph.links[link_id]; //remove from the pool
+			    if (this.graph) {
+				this.graph._version++;
+			    }
+			    if (this.onConnectionsChange) {
+				this.onConnectionsChange(
+				    LiteGraph.INPUT,
+				    slot,
+				    false,
+				    link_info,
+				    input
+				);
+			    }
+			    if (target_node.onConnectionsChange) {
+				target_node.onConnectionsChange(
+				    LiteGraph.OUTPUT,
+				    i,
+				    false,
+				    link_info,
+				    output
+				);
+			    }
+			    if (this.graph && this.graph.onNodeConnectionChange) {
+				this.graph.onNodeConnectionChange(
+				    LiteGraph.OUTPUT,
+				    target_node,
+				    i
+				);
+				this.graph.onNodeConnectionChange(LiteGraph.INPUT, this, slot);
+			    }
 			}
 		} //link != null
-
+        
         this.setDirtyCanvas(false, true);
-		if(this.graph)
-	            this.graph.connectionChange(this);
-
-
+	if(this.graph)
+	    this.graph.connectionChange(this);
+        
+        
 	
         return true;
     };
