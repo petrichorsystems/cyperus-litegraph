@@ -3580,7 +3580,7 @@ class Cyperus {
             return;
         }
 
-		this.beforeChange();
+	this.beforeChange();
         this.inputs[name] = { name: name, type: type, value: value, id: cyperus_id };
         this._version++;
 		this.afterChange();
@@ -4473,7 +4473,7 @@ class Cyperus {
         //remove links
         if (data.inputs) {
             for (var i = 0; i < data.inputs.length; ++i) {
-                data.inputs[i].link = null;
+                data.inputs[i].link = [];
             }
         }
 
@@ -6021,8 +6021,13 @@ class Cyperus {
 	    output.links = [];
 	}
 	output.links.push(link_info.id);
+        
 	//connect in input
-	target_node.inputs[target_slot].link = link_info.id;
+        if (input.links == null) {
+            input.links = [];
+        }       
+	target_node.inputs[target_slot].links.push(link_info.id);
+        
 	if (this.graph) {
 	    this.graph._version++;
 	}
@@ -10555,96 +10560,107 @@ LGraphNode.prototype.executeAction = function(action)
 
             for (var i = 0; i < node.inputs.length; ++i) {
                 var input = node.inputs[i];
-                if (!input || input.link == null) {
+
+                if (!input || input.links == null || input.links == []) {
                     continue;
                 }
-                var link_id = input.link;
-                var link = this.graph.links[link_id];
-                if (!link) {
-                    continue;
-                }
+                
+                for (j=0; j < input.links.length; j++) {
+                
+                    var link_id = input.links[j];
+                    var link = this.graph.links[link_id];
 
-                //find link info
-                var start_node = this.graph.getNodeById(link.origin_id);
-                if (start_node == null) {
-                    continue;
-                }
-                var start_node_slot = link.origin_slot;
-                var start_node_slotpos = null;
-                if (start_node_slot == -1) {
-                    start_node_slotpos = [
-                        start_node.pos[0] + 10,
-                        start_node.pos[1] + 10
-                    ];
-                } else {
-                    start_node_slotpos = start_node.getConnectionPos(
-                        false,
-                        start_node_slot,
-                        tempA
-                    );
-                }
-                var end_node_slotpos = node.getConnectionPos(true, i, tempB);
 
-                //compute link bounding
-                link_bounding[0] = start_node_slotpos[0];
-                link_bounding[1] = start_node_slotpos[1];
-                link_bounding[2] = end_node_slotpos[0] - start_node_slotpos[0];
-                link_bounding[3] = end_node_slotpos[1] - start_node_slotpos[1];
-                if (link_bounding[2] < 0) {
-                    link_bounding[0] += link_bounding[2];
-                    link_bounding[2] = Math.abs(link_bounding[2]);
-                }
-                if (link_bounding[3] < 0) {
-                    link_bounding[1] += link_bounding[3];
-                    link_bounding[3] = Math.abs(link_bounding[3]);
-                }
+                    if (!link) {
+                        continue;
+                    }
 
-                //skip links outside of the visible area of the canvas
-                if (!overlapBounding(link_bounding, margin_area)) {
-                    continue;
-                }
 
-                var start_slot = start_node.outputs[start_node_slot];
-                var end_slot = node.inputs[i];
-                if (!start_slot || !end_slot) {
-                    continue;
-                }
-                var start_dir =
-                    start_slot.dir ||
-                    (start_node.horizontal ? LiteGraph.DOWN : LiteGraph.RIGHT);
-                var end_dir =
-                    end_slot.dir ||
-                    (node.horizontal ? LiteGraph.UP : LiteGraph.LEFT);
+                    //find link info
+                    var start_node = this.graph.getNodeById(link.origin_id);
+                    if (start_node == null) {
+                        continue;
+                    }
+                    
+                    var start_node_slot = link.origin_slot;
+                    var start_node_slotpos = null;
+                    if (start_node_slot == -1) {
+                        start_node_slotpos = [
+                            start_node.pos[0] + 10,
+                            start_node.pos[1] + 10
+                        ];
+                    } else {
+                        start_node_slotpos = start_node.getConnectionPos(
+                            false,
+                            start_node_slot,
+                            tempA
+                        );
+                    }
+                    var end_node_slotpos = node.getConnectionPos(true, i, tempB);
 
-                this.renderLink(
-                    ctx,
-                    start_node_slotpos,
-                    end_node_slotpos,
-                    link,
-                    false,
-                    0,
-                    null,
-                    start_dir,
-                    end_dir
-                );
+                    //compute link bounding
+                    link_bounding[0] = start_node_slotpos[0];
+                    link_bounding[1] = start_node_slotpos[1];
+                    link_bounding[2] = end_node_slotpos[0] - start_node_slotpos[0];
+                    link_bounding[3] = end_node_slotpos[1] - start_node_slotpos[1];
+                    if (link_bounding[2] < 0) {
+                        link_bounding[0] += link_bounding[2];
+                        link_bounding[2] = Math.abs(link_bounding[2]);
+                    }
+                    if (link_bounding[3] < 0) {
+                        link_bounding[1] += link_bounding[3];
+                        link_bounding[3] = Math.abs(link_bounding[3]);
+                    }
 
-                //event triggered rendered on top
-                if (link && link._last_time && now - link._last_time < 1000) {
-                    var f = 2.0 - (now - link._last_time) * 0.002;
-                    var tmp = ctx.globalAlpha;
-                    ctx.globalAlpha = tmp * f;
+                    //skip links outside of the visible area of the canvas
+                    if (!overlapBounding(link_bounding, margin_area)) {
+                        continue;
+                    }
+
+                    var start_slot = start_node.outputs[start_node_slot];
+                    var end_slot = node.inputs[i];
+                    if (!start_slot || !end_slot) {
+                        continue;
+                    }
+                    var start_dir =
+                        start_slot.dir ||
+                        (start_node.horizontal ? LiteGraph.DOWN : LiteGraph.RIGHT);
+                    var end_dir =
+                        end_slot.dir ||
+                        (node.horizontal ? LiteGraph.UP : LiteGraph.LEFT);
+
+                    console.log('ATTEMPTING TO RENDER');
+                    
                     this.renderLink(
                         ctx,
                         start_node_slotpos,
                         end_node_slotpos,
                         link,
-                        true,
-                        f,
-                        "white",
+                        false,
+                        0,
+                        null,
                         start_dir,
                         end_dir
                     );
-                    ctx.globalAlpha = tmp;
+
+                    //event triggered rendered on top
+                    if (link && link._last_time && now - link._last_time < 1000) {
+                        var f = 2.0 - (now - link._last_time) * 0.002;
+                        var tmp = ctx.globalAlpha;
+                        ctx.globalAlpha = tmp * f;
+                        this.renderLink(
+                            ctx,
+                            start_node_slotpos,
+                            end_node_slotpos,
+                            link,
+                            true,
+                            f,
+                            "white",
+                            start_dir,
+                            end_dir
+                        );
+                        ctx.globalAlpha = tmp;
+                    }
                 }
             }
         }
