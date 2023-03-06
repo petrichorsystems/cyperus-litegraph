@@ -2778,9 +2778,14 @@ class Cyperus {
     function _cyperus_util_get_bus_descendants(response, args) {
 	var node = args['node'];
         
-	var filtered = response[3].split('\n').filter(Boolean);
+	var filtered = response[5].split('\n').filter(Boolean);
+
+        console.log('RESPONSE');
+        console.log(response);
+        console.log('FILTERED', filtered);
+        
 	var temp_bus_uuid = filtered[filtered.length - 1].split('|')[0];
-	var bus_path = `${response[0]}/${temp_bus_uuid}`;
+	var bus_path = `${response[2]}/${temp_bus_uuid}`;
 
 	LiteGraph._cyperus.osc_list_bus(
             LiteGraph._cyperus.uuidv4(),
@@ -3003,7 +3008,7 @@ class Cyperus {
 	     )
 	   )
 	{
-	    if (!node.type.localeCompare("cyperus/bus/add")) {		
+	    if (!node.type.localeCompare("cyperus/bus/add")) {
 		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
                                                LiteGraph._cyperus.uuidv4(),
 					       'name',
@@ -3022,6 +3027,8 @@ class Cyperus {
 			{'node': node,
 			 'my_id': this._nodes.length});
 		} else {
+                    console.log('calling _cyperus_util_get_current_bus_path()')
+                    console.log(_cyperus_util_get_current_bus_path);
 		    LiteGraph._cyperus.osc_list_bus(
                         LiteGraph._cyperus.uuidv4(),
                         _cyperus_util_get_current_bus_path(),
@@ -4093,22 +4100,22 @@ class Cyperus {
     LGraph.prototype.load = function(url, callback) {
         var that = this;
 
-		//from file
-		if(url.constructor === File || url.constructor === Blob)
-		{
-			var reader = new FileReader();
-			reader.addEventListener('load', function(event) {
-				var data = JSON.parse(event.target.result);
-				that.configure(data);
-				if(callback)
-					callback();
-			});
-			
-			reader.readAsText(url);
-			return;
-		}
-
-		//is a string, then an URL
+	//from file
+	if(url.constructor === File || url.constructor === Blob)
+	{
+	    var reader = new FileReader();
+	    reader.addEventListener('load', function(event) {
+		var data = JSON.parse(event.target.result);
+		that.configure(data);
+		if(callback)
+		    callback();
+	    });
+	    
+	    reader.readAsText(url);
+	    return;
+	}
+        
+	//is a string, then an URL
         var req = new XMLHttpRequest();
         req.open("GET", url, true);
         req.send(null);
