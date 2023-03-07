@@ -4019,27 +4019,27 @@ class Cyperus {
             var links = [];
             for (var i = 0; i < data.links.length; ++i) {
                 var link_data = data.links[i];
-				if(!link_data) //weird bug
-				{
-					console.warn("serialized graph link data contains errors, skipping.");
-					continue;
-				}
+		if(!link_data) //weird bug
+		{
+		    console.warn("serialized graph link data contains errors, skipping.");
+		    continue;
+		}
                 var link = new LLink();
                 link.configure(link_data);
                 links[link.id] = link;
             }
             data.links = links;
         }
-
+        
         //copy all stored fields
         for (var i in data) {
-			if(i == "nodes" || i == "groups" ) //links must be accepted
-				continue;
+	    if(i == "nodes" || i == "groups" ) //links must be accepted
+		continue;
             this[i] = data[i];
         }
-
+        
         var error = false;
-
+        
         //create nodes
         this._nodes = [];
         if (nodes) {
@@ -4052,7 +4052,7 @@ class Cyperus {
                             "Node not found or has errors: " + n_info.type
                         );
                     }
-
+                    
                     //in case of error we create a replacement node to avoid losing info
                     node = new LGraphNode();
                     node.last_serialization = n_info;
@@ -4087,10 +4087,10 @@ class Cyperus {
 
         this.updateExecutionOrder();
 
-		this.extra = data.extra || {};
+	this.extra = data.extra || {};
 
-		if(this.onConfigure)
-			this.onConfigure(data);
+	if(this.onConfigure)
+	    this.onConfigure(data);
 
         this._version++;
         this.setDirtyCanvas(true, true);
@@ -4126,8 +4126,8 @@ class Cyperus {
             }
             var data = JSON.parse( req.response );
             that.configure(data);
-			if(callback)
-				callback();
+	    if(callback)
+		callback();
         };
         req.onerror = function(err) {
             console.error("Error loading graph:", err);
