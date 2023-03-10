@@ -17,7 +17,8 @@ LiteGraph.allow_scripts = true;
 //create scene selector
 var elem = document.createElement("span");
 elem.className = "selector";
-elem.innerHTML = "Demo <select><option>Empty</option></select> <button class='btn' id='save'>Save</button><button class='btn' id='load'>Load</button><button class='btn' id='download'>Download</button> | <button class='btn' id='webgl'>WebGL</button>";
+// elem.innerHTML = "Demo <select><option>Empty</option></select> <button class='btn' id='save'>Save</button><button class='btn' id='load'>Load</button><button class='btn' id='download'>Download</button> | <button class='btn' id='webgl'>WebGL</button>";
+elem.innerHTML = "Demo <select><option>Empty</option></select> <button class='btn' id='save'>Save</button><button class='btn' id='load'>Load</button><button class='btn' id='download'>Download</button>";
 editor.tools.appendChild(elem);
 var select = elem.querySelector("select");
 select.addEventListener("change", function(e){
@@ -58,7 +59,7 @@ elem.querySelector("#download").addEventListener("click",function(){
 	setTimeout( function(){ URL.revokeObjectURL( url ); }, 1000*60 ); //wait one minute to revoke url	
 });
 
-elem.querySelector("#webgl").addEventListener("click", enableWebGL );
+// elem.querySelector("#webgl").addEventListener("click", enableWebGL );
 
 
 function addDemo( name, url )

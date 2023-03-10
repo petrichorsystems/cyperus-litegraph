@@ -43,6 +43,7 @@
         "rimraf": "^2.7.1"
     },
     "dependencies": {
-        "osc": "^2.4.1"
+        "osc": "^2.4.3",
+        "uuid-browser": "^3.1.0"
     }
 }

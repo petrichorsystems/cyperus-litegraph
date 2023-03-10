@@ -2708,7 +2708,12 @@ class Cyperus {
 	    node.subgraph.addInput(name, "number", {'id': id});
 
 	    in_ids.push(id);
-	    
+
+            console.log('INIT INPUT BUS PORT');
+            console.log('my_id', my_id);
+            console.log('node.properties[id]', node.properties['id']);
+            console.log('_cyperus_util_get_current_bus_id()', _cyperus_util_get_current_bus_id());
+            
 	    _cyperus_util_store_litegraph_to_cyperus_id(
 		_cyperus_util_get_current_bus_id(),
 		my_id,
@@ -2754,7 +2759,13 @@ class Cyperus {
 	    node.subgraph.addOutput(name, "number", {'id': id});
 
 	    out_ids.push(id);
-	    
+
+
+            console.log('INIT OUTPUT BUS PORT');
+            console.log('my_id', my_id);
+            console.log('node.properties[id]', node.properties['id']);
+            console.log('_cyperus_util_get_current_bus_id()', _cyperus_util_get_current_bus_id());
+            
 	    _cyperus_util_store_litegraph_to_cyperus_id(
 		_cyperus_util_get_current_bus_id(),
 		my_id,
@@ -3979,7 +3990,7 @@ class Cyperus {
         for (var i = 0; i < this._groups.length; ++i) {
             groups_info.push(this._groups[i].serialize());
         }
-
+        
         var data = {
             last_node_id: this.last_node_id,
             last_link_id: this.last_link_id,
@@ -3987,12 +3998,16 @@ class Cyperus {
             links: links,
             groups: groups_info,
             config: this.config,
-			extra: this.extra,
+	    extra: this.extra,
+            cyperus_ids: LiteGraph._litegraph_to_cyperus_bus_id_record,
             version: LiteGraph.VERSION
         };
 
-		if(this.onSerialize)
-			this.onSerialize(data);
+        console.log('data');
+        console.log(data);
+        
+	if(this.onSerialize)
+	    this.onSerialize(data);
 
         return data;
     };
@@ -4088,7 +4103,7 @@ class Cyperus {
         this.updateExecutionOrder();
 
 	this.extra = data.extra || {};
-
+        
 	if(this.onConfigure)
 	    this.onConfigure(data);
 
@@ -5818,7 +5833,7 @@ class Cyperus {
     LGraphNode.prototype.findOutputSlot = function(name) {
         if (!this.outputs) {
             return -1;
-        }
+       } 
         for (var i = 0, l = this.outputs.length; i < l; ++i) {
             if (name == this.outputs[i].name) {
                 return i;
@@ -5968,6 +5983,11 @@ class Cyperus {
 	if (!this.type.localeCompare("cyperus/main/inputs")) {
 	    cyperus_id_out = this.properties['ids'][slot];
 	} else {
+            console.log('output_graph_id', output_graph_id);
+            console.log('this.id', this.id);
+            console.log('slot', slot);
+            console.log('LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id]',  LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id]);
+            console.log('LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]', LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]);
 	    cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]['output'][slot];
 	}
 	
