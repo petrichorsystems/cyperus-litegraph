@@ -339,6 +339,80 @@ class follower extends CyperusNode {
   }
 }
 
+// envelope/segment 
+class segment extends CyperusNode {
+    type = 'envelope/segment';
+    title = 'envelope_segment';
+    constructor(title) {	
+	super(title);
+	this.properties = {
+            name: '',
+            reset: 0,
+            start: 0,
+            step_size: 1.0,
+            min: 0.0,
+            max: 16.0,
+            direction: 1.0,
+            auto_reset: 0.0,
+            precision: 1,
+            is_module: true,
+            'module_parameters': []};
+
+	this.properties['module_parameters'] = [
+		{
+		    param_name: "reset",
+		    param_type: "text",
+		    param: this.properties.reset
+		},            
+		{
+		    param_name: "start",
+		    param_type: "text",
+		    param: this.properties.start
+		},
+		{
+		    param_name: "step_size",
+		    param_type: "text",
+		    param: this.properties.step_size 
+		},
+		{
+		    param_name: "min",
+		    param_type: "text",
+		    param: this.properties.min
+		},
+		{
+		    param_name: "max",
+		    param_type: "text",
+		    param: this.properties.max
+		},
+		{
+		    param_name: "direction",
+		    param_type: "text",
+		    param: this.properties.direction
+		},
+		{
+		    param_name: "auto_reset",
+		    param_type: "text",
+		    param: this.properties.auto_reset
+		}            
+	];
+	this.onExecute = () => {
+	}
+    }
+
+    osc_listener_callback(node, response) {
+        var value = response['args'];
+        console.log('utils/counter osc_listener_callbak()');
+        node.widgets[0].value = value[0].toFixed(8);
+        node.widgets[1].value = value[1].toFixed(8);
+        node.widgets[2].value = value[2].toFixed(8);
+        node.widgets[3].value = value[3].toFixed(8);
+        node.widgets[4].value = value[4].toFixed(8);
+        node.widgets[5].value = value[5].toFixed(8);
+        node.widgets[6].value = value[6].toFixed(8);                
+    }
+
+}
+
 // filter/bandpass
 class bandpass extends CyperusNode {
   type = 'filter/bandpass';
@@ -989,7 +1063,8 @@ LiteGraph.registerNodeType("filter/bandpass", bandpass);
 LiteGraph.registerNodeType("osc/float", osc_float);
 LiteGraph.registerNodeType("utils/counter", counter);
 LiteGraph.registerNodeType("utils/equals", equals);
-LiteGraph.registerNodeType("utils/spigot", spigot);            
+LiteGraph.registerNodeType("utils/spigot", spigot);   
+LiteGraph.registerNodeType("envelope/segment", segment);         
 // LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
 // LiteGraph.registerNodeType("osc/metronome", metronome );
 // LiteGraph.registerNodeType("analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );

@@ -709,6 +709,125 @@ class Cyperus {
 	);				     
     }
 
+    osc_add_module_envelope_segment(request_id,
+        path,
+        reset,
+        start,
+        step_size,
+        min,
+        max,
+        direction,
+        auto_reset,
+callback,
+args) {
+var self = this;
+self._send(
+{
+address: "/cyperus/add/module/envelope/segment",
+args: [
+{
+type: "s",
+value: request_id,
+},
+{
+type: "s",
+value: path
+},
+{
+type: "f",
+value: reset
+},                    
+{
+type: "f",
+value: start
+},
+{
+type: "f",
+value: step_size
+},
+{
+type: "f",
+value: min
+},
+{
+type: "f",
+value: max
+},
+{
+type: "f",
+value: direction
+},
+{
+type: "f",
+value: auto_reset
+}
+]
+},
+callback,
+args
+);				     
+}
+
+
+osc_edit_module_envelope_segment(request_id,
+         path,
+         reset,
+         start,
+         step_size,
+         min,
+         max,
+         direction,
+         auto_reset,
+callback,
+args) {
+var self = this;
+self._send(
+{
+address: "/cyperus/edit/module/envelope/segment",
+args: [
+{
+type: "s",
+value: request_id,
+},                    
+{
+type: "s",
+value: path
+},
+{
+type: "f",
+value: reset
+},                    
+{
+type: "f",
+value: start
+},
+{
+type: "f",
+value: step_size
+},
+{
+type: "f",
+value: min
+},
+{
+type: "f",
+value: max
+},
+{
+type: "f",
+value: direction
+},
+{
+type: "f",
+value: auto_reset
+}     
+],
+},
+callback,
+args
+);				     
+}    
+
     osc_add_module_filter_bandpass(request_id,
                                    path,
 				   cutoff_frequency,
@@ -3158,6 +3277,32 @@ class Cyperus {
 		    "1.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
+        } else if (!node.type.localeCompare("envelope/segment")) {
+            console.log('_cyperus.osc_add_module_envelope_segment()');
+            var path = _cyperus_util_get_current_bus_path();
+    
+                    node['properties']['reset'] = "0.0";
+            node['properties']['start'] = "0.0";
+            node['properties']['step_size'] = "1.0";
+            node['properties']['min'] = "0.0";
+                    node['properties']['max'] = "16.0";
+                    node['properties']['direction'] = "1.0";
+                    node['properties']['auto_reset'] = "0.0";
+    
+                    node['properties']['listener'] = true;
+            
+            LiteGraph._cyperus.osc_add_module_envelope_segment(
+                        LiteGraph._cyperus.uuidv4(),
+                        path,
+                        "0.0",
+                        "0.0",
+                        "1.0",
+                        "0.0",
+                        "16.0",
+                        "1.0",
+                        "0.0",
+                _cyperus_util_create_new_dsp_module,
+                node);
 	    } else if (!node.type.localeCompare("filter/bandpass")) {
 		console.log('_cyperus.osc_add_module_filter_bandpass()');
 		var path = _cyperus_util_get_current_bus_path();
@@ -4642,6 +4787,28 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
+
+    } else if (!this.type.localeCompare("envelope/segment")) {
+        console.log('reset', this.properties['reset']);
+    console.log('start', this.properties['start']);
+    console.log('step_size', this.properties['step_size']);
+    console.log('min', this.properties['min']);
+    console.log('max', this.properties['max']);
+    console.log('direction', this.properties['direction']);
+    console.log('auto_reset', this.properties['auto_reset']);	                
+     LiteGraph._cyperus.osc_edit_module_envelope_segment(
+            LiteGraph._cyperus.uuidv4(),
+    current_path,
+    this.widgets[0].value,
+    this.widgets[1].value,
+    this.widgets[2].value,
+    this.widgets[3].value,
+    this.widgets[4].value,
+    this.widgets[5].value,
+            this.widgets[6].value,
+    console.log,
+    undefined
+    )
 	} else if (!this.type.localeCompare("filter/bandpass")) {
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('cutoff', this.properties['cutoff']);
