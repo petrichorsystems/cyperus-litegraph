@@ -2829,14 +2829,16 @@ class Cyperus {
 	
 	node.properties['id'] = new_bus_uuid;
 	node.properties['is_bus'] = true;
+
+        node.subgraph.bus_id = new_bus_uuid;
+        node.subgraph.node_id = node.id;
+        
 	LiteGraph._cyperus.osc_list_bus_port(
             LiteGraph._cyperus.uuidv4(),
             new_path,
 	    _cyperus_util_create_bus_port_litegraph_nodes,
 	    args);
     }
-
-
     
     function _cyperus_util_store_new_dsp_module_ports(response, args) {
 	var node = args;
@@ -3020,6 +3022,8 @@ class Cyperus {
 	   )
 	{
 	    if (!node.type.localeCompare("cyperus/bus/add")) {
+                console.log('LGraph.prototype.add()::_cyperus_util_get_current_bus_path()');
+                console.log(_cyperus_util_get_current_bus_path())
 		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
                                                LiteGraph._cyperus.uuidv4(),
 					       'name',
@@ -4003,6 +4007,14 @@ class Cyperus {
             version: LiteGraph.VERSION
         };
 
+        if( this.bus_id ) {
+            data['bus_id'] = this.bus_id;
+        }
+
+        if( this.node_id ) {
+            data['node_id'] = this.node_id;
+        }
+        
         console.log('data');
         console.log(data);
         
