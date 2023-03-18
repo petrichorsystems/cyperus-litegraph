@@ -2605,11 +2605,11 @@ class Cyperus {
 	var paths = [];
 
 	console.log(LiteGraph._global_graph_stack);
-	
-	for (var i = 0; i < LiteGraph._global_graph_stack.length; i++) {
-	    paths.push(LiteGraph._global_graph_stack[i]);
-	}
-	return "/".concat('', paths.join('/'));
+
+        if (LiteGraph._global_graph_stack.length)
+            return LiteGraph._global_graph_stack[LiteGraph._global_graph_stack.length - 1]
+        else
+            return '/'
     }
 
     function _cyperus_util_get_current_bus_id() {
@@ -2795,7 +2795,7 @@ class Cyperus {
         // console.log('FILTERED', filtered);
         
 	var temp_bus_uuid = filtered[filtered.length - 1].split('|')[0];
-	var bus_path = `${response[2]}/${temp_bus_uuid}`;
+	var bus_path = `${temp_bus_uuid}`;
 
 	LiteGraph._cyperus.osc_list_bus(
             LiteGraph._cyperus.uuidv4(),
@@ -2949,7 +2949,7 @@ class Cyperus {
         // console.log('FILTERED', filtered);
         
 	var temp_bus_uuid = filtered[filtered.length - 1].split('|')[0];
-	var bus_path = `${response[2]}/${temp_bus_uuid}`;
+	var bus_path = `${temp_bus_uuid}`;
 
 	LiteGraph._cyperus.osc_list_bus(
             LiteGraph._cyperus.uuidv4(),
@@ -2975,9 +2975,9 @@ class Cyperus {
 	
 	var new_path = undefined;
 	if (LiteGraph._global_graph_stack.length == 0) {
-	    new_path = `/${new_bus_uuid}`;
+	    new_path = `${new_bus_uuid}`;
 	} else {
-	    new_path = _cyperus_util_get_current_bus_path().concat('/', new_bus_uuid);
+	    new_path = new_bus_uuid;
 	}
 	
 	node.properties['id'] = new_bus_uuid;
@@ -3197,7 +3197,7 @@ class Cyperus {
 		if( LiteGraph._global_graph_stack.length == 0 ) {
 		    LiteGraph._cyperus.osc_list_bus(
                         LiteGraph._cyperus.uuidv4(),
-                        _cyperus_util_get_current_bus_path(),
+                        '/',
 			1,
 			_cyperus_util_store_new_bus_uuid,
                         args);
