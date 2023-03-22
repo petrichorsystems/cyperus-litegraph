@@ -225,8 +225,8 @@ class Cyperus {
 
     osc_add_connection(
         request_id,
-        path_out,
-	path_in,
+        id_out,
+	id_in,
 	callback,
 	args) {
 	var self = this;
@@ -240,11 +240,11 @@ class Cyperus {
                     },
                     {
                         type: "s",
-                        value: path_out
+                        value: id_out
                     },
                     {
                         type: "s",
-                        value: path_in
+                        value: id_in
                     }
                 ]
 	    },
@@ -254,8 +254,8 @@ class Cyperus {
     }
 
     osc_remove_connection(request_id,
-                          path_out,
-			  path_in,
+                          id_out,
+			  id_in,
 			  callback,
 			  args) {
 	var self = this;
@@ -265,11 +265,11 @@ class Cyperus {
 		args: [
                     {
                         type: "s",
-                        value: path_out
+                        value: id_out
                     },
                     {
                         type: "s",
-                        value: path_in
+                        value: id_in
                     }
                 ]
 	    },
@@ -2654,6 +2654,9 @@ class Cyperus {
     
     function _cyperus_util_create_new_bus_port_litegraph_nodes(bus_ports, args) {
 
+        console.log('_cyperus_util_create_new_bus_port_litegraph_nodes(), bus_ports:');
+        console.log(bus_ports);
+        
 	var node = args['node'];
 	var my_id = args['my_id'];
 	var ins = [];
@@ -6196,32 +6199,32 @@ class Cyperus {
 	    current_bus_path = "";
 	}
         
-	var connection_out_path = undefined;
-	if (this.properties['is_bus_port']) {
-	    connection_out_path = current_bus_path.concat(':', cyperus_id_out);
-	} else if (this.properties['is_module']) {
-	    connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
-	} else if (this.properties['is_bus']) {
-	    connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
-	} else {
-	    connection_out_path = cyperus_id_out;
-	}
+	// var connection_out_path = undefined;
+	// if (this.properties['is_bus_port']) {
+	//     connection_out_path = current_bus_path.concat(':', cyperus_id_out);
+	// } else if (this.properties['is_module']) {
+	//     connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
+	// } else if (this.properties['is_bus']) {
+	//     connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
+	// } else {
+	//     connection_out_path = cyperus_id_out;
+	// }
 	
-	var connection_in_path = undefined;
-	if (target_node.properties['is_bus_port']) {
-	    connection_in_path = current_bus_path.concat(':', cyperus_id_in);
-	} else if (target_node.properties['is_module']) {
-	    connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
-	} else if (target_node.properties['is_bus']) {
-	    connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
-	} else {
-	    connection_in_path = cyperus_id_in;
-	}
+	// var connection_in_path = undefined;
+	// if (target_node.properties['is_bus_port']) {
+	//     connection_in_path = current_bus_path.concat(':', cyperus_id_in);
+	// } else if (target_node.properties['is_module']) {
+	//     connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
+	// } else if (target_node.properties['is_bus']) {
+	//     connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
+	// } else {
+	//     connection_in_path = cyperus_id_in;
+	// }
         
 	LiteGraph._cyperus.osc_add_connection(
             LiteGraph._cyperus.uuidv4(),
-	    connection_out_path,
-	    connection_in_path,
+	    cyperus_id_out,
+	    cyperus_id_in,
 	    console.log,
 	    undefined
 	);
