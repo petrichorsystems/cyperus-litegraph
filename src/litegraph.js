@@ -1389,7 +1389,7 @@ class Cyperus {
 			processing_outs = 1;
 		    }
 		}
-		if (line.includes('mains')) {
+		if (line.includes('-')) {
 		    if (processing_ins) {
 			ins.push(line);
 		    } else if (processing_outs) {
