@@ -3182,9 +3182,9 @@ class Cyperus {
 	   )
 	{
 	    if (!node.type.localeCompare("cyperus/bus/add")) {
-                console.log('LGraph.prototype.add()::_cyperus_util_get_current_bus_path()');
-                console.log(_cyperus_util_get_current_bus_path())
-		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
+                console.log('LGraph.prototype.add()::this.bus_id');
+                console.log(this.bus_id)
+		LiteGraph._cyperus.osc_add_bus(this.bus_id,
                                                LiteGraph._cyperus.uuidv4(),
 					       'name',
 					       'in0',
@@ -3205,11 +3205,11 @@ class Cyperus {
 			_cyperus_util_store_new_bus_uuid,
                         args);
 		} else {
-                    console.log('calling _cyperus_util_get_current_bus_path()')
+                    console.log('calling this.bus_id')
                     console.log(_cyperus_util_get_current_bus_path);
 		    LiteGraph._cyperus.osc_list_bus(
                         LiteGraph._cyperus.uuidv4(),
-                        _cyperus_util_get_current_bus_path(),
+                        this.bus_id,
 			2,
 			_cyperus_util_get_bus_descendants,
                         args);
@@ -3223,7 +3223,7 @@ class Cyperus {
                 
 	            // LiteGraph._cyperus.osc_list_bus_port(
                     //     LiteGraph._cyperus.uuidv4(),
-                    //     new_path,
+                    //     new_this.bus_id,
 	            //     _cyperus_util_create_bus_port_from_litegraph_node,
 	            //     args);
                 }
@@ -3232,19 +3232,19 @@ class Cyperus {
 
 	    } else if (!node.type.localeCompare("dsp/generator/sawtooth")) {
 		console.log('_cyperus.osc_add_module_sawtooth()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
 		
-		LiteGraph._cyperus.osc_add_module_sawtooth(path,
+		LiteGraph._cyperus.osc_add_module_sawtooth(this.bus_id,
 							   .06125,
 							   1.0,
 							   _cyperus_util_create_new_dsp_module,
 							   node);
 	    } else if (!node.type.localeCompare("oscillator/sine")) {
 		console.log('_cyperus.osc_add_module_oscillator_sine()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
@@ -3254,7 +3254,7 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_oscillator_sine(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
 		    "440.0",
 		    "1.0",
 		    "0.0",
@@ -3262,33 +3262,33 @@ class Cyperus {
 		    node);
 	    } else if (!node.type.localeCompare("dsp/generator/square")) {
 		console.log('_cyperus.osc_add_module_square()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 		
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
 
-		LiteGraph._cyperus.osc_add_module_square(path,
+		LiteGraph._cyperus.osc_add_module_square(this.bus_id,
 							 "440.0",
 							 "1.0",
 							 _cyperus_util_create_new_dsp_module,
 							 node);
 	    } else if (!node.type.localeCompare("oscillator/triangle")) {
 		console.log('_cyperus.osc_add_module_oscillator_triangle()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 		
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
 
 		LiteGraph._cyperus.osc_add_module_oscillator_triangle(
                     LiteGraph._cyperus.uuidv4(), 
-                    path,
+                    this.bus_id,
 		    "440",
 		    "1.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
 	    } else if (!node.type.localeCompare("oscillator/clock")) {
 		console.log('_cyperus.osc_add_module_oscillator_clock()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['frequency'] = "440.0";
 		node['properties']['amplitude'] = "1.0";
@@ -3297,14 +3297,15 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_oscillator_clock(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
 		    "440.0",
 		    "1.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);                
 	    } else if (!node.type.localeCompare("delay/simple")) {
 		console.log('_cyperus.osc_add_module_delay_simple()');
-		var path = _cyperus_util_get_current_bus_path();
+                
+		
 
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['time'] = "1.0";
@@ -3312,7 +3313,7 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_delay_simple(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
 		    "1.0",
 		    "1.0",
 		    "0.5",
@@ -3320,7 +3321,7 @@ class Cyperus {
 		    node);
 	    } else if (!node.type.localeCompare("envelope/follower")) {
 		console.log('_cyperus.osc_add_module_envelope_follower()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['attack'] = "1.0";
 		node['properties']['decay'] = "1.0";
@@ -3328,7 +3329,7 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_envelope_follower(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
 		    "1.0",
 		    "1.0",
 		    "1.0",
@@ -3336,7 +3337,7 @@ class Cyperus {
 		    node);
 	    } else if (!node.type.localeCompare("filter/bandpass")) {
 		console.log('_cyperus.osc_add_module_filter_bandpass()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 		
 		node['properties']['cutoff_frequency'] = "100.0";
 		node['properties']['q'] = "10.0";
@@ -3344,7 +3345,7 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_filter_bandpass(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
 		    "100.0",
 		    "10.0",
                     "1.0",
@@ -3352,25 +3353,25 @@ class Cyperus {
 		    node);
 	    } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
 		console.log('_cyperus.osc_add_module_filter_highpass()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['cutoff'] = "100.0";
 
-		LiteGraph._cyperus.osc_add_module_filter_highpass(path,
+		LiteGraph._cyperus.osc_add_module_filter_highpass(this.bus_id,
 								  "1.0",
 								  "100.0",
 								  _cyperus_util_create_new_dsp_module,
 								  node);
 	    } else if (!node.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
 		console.log('_cyperus.osc_add_module_filter_varslope_lowpass()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['amplitude'] = "1.0";
 		node['properties']['slope'] = "10.0";
 		node['properties']['cutoff_freq'] = "100.0";
 
-		LiteGraph._cyperus.osc_add_module_filter_varslope_lowpass(path,
+		LiteGraph._cyperus.osc_add_module_filter_varslope_lowpass(this.bus_id,
 									  "1.0",
 									  "10.0",
 									  "100.0",
@@ -3378,14 +3379,14 @@ class Cyperus {
 									  node);
 	    } else if (!node.type.localeCompare("network/osc/transmit")) {
 		console.log('_cyperus.osc_add_module_osc_transmit()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 		
 		node['properties']['host'] = "127.0.0.1";
 		node['properties']['port'] = "6001";
 		node['properties']['path'] = "/default";
 		node['properties']['samplerate_divisor'] = 48;
 		
-		LiteGraph._cyperus.osc_add_module_osc_transmit(path,
+		LiteGraph._cyperus.osc_add_module_osc_transmit(this.bus_id,
 							       "127.0.0.1",
 							       "6001",
 							       "/default",
@@ -3394,32 +3395,32 @@ class Cyperus {
 							       node);
 	    } else if (!node.type.localeCompare("movement/osc/metronome")) {
 		console.log('_cyperus.osc_add_module_movement_osc_metronome()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['beats_per_minute'] = "60.0";
 		node.properties['listener'] = true;
 		
-		LiteGraph._cyperus.osc_add_module_movement_osc_metronome(path,
+		LiteGraph._cyperus.osc_add_module_movement_osc_metronome(this.bus_id,
 									 60.0,
 									 _cyperus_util_create_new_dsp_module,
 									 node);
 	    } else if (!node.type.localeCompare("osc/float")) {
 		console.log('_cyperus.osc_add_module_osc_float()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['value'] = "0.0";
 		node.properties['listener'] = true;
 		
 		LiteGraph._cyperus.osc_add_module_osc_float(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
 		    0.0,
 		    _cyperus_util_create_new_dsp_module,
 		    node);
                 
 	    } else if (!node.type.localeCompare("analysis/transient_detector")) {
 		console.log('_cyperus.osc_add_moodule_analysis_transient_detector()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
 		node['properties']['sensitivity'] = "0.50";
 		node['properties']['attack_ms'] = "5.0";
@@ -3427,7 +3428,7 @@ class Cyperus {
 		node['properties']['scale'] = "1.0";
 		node.properties['listener'] = true;
 		
-		LiteGraph._cyperus.osc_add_module_analysis_transient_detector(path,
+		LiteGraph._cyperus.osc_add_module_analysis_transient_detector(this.bus_id,
 									      0.5,
 									      5.0,
 									      5.0,
@@ -3436,7 +3437,7 @@ class Cyperus {
 									      node);
 	    } else if (!node.type.localeCompare("utils/counter")) {
 		console.log('_cyperus.osc_add_module_utils_counter()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
                 node['properties']['reset'] = "0.0";
 		node['properties']['start'] = "0.0";
@@ -3450,7 +3451,7 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_utils_counter(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
                     "0.0",
                     "0.0",
                     "1.0",
@@ -3462,7 +3463,7 @@ class Cyperus {
 		    node);
 	    } else if (!node.type.localeCompare("utils/equals")) {
 		console.log('_cyperus.osc_add_module_utils_equals()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
                 node['properties']['x'] = "0.0";
 		node['properties']['y'] = "1.0";
@@ -3471,14 +3472,14 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_utils_equals(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
                     "0.0",
                     "1.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
 	    } else if (!node.type.localeCompare("utils/spigot")) {
 		console.log('_cyperus.osc_add_module_utils_spigot()');
-		var path = _cyperus_util_get_current_bus_path();
+		
 
                 node['properties']['open'] = "0.0";
 
@@ -3486,7 +3487,7 @@ class Cyperus {
 		
 		LiteGraph._cyperus.osc_add_module_utils_spigot(
                     LiteGraph._cyperus.uuidv4(),
-                    path,
+                    this.bus_id,
                     "0.0",
 		    _cyperus_util_create_new_dsp_module,
 		    node);
