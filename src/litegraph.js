@@ -711,12 +711,10 @@ class Cyperus {
 
     osc_add_module_envelope_segment(request_id,
         path,
-        reset,
-        start,
-        step_size,
+        rate,
+        shape,
         min,
         max,
-        direction,
         auto_reset,
 callback,
 args) {
@@ -735,15 +733,11 @@ value: path
 },
 {
 type: "f",
-value: reset
+value: rate
 },                    
 {
-type: "f",
-value: start
-},
-{
-type: "f",
-value: step_size
+type: "s",
+value: shape
 },
 {
 type: "f",
@@ -752,10 +746,6 @@ value: min
 {
 type: "f",
 value: max
-},
-{
-type: "f",
-value: direction
 },
 {
 type: "f",
@@ -771,12 +761,10 @@ args
 
 osc_edit_module_envelope_segment(request_id,
          path,
-         reset,
-         start,
-         step_size,
+         rate,
+         shape,
          min,
          max,
-         direction,
          auto_reset,
 callback,
 args) {
@@ -795,15 +783,11 @@ value: path
 },
 {
 type: "f",
-value: reset
+value: rate
 },                    
 {
-type: "f",
-value: start
-},
-{
-type: "f",
-value: step_size
+type: "s",
+value: shape
 },
 {
 type: "f",
@@ -812,10 +796,6 @@ value: min
 {
 type: "f",
 value: max
-},
-{
-type: "f",
-value: direction
 },
 {
 type: "f",
@@ -3281,12 +3261,10 @@ args
             console.log('_cyperus.osc_add_module_envelope_segment()');
             var path = _cyperus_util_get_current_bus_path();
     
-                    node['properties']['reset'] = "0.0";
-            node['properties']['start'] = "0.0";
-            node['properties']['step_size'] = "1.0";
+                    node['properties']['rate'] = "0.0";
+            node['properties']['shape'] = "linear";
             node['properties']['min'] = "0.0";
                     node['properties']['max'] = "16.0";
-                    node['properties']['direction'] = "1.0";
                     node['properties']['auto_reset'] = "0.0";
     
                     node['properties']['listener'] = true;
@@ -3295,11 +3273,9 @@ args
                         LiteGraph._cyperus.uuidv4(),
                         path,
                         "0.0",
-                        "0.0",
-                        "1.0",
+                        "linear",
                         "0.0",
                         "16.0",
-                        "1.0",
                         "0.0",
                 _cyperus_util_create_new_dsp_module,
                 node);
@@ -4789,12 +4765,10 @@ args
 	    )
 
     } else if (!this.type.localeCompare("envelope/segment")) {
-        console.log('reset', this.properties['reset']);
-    console.log('start', this.properties['start']);
-    console.log('step_size', this.properties['step_size']);
+        console.log('rate', this.properties['rate']);
+    console.log('shape', this.properties['shape']);
     console.log('min', this.properties['min']);
     console.log('max', this.properties['max']);
-    console.log('direction', this.properties['direction']);
     console.log('auto_reset', this.properties['auto_reset']);	                
      LiteGraph._cyperus.osc_edit_module_envelope_segment(
             LiteGraph._cyperus.uuidv4(),
@@ -4804,8 +4778,6 @@ args
     this.widgets[2].value,
     this.widgets[3].value,
     this.widgets[4].value,
-    this.widgets[5].value,
-            this.widgets[6].value,
     console.log,
     undefined
     )

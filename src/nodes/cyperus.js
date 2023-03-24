@@ -347,12 +347,10 @@ class segment extends CyperusNode {
 	super(title);
 	this.properties = {
             name: '',
-            reset: 0,
-            start: 0,
-            step_size: 1.0,
+            rate: 0,
+            shape: "linear",
             min: 0.0,
             max: 16.0,
-            direction: 1.0,
             auto_reset: 0.0,
             precision: 1,
             is_module: true,
@@ -360,19 +358,14 @@ class segment extends CyperusNode {
 
 	this.properties['module_parameters'] = [
 		{
-		    param_name: "reset",
+		    param_name: "rate",
 		    param_type: "text",
-		    param: this.properties.reset
+		    param: this.properties.rate
 		},            
 		{
-		    param_name: "start",
+		    param_name: "shape",
 		    param_type: "text",
-		    param: this.properties.start
-		},
-		{
-		    param_name: "step_size",
-		    param_type: "text",
-		    param: this.properties.step_size 
+		    param: this.properties.shape
 		},
 		{
 		    param_name: "min",
@@ -383,11 +376,6 @@ class segment extends CyperusNode {
 		    param_name: "max",
 		    param_type: "text",
 		    param: this.properties.max
-		},
-		{
-		    param_name: "direction",
-		    param_type: "text",
-		    param: this.properties.direction
 		},
 		{
 		    param_name: "auto_reset",
