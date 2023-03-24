@@ -99,13 +99,14 @@ class Cyperus {
 	// now, place the callback on the queue
     }
 
-    osc_add_bus(path,
-                request_id,
-		name,
-		input_bus_port_names,
-		output_bus_port_names,
-		callback,
-		args) {
+    osc_add_bus(
+        request_id,
+        bus_id,
+	name,
+	input_bus_port_names,
+	output_bus_port_names,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
@@ -117,7 +118,7 @@ class Cyperus {
                     },
                     {
                         type: "s",
-                        value: path
+                        value: bus_id
                     },
                     {
                         type: "s",
@@ -3172,7 +3173,15 @@ class Cyperus {
 	    if (!node.type.localeCompare("cyperus/bus/add")) {
                 console.log('LGraph.prototype.add()::this.bus_id');
                 console.log(this.bus_id)
-		LiteGraph._cyperus.osc_add_bus(this.bus_id,
+
+                target_bus_id = undefined;
+                
+                if( this.bus_id == undefined )
+                    target_bus_id = '';
+                else
+                    target_bus_id = this.bus_id;
+                
+		LiteGraph._cyperus.osc_add_bus(target_bus_id,
                                                LiteGraph._cyperus.uuidv4(),
 					       'name',
 					       'in0',
@@ -3188,7 +3197,7 @@ class Cyperus {
 		if( LiteGraph._global_graph_stack.length == 0 ) {
 		    LiteGraph._cyperus.osc_list_bus(
                         LiteGraph._cyperus.uuidv4(),
-                        '/',
+                        target_bus_id,
 			1,
 			_cyperus_util_store_new_bus_uuid,
                         args);
@@ -3196,7 +3205,7 @@ class Cyperus {
                     console.log('calling this.bus_id')
 		    LiteGraph._cyperus.osc_list_bus(
                         LiteGraph._cyperus.uuidv4(),
-                        this.bus_id,
+                        target_bus_id,
 			2,
 			_cyperus_util_get_bus_descendants,
                         args);
