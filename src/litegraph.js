@@ -2944,6 +2944,19 @@ args
 	var module_parameters = node.properties['module_parameters'];
 	for( var i=0; i<module_parameters.length; i++ ) {
 	    module_parameter = module_parameters[i];
+
+
+        console.log('module_parameter');
+        console.log(module_parameter);
+
+        options = undefined;
+        if( 'options' in module_parameter ) {
+            options = module_parameter['options'];
+        }
+
+        console.log("OPTIONS:");
+        console.log(options)
+
 	    node.addWidget(
 		module_parameter['param_type'],
 		module_parameter['param_name'],
@@ -2956,7 +2969,8 @@ args
 	                             v
 		    )
 		    
-		}
+		},
+        options
 	    )
 	}
         

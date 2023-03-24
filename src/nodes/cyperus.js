@@ -364,8 +364,10 @@ class segment extends CyperusNode {
 		},            
 		{
 		    param_name: "shape",
-		    param_type: "text",
-		    param: this.properties.shape
+		    param_type: "combo",
+		    param: this.properties.shape,
+            options: {values: ['linear','exponential','logarithmic']}
+
 		},
 		{
 		    param_name: "min",
@@ -389,7 +391,7 @@ class segment extends CyperusNode {
 
     osc_listener_callback(node, response) {
         var value = response['args'];
-        console.log('utils/counter osc_listener_callbak()');
+        console.log('envelope/segment osc_listener_callback()');
         node.widgets[0].value = value[0].toFixed(8);
         node.widgets[1].value = value[1].toFixed(8);
         node.widgets[2].value = value[2].toFixed(8);
