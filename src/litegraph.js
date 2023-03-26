@@ -2958,6 +2958,9 @@ class Cyperus {
 	node.properties['id'] = new_bus_uuid;
 	node.properties['is_bus'] = true;
 
+        console.log('NODE.PROPERITES[id]');
+        console.log(new_bus_uuid);
+        
         node.subgraph.bus_id = new_bus_uuid;
         node.subgraph.node_id = node.id;
 
@@ -3204,15 +3207,13 @@ class Cyperus {
                     args = {'node': node,
                             'from_load_configure': true};
 
-                    console.log('ADD(), node:');
-                    console.log(node);
-
-                    console.log('NODE.PARENT_BUS_NODE.BUS_ID:');
-                    console.log(node.parent_bus_node.bus_id);
+                    console.log('ADD(), this:');
+                    console.log(this);
+                    console.log(this.bus_id);
                     
 	            LiteGraph._cyperus.osc_list_bus_port(
                         LiteGraph._cyperus.uuidv4(),
-                        node.parent_bus_node.bus_id,
+                        this.bus_id,
 	                _cyperus_util_create_bus_port_from_litegraph_node,
 	                args);
                 }
@@ -3223,15 +3224,13 @@ class Cyperus {
                     args = {'node': node,
                             'from_load_configure': true};
                     
-                    console.log('ADD(), node:');
-                    console.log(node);
-
-                    console.log('NODE.PARENT_BUS_NODE.BUS_ID:');
-                    console.log(node.parent_bus_node.bus_id);
+                    console.log('ADD(), this:');
+                    console.log(this);
+                    console.log(this.bus_id);
                     
 	            LiteGraph._cyperus.osc_list_bus_port(
                         LiteGraph._cyperus.uuidv4(),
-                        node.parent_bus_node.bus_id,
+                        this.bus_id,
 	                _cyperus_util_create_bus_port_from_litegraph_node,
 	                args);
                 }
