@@ -1368,8 +1368,7 @@ class Cyperus {
 
 
 
-	_cyperus_parse_mains: function(resp, arg) {
-
+	_cyperus_parse_new_mains: function(resp, arg) {
             console.log(resp);
             
             let request_id = resp[0];
@@ -1413,6 +1412,50 @@ class Cyperus {
 	    this.graph.add(node_main_outputs);
 	},
 
+	_cyperus_parse_existing_mains: function(resp, arg) {
+            console.log(resp);
+
+            var node = arg;
+            
+            let request_id = resp[0];
+            let error_code = resp[1];
+            let mains = resp[2];
+            
+	    let ins = [];
+	    let outs = [];
+	    let processing_ins = 0;
+	    let processing_outs = 0;
+	    for (let line of mains.split('\n')) {
+		if (line.includes('in:')) {
+		    processing_ins = 1;
+		}
+		if (processing_ins) {
+		    if (line.includes('out:')) {
+			processing_ins = 0;
+			processing_outs = 1;
+		    }
+		}
+		if (line.includes('-')) {
+		    if (processing_ins) {
+			ins.push(line);
+		    } else if (processing_outs) {
+			outs.push(line);
+		    }
+		}
+		
+	    }
+	    LiteGraph.global_main_ins = ins;
+	    LiteGraph.global_main_outs = outs;
+	    let ret = {'in': ins, 'out': outs};
+
+            if (!node.type.localeCompare("cyperus/main/inputs")) {
+                node.properties.ids = ins;
+            } else if (!node.type.localeCompare("cyperus/main/outputs")) {
+                node.properties.ids = outs;
+            } else {
+                // FUCKIN ERROR
+            }
+	},
 	
         /**
          * Register a node class so it can be listed when the user wants to create a new one
@@ -1995,7 +2038,7 @@ class Cyperus {
 	    this._cyperus = new Cyperus('ws://127.0.0.1:8081');
 	    LiteGraph._cyperus = this._cyperus;
 	    this._cyperus.initialize();
-	    this._cyperus.osc_list_main(LiteGraph._cyperus_parse_mains, undefined);
+	    this._cyperus.osc_list_main(LiteGraph._cyperus_parse_new_mains, undefined);
 	}
 
         // * i have a feeling we don't need the below commented-out code *
@@ -3163,23 +3206,10 @@ class Cyperus {
 		    !node.type.localeCompare("cyperus/main/outputs")
 		 
 	    ) {
-                // console.log('SCREAM\n');
-                // if( from_load_configure) {
-                //     console.log('from_load_confiure');
-                //     console.log('configure_payload:');
-                //     console.log(configure_payload);
-
-                    
-                //     if( configure_payload['bus_nodes'].length ) {
-                //         var node_payload = configure_payload['bus_nodes'].shift();
-
-                //         console.log('node_payload');
-                //         console.log(node_payload);
-
-                //         this.add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
-                //     }
-                    
-                // }
+                if( from_load_configure) {
+                    console.log('CALLING _cyperus.osc_list_main()');
+                    this._cyperus.osc_list_main(LiteGraph._cyperus_parse_existing_mains, node);
+                }
 	    } else if (!node.type.localeCompare("cyperus/bus/add")) {
                 console.log('LGraph.prototype.add()::this.bus_id');
                 console.log(this.bus_id)
@@ -4312,9 +4342,11 @@ class Cyperus {
                 } else if( !node.type.localeCompare("cyperus/main/inputs") ||
                            !node.type.localeCompare("cyperus/main/outputs") ) {
                     console.log('ADDING:');
+                    var skip_compute_order = true;
+                    var from_load_configure = true; 
                     console.log(node);
-                    node.configure(n_info);
                     this.add(node, skip_compute_order, from_load_configure, configure_payload);
+                    node.configure(n_info);                    
                 } else if( !node.type.localeCompare("cyperus/bus/input") ||
                            !node.type.localeCompare("cyperus/bus/output") ) {
                     continue;
