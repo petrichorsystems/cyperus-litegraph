@@ -41,7 +41,7 @@ elem.querySelector("#save").addEventListener("click",function(){
 elem.querySelector("#load").addEventListener("click",function(){
 	var data = localStorage.getItem( "graphdemo_save" );
 	if(data)
-		graph.configure( JSON.parse( data ) );
+		graph.load_configure( JSON.parse( data ) );
 	console.log("loaded");
 });
 
