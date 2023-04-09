@@ -2755,26 +2755,6 @@ class Cyperus {
 
 	    in_ids.push(id);
 
-            // console.log('INIT INPUT BUS PORT');
-            // console.log('my_id', my_id);
-            // console.log('node.properties[id]', node.properties['id']);
-            // console.log('_cyperus_util_get_current_bus_id()', _cyperus_util_get_current_bus_id());
-            
-            /* external bus input port scope */
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		_cyperus_util_get_current_bus_id(),
-		my_id,
-		'input',
-		i,
-		id);
-
-            /* internal bus input port scope */
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		node.properties['id'],
-		node_idx,
-		'output',
-		i,
-		id);
 	    i++;
 	}
 ;
@@ -2801,28 +2781,6 @@ class Cyperus {
 
 	    out_ids.push(id);
 
-
-            // console.log('INIT OUTPUT BUS PORT');
-            // console.log('my_id', my_id);
-            // console.log('node.properties[id]', node.properties['id']);
-            // console.log('_cyperus_util_get_current_bus_id()', _cyperus_util_get_current_bus_id());
-
-            /* external bus output port scope */
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		_cyperus_util_get_current_bus_id(),
-		my_id,
-		'output',
-		i,
-		id);
-
-            /* internal bus output port scope */            
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		node.properties['id'],
-		node_idx,
-		'input',
-		i,
-		id);
-	    i++;
 	}
 
 	node.properties['bus_input_ids'] = in_ids;
@@ -2922,22 +2880,7 @@ class Cyperus {
                 var name = inval_split[1];
 
                 bus_port_node.properties.id = id;
-                
-                /* external bus input port scope */
-                _cyperus_util_store_litegraph_to_cyperus_id(
-                    parent_cyperus_id,                    
-                    args['node'].id,
-                    'input',
-                    lg_slot_number,
-                    id);
-
-                /* internal bus input port scope */
-                _cyperus_util_store_litegraph_to_cyperus_id(
-                    bus_port_node.properties.id,
-                    bus_port_node.id,
-                    'output',
-                    lg_slot_number,
-                    id); 
+                in_ids.push(id);
             }
 
             if (!bus_port_node.type.localeCompare("cyperus/bus/output")) {
@@ -2960,24 +2903,11 @@ class Cyperus {
                 var name = outval_split[1];
 
                 bus_port_node.properties.id = id;
-                
-                /* external bus output port scope */
-                _cyperus_util_store_litegraph_to_cyperus_id(
-                    parent_cyperus_id,
-                    args['node'].id,
-                    'output',
-                    lg_slot_number,
-                    id);
-
-                /* internal bus output port scope */            
-                _cyperus_util_store_litegraph_to_cyperus_id(
-                    bus_port_node.properties['id'],
-                    bus_port_node.id,
-                    'input',
-                    lg_slot_number,
-                    id);
+                out_ids.push(id);
             }
         }
+        node.properties['bus_input_ids'] = in_ids;
+        node.properties['bus_output_ids'] = out_ids;
     }
 
     function _cyperus_util_store_new_bus_uuid(response, args) {
@@ -4464,6 +4394,8 @@ class Cyperus {
                     var skip_compute_order = true;
                     var from_load_configure = true; 
                     console.log(node);
+                    
+                    node.id = n_info.id;
                     this.add(node, skip_compute_order, from_load_configure, configure_payload);
                     node.configure(n_info);                    
                 } else {
@@ -6402,8 +6334,6 @@ class Cyperus {
         
 	// START CYPERUS CODE
 	
-	var output_graph_id = undefined;        
-        
 	console.log('type: ');
 	console.log(this.type)
 	
@@ -10963,6 +10893,8 @@ LGraphNode.prototype.executeAction = function(action)
      * @method drawConnections
      **/
     LGraphCanvas.prototype.drawConnections = function(ctx) {
+        console.log('litegraph.js::LGraphCanvas.prorotype.drawConnections()');
+        
         var now = LiteGraph.getTime();
         var visible_area = this.visible_area;
         margin_area[0] = visible_area[0] - 20;
@@ -10988,7 +10920,13 @@ LGraphNode.prototype.executeAction = function(action)
             for (var i = 0; i < node.inputs.length; ++i) {
                 var input = node.inputs[i];
 
+                    console.log('node:');
+                    console.log(node);
+                    console.log('node.inputs:');
+                    console.log(node.inputs)
+                
                 if (!input || input.links == null || input.links == []) {
+                    console.log('litegraph.js::LGraphCanvas.prorotype.drawConnections(), no input link or links');
                     continue;
                 }
                 
@@ -10999,6 +10937,7 @@ LGraphNode.prototype.executeAction = function(action)
 
 
                     if (!link) {
+                        console.log("litegraph.js::LGraphCanvas.prorotype.drawConnections(), this.graph.links[link_id] doesn't exist");
                         continue;
                     }
 
@@ -11006,6 +10945,11 @@ LGraphNode.prototype.executeAction = function(action)
                     //find link info
                     var start_node = this.graph.getNodeById(link.origin_id);
                     if (start_node == null) {
+                        console.log("litegraph.js::LGraphCanvas.prorotype.drawConnections(), start_node is null");
+                        console.log('this.graph');
+                        console.log(this.graph);
+                        console.log('link.origin_id');
+                        console.log(link.origin_id);
                         continue;
                     }
                     
@@ -11041,12 +10985,14 @@ LGraphNode.prototype.executeAction = function(action)
 
                     //skip links outside of the visible area of the canvas
                     if (!overlapBounding(link_bounding, margin_area)) {
+                        console.log('litegraph.js::LGraphCanvas.prorotype.drawConnections(), link outside visible canvas area');                        
                         continue;
                     }
 
                     var start_slot = start_node.outputs[start_node_slot];
                     var end_slot = node.inputs[i];
                     if (!start_slot || !end_slot) {
+                        console.log('litegraph.js::LGraphCanvas.prorotype.drawConnections(), no start slot and end slot');
                         continue;
                     }
                     var start_dir =
