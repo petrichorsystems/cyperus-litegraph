@@ -4311,21 +4311,22 @@ class Cyperus {
         var nodes = data.nodes;
 
         //decode links info (they are very verbose)
-        if (data.links && data.links.constructor === Array) {
-            var links = [];
-            for (var i = 0; i < data.links.length; ++i) {
-                var link_data = data.links[i];
-		if(!link_data) //weird bug
-		{
-		    console.warn("serialized graph link data contains errors, skipping.");
-		    continue;
-		}
-                var link = new LLink();
-                link.configure(link_data);
-                links[link.id] = link;
-            }
-            data.links = links;
-        }
+        // if (data.links && data.links.constructor === Array) {
+        //     var links = [];
+        //     for (var i = 0; i < data.links.length; ++i) {
+        //         var link_data = data.links[i];
+	// 	if(!link_data) //weird bug
+	// 	{
+	// 	    console.warn("serialized graph link data contains errors, skipping.");
+	// 	    continue;
+	// 	}
+        //         var link = new LLink();
+        //         link.configure(link_data);
+        //         links[link.id] = link;
+        //     }
+        //     data.links = links;
+        // }
+
         
         //copy all stored fields
         for (var i in data) {
@@ -4426,8 +4427,8 @@ class Cyperus {
                     'parent_subgraph': this,
                     'parent_subgraph_node': prev_subgraph_node,
                     'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
-                    'bus_nodes': cyperus_bus_nodes,
-                    'links': links
+                    'bus_nodes': cyperus_bus_nodes// ,
+                    // 'links': links
                 }
                 console.log("configure_payload['parent_subgraph']:");
                 console.log(configure_payload['parent_subgraph']);
