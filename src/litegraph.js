@@ -2858,9 +2858,10 @@ class Cyperus {
             bus_port_node.configure(bus_port_node_n_info);
 
             var parent_cyperus_id = undefined;
-            if( args['configure_payload']['parent_subgraph_node'] != undefined )
-                parent_cyperus_id = args['configure_payload']['parent_subgraph_node'].properties.id;
-            
+            if( args['configure_payload']['parent_subgraph_node'] != undefined ) {
+                parent_cyperus_id = args['configure_payload']['parent_subgraph_node'].bus_id;
+            }
+
             if (!bus_port_node.type.localeCompare("cyperus/bus/input")) {
                 var lg_slot_number = 0;
                 var inval = undefined;
