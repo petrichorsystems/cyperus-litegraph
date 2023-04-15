@@ -2931,8 +2931,14 @@ class Cyperus {
         console.log("args['configure_payload']['bus_n_info']:");
         console.log(args['configure_payload']['bus_n_info']);
 
-        var keep_old = true;
-        node.subgraph.load_configure(args['configure_payload']['bus_n_info'].subgraph, keep_old, node.subgraph);
+        // configure subgraph within bus
+        console.log("litegraph.js::_cyperus_util_create_bus_ports_from_litegraph_nodes(), node.type:");
+        console.log(node.type);
+        
+        if (!node.type.localeCompare("cyperus/bus/add")) {
+            var keep_old = true;
+            node.subgraph.load_configure(args['configure_payload']['bus_n_info'].subgraph, keep_old, node.subgraph);
+        }
     }
 
     // function _cyperus_util_
@@ -2989,8 +2995,8 @@ class Cyperus {
     }
     
     function _cyperus_util_store_new_dsp_module_ports(response, args) {
-	var node = args;
-        
+	var node = args['node'];
+
 	console.log('module_parameters ', node.properties['module_parameters']);
 	var module_parameters = node.properties['module_parameters'];
 	for( var i=0; i<module_parameters.length; i++ ) {
@@ -3058,19 +3064,49 @@ class Cyperus {
 		    cyperus_id);
 	    }
 	}
-	
-	node.graph.list_of_graphcanvas[0].drawNodeWidgets(
-	    node,
-	    0,
-	    node.graph.list_of_graphcanvas[0].bgctx,
-	    null
-	);
+
+        if (args['from_load_configure']) {
+            console.log('bus_n_info', args['configure_payload']['bus_n_info']);
+
+            node.configure(args['configure_payload']['bus_n_info']);
+            
+            var node_payload = args['configure_payload']['bus_nodes'].shift();
+            if( node_payload ) {
+                configure_payload = {
+                    'bus_n_info': node_payload['n_info'],
+                    'parent_subgraph': args['configure_payload']['parent_subgraph'],
+                    'parent_subgraph_node': node,
+                    'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
+                    'bus_nodes': args['configure_payload']['bus_nodes']// ,
+                    // 'links': links
+                }            
+                
+                var skip_compute_order = true;
+                var from_load_configure = true;
+                args['configure_payload']['parent_subgraph'].add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
+            }
+            
+            console.log("args['configure_payload']['bus_n_info']:");
+            console.log(args['configure_payload']['bus_n_info']);
+            
+        }
+        
+	// node.graph.list_of_graphcanvas[0].drawNodeWidgets(
+	//     node,
+	//     0,
+	//     node.graph.list_of_graphcanvas[0].bgctx,
+	//     null
+	// );
     }
 
     function _cyperus_util_create_new_dsp_module(response, args) {
-	var node = args;
+        console.log('litegraph.js::_cyperus_util_create_new_dsp_module()');
+        console.log('litegraph.js::_cyperus_util_create_new_dsp_module(), args:');
+        console.log(args);
+        
+	var node = args['node'];
 	var self = this;
-
+        
 	// store id
 	node.properties['id'] = response[2];
 
@@ -3087,7 +3123,7 @@ class Cyperus {
             LiteGraph._cyperus.uuidv4(),
             response[2],
 	    _cyperus_util_store_new_dsp_module_ports,
-	    node);
+	    args);
 					       
     }
     
@@ -3160,7 +3196,13 @@ class Cyperus {
 	//
 	// build current path
 	//
-	
+	target_bus_id = undefined;
+        
+        if( this.bus_id == undefined )
+            target_bus_id = '';
+        else
+            target_bus_id = this.bus_id;
+        
 
 	// console.log("node.type", node.type);
 	
@@ -3176,13 +3218,6 @@ class Cyperus {
                     this._cyperus.osc_list_main(LiteGraph._cyperus_parse_existing_mains, node);
                 }
 	    } else if (!node.type.localeCompare("cyperus/bus/add")) {
-                target_bus_id = undefined;
-                
-                if( this.bus_id == undefined )
-                    target_bus_id = '';
-                else
-                    target_bus_id = this.bus_id;
-
                 console.log('litegraph.js::LGraph.prototype.add(), target_bus_id:');
                 console.log(target_bus_id);
                 
@@ -3322,20 +3357,28 @@ class Cyperus {
                 } else if (!node.type.localeCompare("delay/simple")) {
                     console.log('_cyperus.osc_add_module_delay_simple()');
 
-
-
-                    node['properties']['amplitude'] = "1.0";
-                    node['properties']['time'] = "1.0";
-                    node['properties']['feedback'] = "0.5";
+                args = {'node': node,
+                        'from_load_configure': from_load_configure,
+                        'configure_payload': configure_payload};
+                    
+                    if (!from_load_configure) {
+                        node['properties']['amplitude'] = "1.0";
+                        node['properties']['time'] = "1.0";
+                        node['properties']['feedback'] = "0.5";
+                    } else {
+                        node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
+                        node['properties']['time'] = configure_payload['bus_n_info'].properties['time'];
+                        node['properties']['feedback'] = configure_payload['bus_n_info'].properties['feedback'];  
+                    }
 
                     LiteGraph._cyperus.osc_add_module_delay_simple(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        "1.0",
-                        "1.0",
-                        "0.5",
+                        node['properties']['amplitude'],
+                        node['properties']['time'],
+                        node['properties']['feedback'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
                 } else if (!node.type.localeCompare("envelope/follower")) {
                     console.log('_cyperus.osc_add_module_envelope_follower()');
 
@@ -4427,7 +4470,9 @@ class Cyperus {
                     // this.add(node, skip_compute_order); //add before configure, otherwise configure cannot create links
                     node.id = n_info.id;
                     node_payload = {
-                        'node': node
+                        'n_info': n_info,
+                        'node': node,
+                        'subgraph_bus_port_nodes': []
                     }
                     
                     cyperus_bus_nodes.push(node_payload);
