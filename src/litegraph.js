@@ -3033,6 +3033,8 @@ class Cyperus {
         if (args['from_load_configure']) {
             console.log('bus_n_info', args['configure_payload']['bus_n_info']);
 
+            
+            args['configure_payload']['bus_n_info'].properties.id = node.properties.id;
             node.configure(args['configure_payload']['bus_n_info']);
             
 	    for (var i = 0; i < cyperus_input_ports.length; i++) {
@@ -3042,6 +3044,7 @@ class Cyperus {
 	    for (var i = 0; i < cyperus_output_ports.length; i++) {
                 node.outputs[i].id = cyperus_output_ports[i];                
 	    }            
+            
             
             var node_payload = args['configure_payload']['bus_nodes'].shift();
             if( node_payload ) {
@@ -3255,34 +3258,32 @@ class Cyperus {
 	        //         args);
                 // }
 	    } else {
-                if (!node.type.localeCompare("dsp/generator/sawtooth")) {
-                    console.log('_cyperus.osc_add_module_sawtooth()');
 
+                args = {'node': node,
+                        'from_load_configure': from_load_configure,
+                        'configure_payload': configure_payload};
 
-                    node['properties']['frequency'] = "440.0";
-                    node['properties']['amplitude'] = "1.0";
-
-                    LiteGraph._cyperus.osc_add_module_sawtooth(this.bus_id,
-                                                               .06125,
-                                                               1.0,
-                                                               _cyperus_util_create_new_dsp_module,
-                                                               node);
-                } else if (!node.type.localeCompare("oscillator/sine")) {
+                if (!node.type.localeCompare("oscillator/sine")) {
                     console.log('_cyperus.osc_add_module_oscillator_sine()');
 
-
-                    node['properties']['frequency'] = "440.0";
-                    node['properties']['amplitude'] = "1.0";
-                    node['properties']['phase'] = "0.0";
-
+                    if (!from_load_configure) {
+                        node['properties']['frequency'] = "440.0";
+                        node['properties']['amplitude'] = "1.0";
+                        node['properties']['phase'] = "0.0";                        
+                    } else {
+                        node['properties']['frequency'] = configure_payload['bus_n_info'].properties['frequency'];
+                        node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
+                        node['properties']['phase'] = configure_payload['bus_n_info'].properties['phase'];
+                    }
+                    
                     node['properties']['listener'] = true;
 
                     LiteGraph._cyperus.osc_add_module_oscillator_sine(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        "440.0",
-                        "1.0",
-                        "0.0",
+                        node['properties']['frequency'],
+                        node['properties']['amplitude'],
+                        node['properties']['phase'],
                         _cyperus_util_create_new_dsp_module,
                         node);
                 } else if (!node.type.localeCompare("dsp/generator/square")) {
@@ -3329,10 +3330,6 @@ class Cyperus {
                         node);                
                 } else if (!node.type.localeCompare("delay/simple")) {
                     console.log('_cyperus.osc_add_module_delay_simple()');
-
-                args = {'node': node,
-                        'from_load_configure': from_load_configure,
-                        'configure_payload': configure_payload};
                     
                     if (!from_load_configure) {
                         node['properties']['amplitude'] = "1.0";
@@ -4222,9 +4219,6 @@ class Cyperus {
             data['node_id'] = this.node_id;
         }
         
-        console.log('data');
-        console.log(data);
-        
 	if(this.onSerialize)
 	    this.onSerialize(data);
 
@@ -4955,17 +4949,7 @@ class Cyperus {
 
 	// START CYPERUS CODE
 	
-	if (!this.type.localeCompare("dsp/generator/sawtooth")) {
-	    console.log('frequency', this.properties['frequency']);
-	    console.log('amplitude', this.properties['amplitude']);
-	    LiteGraph._cyperus.osc_edit_module_sawtooth(
-		this.properties['id'],
-		this.widgets[0].value,
-		this.widgets[1].value,
-		console.log,
-		undefined
-	    )
-	} else if (!this.type.localeCompare("oscillator/sine")) {
+        if (!this.type.localeCompare("oscillator/sine")) {
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
