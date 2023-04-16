@@ -2651,34 +2651,6 @@ class Cyperus {
 	return LiteGraph._global_graph_stack[LiteGraph._global_graph_stack.length - 1];
     }
 
-    function _cyperus_util_store_litegraph_to_cyperus_id(graph_id,
-							 lg_node_id,
-							 lg_slot_type,
-							 lg_slot_no,
-							 cyperus_id) {
-	if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id]) {
-	    if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id]) {
-		if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type]) {
-		    if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no]){
-		    }
-		} else {
-		    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
-		    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
-		}
-	    } else {
-		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id] = {}
-		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
-		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
-	    }
-	} else {
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id] = {}
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id] = {}
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
-	}
-	LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] =  cyperus_id;
-    }
-								
 
     function _cyperus_util_add_connection(response, args) {
 	console.log('response: ');
@@ -3022,6 +2994,9 @@ class Cyperus {
 	var raw_input_ports = raw_ports[0].split('\n').slice(1);
 	var raw_output_ports = raw_ports[1].split('\n');
 
+        var cyperus_input_ports = [];
+        var cyperus_output_ports = [];
+        
 	console.log('raw_input_ports ', raw_input_ports);
 	console.log('raw_output_ports', raw_output_ports);
 
@@ -3036,12 +3011,7 @@ class Cyperus {
 		var cyperus_id = split_input_port[0];
 		var port_name = split_input_port[1];
 		node.addInput(port_name, "number", {'id': cyperus_id});
-		_cyperus_util_store_litegraph_to_cyperus_id(
-		    _cyperus_util_get_current_bus_id(),
-		    node.id,
-		    "input",
-		    i,
-		    cyperus_id);   
+                cyperus_input_ports.push(cyperus_id);
 	    }
 	}
 
@@ -3056,19 +3026,22 @@ class Cyperus {
 		var port_name = split_output_port[1];
 
 		node.addOutput(port_name, "number", {'id': cyperus_id });
-		_cyperus_util_store_litegraph_to_cyperus_id(
-		    _cyperus_util_get_current_bus_id(),
-		    node.id,
-		    "output",
-		    i,
-		    cyperus_id);
 	    }
+            cyperus_output_ports.push(cyperus_id);
 	}
 
         if (args['from_load_configure']) {
             console.log('bus_n_info', args['configure_payload']['bus_n_info']);
 
             node.configure(args['configure_payload']['bus_n_info']);
+            
+	    for (var i = 0; i < cyperus_input_ports.length; i++) {
+                node.inputs[i].id = cyperus_input_ports[i];
+	    }
+
+	    for (var i = 0; i < cyperus_output_ports.length; i++) {
+                node.outputs[i].id = cyperus_output_ports[i];                
+	    }            
             
             var node_payload = args['configure_payload']['bus_nodes'].shift();
             if( node_payload ) {
@@ -11044,8 +11017,6 @@ LGraphNode.prototype.executeAction = function(action)
                     var end_dir =
                         end_slot.dir ||
                         (node.horizontal ? LiteGraph.UP : LiteGraph.LEFT);
-
-                    console.log('ATTEMPTING TO RENDER');
                     
                     this.renderLink(
                         ctx,
