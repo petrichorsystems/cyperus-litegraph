@@ -6401,8 +6401,11 @@ class Cyperus {
             cyperus_id_out = this.properties.id;
 	} else 	if (!this.type.localeCompare("cyperus/bus/add")) {
             cyperus_id_out = this.properties.bus_output_ids[slot];;
+        } else {
+            cyperus_id_out = this.outputs[slot]['id'];
         }
-	
+
+        var cyperus_id_in = undefined;
 	if (!target_node.type.localeCompare("cyperus/main/outputs")) {
 	    cyperus_id_in = target_node.properties['ids'][target_slot];
 	} else if (!target_node.type.localeCompare("cyperus/bus/input") ||
@@ -6410,6 +6413,8 @@ class Cyperus {
             cyperus_id_in = target_node.properties.id;
 	} else 	if (!target_node.type.localeCompare("cyperus/bus/add")) {
             cyperus_id_in = target_node.properties.bus_input_ids[target_slot];;
+        } else {
+            cyperus_id_in = target_node.inputs[slot]['id'];
         }
         
 	// var connection_out_path = undefined;
