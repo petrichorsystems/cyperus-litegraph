@@ -3043,8 +3043,7 @@ class Cyperus {
 
 	    for (var i = 0; i < cyperus_output_ports.length; i++) {
                 node.outputs[i].id = cyperus_output_ports[i];                
-	    }            
-            
+	    }                        
             
             var node_payload = args['configure_payload']['bus_nodes'].shift();
             if( node_payload ) {
@@ -3285,7 +3284,7 @@ class Cyperus {
                         node['properties']['amplitude'],
                         node['properties']['phase'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
                 } else if (!node.type.localeCompare("dsp/generator/square")) {
                     console.log('_cyperus.osc_add_module_square()');
 
