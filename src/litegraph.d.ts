@@ -1,6 +1,7 @@
 // Type definitions for litegraph.js 0.7.0
 // Project: litegraph.js
-// Definitions by: NateScarlet <https://github.com/NateScarlet>
+// Definitions by: NateScarlet <https://github.com/NateScarlet>    
+
 
 export type Vector2 = [number, number];
 export type Vector4 = [number, number, number, number];
@@ -36,7 +37,7 @@ export interface INodeSlot {
 }
 
 export interface INodeInputSlot extends INodeSlot {
-    link: LLink["id"] | null;
+    links: LLink["id"][] | null;
 }
 export interface INodeOutputSlot extends INodeSlot {
     links: LLink["id"][] | null;
@@ -215,6 +216,7 @@ export const LiteGraph: {
     debug: boolean;
     catch_exceptions: boolean;
     throw_errors: boolean;
+    
     /** if set to true some nodes like Formula would be allowed to evaluate code that comes from unsafe sources (like node configuration), which could lead to exploits */
     allow_scripts: boolean;
     /** node types by string */

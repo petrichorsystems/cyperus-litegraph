@@ -41,5 +41,9 @@
         "grunt-contrib-concat": "^1.0.1",
         "nodemon": "^1.19.4",
         "rimraf": "^2.7.1"
+    },
+    "dependencies": {
+        "osc": "^2.4.3",
+        "uuid-browser": "^3.1.0"
     }
 }
