@@ -3499,16 +3499,19 @@ class Cyperus {
                 } else if (!node.type.localeCompare("osc/float")) {
                     console.log('_cyperus.osc_add_module_osc_float()');
 
-
-                    node['properties']['value'] = "0.0";
+                    if (!from_load_configure) {
+                        node['properties']['value'] = "0.0";
+                    } else {
+                        node['properties']['value'] = configure_payload['bus_n_info'].properties['value'];                        
+                    }
                     node.properties['listener'] = true;
 
                     LiteGraph._cyperus.osc_add_module_osc_float(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        0.0,
+                        node['properties']['value'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
 
                 } else if (!node.type.localeCompare("analysis/transient_detector")) {
                     console.log('_cyperus.osc_add_moodule_analysis_transient_detector()');
@@ -5013,10 +5016,13 @@ class Cyperus {
             this.properties = {};
         }
 
-        if  (this.type.localeCompare("osc/float"))
-	    if( value === this.properties[name] ) {
-	        return;
+        if  (this.type.localeCompare("osc/float")) {
+            if(name === 'value') {
+	        if( value === this.properties[name] ) {
+	            return;
+                }
             }
+        }
         
 	var prev_value = this.properties[name];
         this.properties[name] = value;
@@ -5188,6 +5194,10 @@ class Cyperus {
 	    )
 	}  else if (!this.type.localeCompare("osc/float")) {
 	    console.log('value', this.properties['value']);
+
+            if( name != 'value' )
+                this.properties[name] = value;
+            
 	    LiteGraph._cyperus.osc_edit_module_osc_float(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
