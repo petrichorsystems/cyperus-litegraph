@@ -2658,6 +2658,61 @@ class Cyperus {
 	console.log('args: ');
 	console.log(args);
     }
+
+    function _cyperus_util_add_connections_from_serialized_links(subgraph, links) {
+        console.log('litegraph.js::_cyperus_util_add_connections_from_serialized_links()');
+        console.log('subgraph:');
+        console.log(subgraph);
+        console.log('links:');
+        console.log(links);
+
+        for (var i = 0; i < links.length; i++) {
+            if (links[i]) {
+                console.log('searching thru node list..');
+
+                var cyperus_id_out = undefined;
+                var cyperus_id_in = undefined;
+                
+                for (var j = 0; j < subgraph._nodes.length; j++) {
+                    if (subgraph._nodes[j].id == links[i].origin_id) {
+	                if (!subgraph._nodes[j].type.localeCompare("cyperus/main/inputs")) {
+	                    cyperus_id_out = subgraph._nodes[j].properties['ids'][links[i].origin_slot];
+	                } else if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input") ||
+                                   !subgraph._nodes[j].type.localeCompare("cyperus/bus/output") ) {
+                            cyperus_id_out = subgraph._nodes[j].properties.id;
+	                } else 	if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/add")) {
+                            cyperus_id_out = subgraph._nodes[j].properties.bus_output_ids[links[i].origin_slot];
+                        } else {
+                            cyperus_id_out = subgraph._nodes[j].outputs[links[i].origin_slot]['id'];
+                        }   
+                    }
+
+                    if (subgraph._nodes[j].id == links[i].target_id) {
+	                if (!subgraph._nodes[j].type.localeCompare("cyperus/main/outputs")) {
+	                    cyperus_id_in = subgraph._nodes[j].properties['ids'][links[i].target_slot];
+	                } else if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input") ||
+                                   !subgraph._nodes[j].type.localeCompare("cyperus/bus/output") ) {
+                            cyperus_id_in = subgraph._nodes[j].properties.id;
+	                } else 	if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/add")) {
+                            cyperus_id_in = subgraph._nodes[j].properties.bus_input_ids[links[i].target_slot];
+                        } else {
+                            cyperus_id_in = subgraph._nodes[j].inputs[links[i].target_slot]['id'];
+                        }
+	            }
+                }
+                if (cyperus_id_out && cyperus_id_in) {
+                    console.log('found cyperus_id_out and cyperus_id_in for connection!');
+                    LiteGraph._cyperus.osc_add_connection(
+                        LiteGraph._cyperus.uuidv4(),
+	                cyperus_id_out,
+	                cyperus_id_in,
+	                console.log,
+	                undefined
+	            );
+                }
+            }
+        }   
+    }
     
     function _cyperus_util_create_new_bus_port_litegraph_nodes(bus_ports, args) {
 
@@ -2891,13 +2946,16 @@ class Cyperus {
                 'parent_subgraph': args['configure_payload']['parent_subgraph'],
                 'parent_subgraph_node': node,
                 'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
-                'bus_nodes': args['configure_payload']['bus_nodes']// ,
-                // 'links': links
+                'bus_nodes': args['configure_payload']['bus_nodes'],
+                'links': args['configure_payload']['links']
             }            
             
             var skip_compute_order = true;
             var from_load_configure = true;
             args['configure_payload']['parent_subgraph'].add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
+        } else {
+            // process links
+            _cyperus_util_add_connections_from_serialized_links(args['configure_payload']['parent_subgraph'], args['configure_payload']['links']);
         }
 
         console.log("args['configure_payload']['bus_n_info']:");
@@ -2973,6 +3031,8 @@ class Cyperus {
 	var module_parameters = node.properties['module_parameters'];
 	for( var i=0; i<module_parameters.length; i++ ) {
 	    module_parameter = module_parameters[i];
+            console.log("litegraph.js::_cyperus_util_store_new_dsp_module_ports(), module_parameter['param_name']:");
+            console.log(module_parameter['param_name']);
 	    node.addWidget(
 		module_parameter['param_type'],
 		module_parameter['param_name'],
@@ -3034,7 +3094,7 @@ class Cyperus {
             console.log('bus_n_info', args['configure_payload']['bus_n_info']);
 
             
-            args['configure_payload']['bus_n_info'].properties.id = node.properties.id;
+            args['configure_payload']['bus_n_info'].properties  = node.properties;
             node.configure(args['configure_payload']['bus_n_info']);
             
 	    for (var i = 0; i < cyperus_input_ports.length; i++) {
@@ -3052,13 +3112,16 @@ class Cyperus {
                     'parent_subgraph': args['configure_payload']['parent_subgraph'],
                     'parent_subgraph_node': node,
                     'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
-                    'bus_nodes': args['configure_payload']['bus_nodes']// ,
-                    // 'links': links
+                    'bus_nodes': args['configure_payload']['bus_nodes'],
+                    'links': args['configure_payload']['links']
                 }            
                 
                 var skip_compute_order = true;
                 var from_load_configure = true;
                 args['configure_payload']['parent_subgraph'].add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
+            } else {
+                // process links
+                _cyperus_util_add_connections_from_serialized_links(args['configure_payload']['parent_subgraph'], args['configure_payload']['links']);
             }
             
             console.log("args['configure_payload']['bus_n_info']:");
@@ -4343,23 +4406,22 @@ class Cyperus {
 
         var nodes = data.nodes;
 
-        //decode links info (they are very verbose)
-        // if (data.links && data.links.constructor === Array) {
-        //     var links = [];
-        //     for (var i = 0; i < data.links.length; ++i) {
-        //         var link_data = data.links[i];
-	// 	if(!link_data) //weird bug
-	// 	{
-	// 	    console.warn("serialized graph link data contains errors, skipping.");
-	// 	    continue;
-	// 	}
-        //         var link = new LLink();
-        //         link.configure(link_data);
-        //         links[link.id] = link;
-        //     }
-        //     data.links = links;
-        // }
-
+        // decode links info (they are very verbose)
+        if (data.links && data.links.constructor === Array) {
+            var links = [];
+            for (var i = 0; i < data.links.length; ++i) {
+                var link_data = data.links[i];
+		if(!link_data) //weird bug
+		{
+		    console.warn("serialized graph link data contains errors, skipping.");
+		    continue;
+		}
+                var link = new LLink();
+                link.configure(link_data);
+                links[link.id] = link;
+            }
+            data.links = links;
+        }
         
         //copy all stored fields
         for (var i in data) {
@@ -4466,8 +4528,8 @@ class Cyperus {
                     'parent_subgraph': this,
                     'parent_subgraph_node': prev_subgraph_node,
                     'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
-                    'bus_nodes': cyperus_bus_nodes// ,
-                    // 'links': links
+                    'bus_nodes': cyperus_bus_nodes,
+                    'links': links
                 }
 
                 var skip_compute_order = true;
@@ -4553,6 +4615,24 @@ class Cyperus {
         this._pos = new Float32Array(2); //center
     }
 
+    LLink.prototype.load_configure = function(subgraph, o) {
+        if (o.constructor === Array) {
+            this.id = o[0];
+            this.origin_id = o[1];
+            this.origin_slot = o[2];
+            this.target_id = o[3];
+            this.target_slot = o[4];
+            this.type = o[5];
+        } else {
+            this.id = o.id;
+            this.type = o.type;
+            this.origin_id = o.origin_id;
+            this.origin_slot = o.origin_slot;
+            this.target_id = o.target_id;
+            this.target_slot = o.target_slot;
+        }
+    };
+    
     LLink.prototype.configure = function(o) {
         if (o.constructor === Array) {
             this.id = o[0];
@@ -4942,13 +5022,38 @@ class Cyperus {
         this.properties[name] = value;
         if (this.onPropertyChanged) {
             if( this.onPropertyChanged(name, value, prev_value) === false ) //abort change
+                console.log('ERROR');
 		this.properties[name] = prev_value;
         }
 
 
+	if(this.widgets) //widgets could be linked to properties
+	    for(var i = 0; i < this.widgets.length; ++i)
+	{
+	    var w = this.widgets[i];
+	    if(!w)
+		continue;
+	    if(w.options.property == name)
+	    {
+		w.value = value;
+		break;
+	    }
+	}
+        
 	// START CYPERUS CODE
-	
+
+        console.log('litegraph.js::LGraphnode.prototype.setProperty(), this.type: ');
+        console.log(this.type);
+        console.log('litegraph.js::LGraphnode.prototype.setProperty(), name: ');
+        console.log(name);
+        console.log('litegraph.js::LGraphnode.prototype.setProperty(), value: ');
+        console.log(value);
+        
         if (!this.type.localeCompare("oscillator/sine")) {
+            this.properties['frequency'] = this.widgets[0].value;
+            this.properties['amplitude'] = this.widgets[1].value;
+            this.properties['phase'] = this.widgets[2].value;
+            
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
@@ -4995,6 +5100,10 @@ class Cyperus {
 		undefined
 	    )
 	} else if (!this.type.localeCompare("delay/simple")) {
+            this.properties['amplitude'] = this.widgets[0].value;
+            this.properties['time'] = this.widgets[1].value;
+            this.properties['feedback'] = this.widgets[2].value;
+            
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('time', this.properties['time']);
 	    console.log('feeback', this.properties['feedback']);	    
@@ -5147,18 +5256,18 @@ class Cyperus {
 	// END CYPERUS CODE
 
 	
-		if(this.widgets) //widgets could be linked to properties
-			for(var i = 0; i < this.widgets.length; ++i)
-			{
-				var w = this.widgets[i];
-				if(!w)
-					continue;
-				if(w.options.property == name)
-				{
-					w.value = value;
-					break;
-				}
-			}
+	if(this.widgets) //widgets could be linked to properties
+	    for(var i = 0; i < this.widgets.length; ++i)
+	{
+	    var w = this.widgets[i];
+	    if(!w)
+		continue;
+	    if(w.options.property == name)
+	    {
+		w.value = value;
+		break;
+	    }
+	}
     };
 
     // Execution *************************
@@ -12995,6 +13104,11 @@ LGraphNode.prototype.executeAction = function(action)
     };
 
     LGraphCanvas.prototype.showEditPropertyValue = function( node, property, options ) {
+        console.log('litegraph.js::LGraphCanvas.prototype.showEditPropertyValue()');
+
+        console.log('litegraph.js::LGraphCanvas.prototype.showEditPropertyValue(), property:');
+        console.log(property);
+        
         if (!node || node.properties[property] === undefined) {
             return;
         }
@@ -13003,7 +13117,7 @@ LGraphNode.prototype.executeAction = function(action)
         var that = this;
 
         var info = node.getPropertyInfo(property);
-		var type = info.type;
+	var type = info.type;
 
         var input_html = "";
 
