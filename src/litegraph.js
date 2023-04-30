@@ -3502,7 +3502,11 @@ class Cyperus {
                     if (!from_load_configure) {
                         node['properties']['value'] = "0.0";
                     } else {
-                        node['properties']['value'] = configure_payload['bus_n_info'].properties['value'];                        
+                        node['properties']['value'] = configure_payload['bus_n_info'].properties['value'];
+                        node['properties']['min'] = configure_payload['bus_n_info'].properties['min'];
+                        node['properties']['max'] = configure_payload['bus_n_info'].properties['max'];
+                        node['properties']['color'] = configure_payload['bus_n_info'].properties['color'];
+                        node['properties']['precision'] = configure_payload['bus_n_info'].properties['precision'];
                     }
                     node.properties['listener'] = true;
 
@@ -11107,6 +11111,9 @@ LGraphNode.prototype.executeAction = function(action)
                         continue;
                     }
 
+                    if (start_node.outputs === undefined)
+                        continue;
+                    
                     var start_slot = start_node.outputs[start_node_slot];
                     var end_slot = node.inputs[i];
                     if (!start_slot || !end_slot) {
