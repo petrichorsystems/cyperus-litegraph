@@ -3414,19 +3414,24 @@ class Cyperus {
                 } else if (!node.type.localeCompare("envelope/follower")) {
                     console.log('_cyperus.osc_add_module_envelope_follower()');
 
-
-                    node['properties']['attack'] = "1.0";
-                    node['properties']['decay'] = "1.0";
-                    node['properties']['scale'] = "1.0";
+                    if (!from_load_configure) {
+                        node['properties']['attack'] = "1.0";
+                        node['properties']['decay'] = "1.0";
+                        node['properties']['scale'] = "1.0";
+                    } else {
+                        node['properties']['attack'] = configure_payload['bus_n_info'].properties['attack'];
+                        node['properties']['decay'] = configure_payload['bus_n_info'].properties['decay'];
+                        node['properties']['scale'] = configure_payload['bus_n_info'].properties['scale'];
+                    }
 
                     LiteGraph._cyperus.osc_add_module_envelope_follower(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        "1.0",
-                        "1.0",
-                        "1.0",
+                        node.properties['attack'],
+                        node.properties['decay'],
+                        node.properties['scale'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
                 } else if (!node.type.localeCompare("filter/bandpass")) {
                     console.log('_cyperus.osc_add_module_filter_bandpass()');
 
