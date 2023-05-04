@@ -42,15 +42,18 @@
 .litegraph-editor .content {
     position: relative;
     width: 100%;
-    height: calc(100% - 80px);
+    height: calc(100% - 120px);
     background-color: #1a1a1a;
+    /* background-color: #fff; */
 }
 
 .litegraph-editor .header,
 .litegraph-editor .footer {
     position: relative;
-    height: 40px;
+    height: 60px;
     background-color: #333;
+    z-index: 10;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
     /*border-radius: 10px 10px 0 0;*/
 }
 
@@ -58,11 +61,21 @@
 .litegraph-editor .tools-left,
 .litegraph-editor .tools-right {
     position: absolute;
-    top: 2px;
+    top: 0px;
     right: 0px;
     vertical-align: top;
 
-    margin: 2px 5px 0 0px;
+    margin: 14px 5px 0px 0px;
+}
+
+.litegraph-editor .tools-left-bottom {
+    position: absolute;
+    top: 0px;
+    right: auto;
+    left: 4px;
+    vertical-align: top;
+
+    margin: 20px 5px 0px 0px;
 }
 
 .litegraph-editor .tools-left {
@@ -71,7 +84,7 @@
 }
 
 .litegraph-editor .footer {
-    height: 40px;
+    height: 60px;
     position: relative;
     /*border-radius: 0 0 10px 10px;*/
 }
@@ -100,9 +113,9 @@
     min-width: 30px;
     /*border-radius: 0.3em;*/
     border: 0 solid #666;
-    background-color: #3f3f3f;
+    background-color: #333;
     /*box-shadow: 0 0 3px black;*/
-    padding: 4px 10px;
+    padding: 10px 10px;
     cursor: pointer;
     transition: all 1s;
     -moz-transition: all 1s;
