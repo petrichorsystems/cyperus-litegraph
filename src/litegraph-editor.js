@@ -23,7 +23,9 @@ function Editor(container_id, options) {
     // var graph = (this.graph = new LGraph(undefined, global_cyperus));
     var graph = (this.graph = new LGraph());
     var graphcanvas = (this.graphcanvas = new LGraphCanvas(canvas, graph));
-    graphcanvas.background_image = "imgs/grids.png";
+    
+    // graphcanvas.background_image = "imgs/grids.png";
+    
     graph.onAfterExecute = function() {
         graphcanvas.draw(true);
     };
@@ -32,16 +34,19 @@ function Editor(container_id, options) {
 	graphcanvas.onDropItem = this.onDropItem.bind(this);
 
     //add stuff
-    this.addToolsButton("loadsession_button","load","imgs/file_open_FILL0_wght400_GRAD0_opsz48.svg", this.onLoadButton.bind(this), ".tools-left");
-    this.addToolsButton("savesession_button","save","imgs/save_FILL0_wght400_GRAD0_opsz48.svg", this.onSaveButton.bind(this), ".tools-left" );
-    this.addToolsButton("downloadsession_button","download","imgs/download_FILL0_wght400_GRAD0_opsz48.svg", this.onDownloadButton.bind(this), ".tools-left" );
+    this.addToolsButton("loadsession_button","load","file_open", this.onLoadButton.bind(this), ".tools-left");
+    this.addToolsButton("savesession_button","save","save", this.onSaveButton.bind(this), ".tools-left" );
+    this.addToolsButton("downloadsession_button","download","download", this.onDownloadButton.bind(this), ".tools-left" );
+
+    this.addToolsButton("dsp_button","dsp","settop_component", undefined, ".footer .tools-left-bottom" );
     
-    this.addLoadCounter();
+    // this.addLoadCounter();
+    
     if (!options.skip_livemode) {
         this.addToolsButton(
             "livemode_button",
-            "Live",
-            "imgs/icon-record.png",
+            "live",
+            "fiber_manual_record",
             this.onLiveButton.bind(this),
             ".tools-right"
         );
@@ -49,12 +54,15 @@ function Editor(container_id, options) {
     if (!options.skip_maximize) {
         this.addToolsButton(
             "maximize_button",
-            "",
-            "imgs/icon-maximize.png",
+            "full screen",
+            "open_in_full",
             this.onFullscreenButton.bind(this),
             ".tools-right"
         );
     }
+
+    this.addToolsButton("lan_button","connection","lan", undefined, ".footer .tools-right" );
+    
     if (options.miniwindow) {
         this.addMiniWindow(300, 200);
     }
@@ -75,7 +83,7 @@ Editor.prototype.addLoadCounter = function() {
 
     var html = "";
     var html =
-        "<div class='cpuload'><strong>dsp</strong> <div class='bgload'><div class='fgload'></div></div></div>";
+        "<div class='cpuload'><div class='bgload'><div class='fgload'></div></div></div>";
 
     meter.innerHTML = html;
     this.root.querySelector(".footer .tools-left-bottom").appendChild(meter);
@@ -87,26 +95,28 @@ Editor.prototype.addLoadCounter = function() {
     }, 200);
 };
 
-Editor.prototype.addToolsButton = function( id, name, icon_url, callback, container ) {
+Editor.prototype.addToolsButton = function( id, name, materials_icon_name, callback, container ) {
     if (!container) {
         container = ".tools";
     }
 
-    var button = this.createButton(name, icon_url, callback);
+    var button = this.createSpan(name, materials_icon_name, callback);
     button.id = id;
     this.root.querySelector(container).appendChild(button);
 };
 
-Editor.prototype.createButton = function(name, icon_url, callback) {
-    var button = document.createElement("button");
-    if (icon_url) {
-        button.innerHTML = "<img width='25' height='25' src='" + icon_url + "'/> ";
+Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
+    var button = document.createElement("span");
+    if (materials_icon_name) {
+        button.innerHTML = materials_icon_name;
     }
     button.classList.add("btn");
+    button.classList.add("btn-primary");    
+    button.classList.add("material-symbols-outlined");
     button.setAttribute('title', name);
     // button.innerHTML += name;
-	if(callback)
-		button.addEventListener("click", callback );
+    if(callback)
+	button.onclick = callback;
     return button;
 };
 
@@ -217,7 +227,9 @@ Editor.prototype.addMiniWindow = function(w, h) {
 
     var graphcanvas = new LGraphCanvas( canvas, this.graph );
     graphcanvas.show_info = false;
-    graphcanvas.background_image = "imgs/grids.png";
+    
+    // graphcanvas.background_image = "imgs/grids.png";
+    
     graphcanvas.scale = 0.25;
     graphcanvas.allow_dragnodes = false;
     graphcanvas.allow_interaction = false;
