@@ -3132,6 +3132,12 @@ args
 	    module_parameter = module_parameters[i];
             console.log("litegraph.js::_cyperus_util_store_new_dsp_module_ports(), module_parameter['param_name']:");
             console.log(module_parameter['param_name']);
+
+        options = undefined;
+        if( 'options' in module_parameter ) {
+            options = module_parameter['options'];
+        }
+
 	    node.addWidget(
 		module_parameter['param_type'],
 		module_parameter['param_name'],
@@ -3143,7 +3149,7 @@ args
 		    node.setProperty(module_parameter['param_name'],
 	                             v
 		    )
-		    
+                
 		},
         options
 	    )
