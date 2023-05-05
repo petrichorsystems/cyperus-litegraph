@@ -99,13 +99,14 @@ class Cyperus {
 	// now, place the callback on the queue
     }
 
-    osc_add_bus(path,
-                request_id,
-		name,
-		input_bus_port_names,
-		output_bus_port_names,
-		callback,
-		args) {
+    osc_add_bus(
+        request_id,
+        bus_id,
+	name,
+	input_bus_port_names,
+	output_bus_port_names,
+	callback,
+	args) {
 	var self = this;
 	self._send(
 	    {
@@ -117,7 +118,7 @@ class Cyperus {
                     },
                     {
                         type: "s",
-                        value: path
+                        value: bus_id
                     },
                     {
                         type: "s",
@@ -175,7 +176,7 @@ class Cyperus {
     }
 
     osc_list_bus_port(request_id,
-                      path,
+                      bus_id,
 		      callback,
 		      args) {
 	var self = this;
@@ -189,7 +190,7 @@ class Cyperus {
                     },
                     {
                         type: "s",
-                        value: path
+                        value: bus_id
                     }
                 ]
 	    },
@@ -225,8 +226,8 @@ class Cyperus {
 
     osc_add_connection(
         request_id,
-        path_out,
-	path_in,
+        id_out,
+	id_in,
 	callback,
 	args) {
 	var self = this;
@@ -240,11 +241,11 @@ class Cyperus {
                     },
                     {
                         type: "s",
-                        value: path_out
+                        value: id_out
                     },
                     {
                         type: "s",
-                        value: path_in
+                        value: id_in
                     }
                 ]
 	    },
@@ -254,8 +255,8 @@ class Cyperus {
     }
 
     osc_remove_connection(request_id,
-                          path_out,
-			  path_in,
+                          id_out,
+			  id_in,
 			  callback,
 			  args) {
 	var self = this;
@@ -265,11 +266,11 @@ class Cyperus {
 		args: [
                     {
                         type: "s",
-                        value: path_out
+                        value: id_out
                     },
                     {
                         type: "s",
-                        value: path_in
+                        value: id_in
                     }
                 ]
 	    },
@@ -1466,8 +1467,7 @@ args
 
 
 
-	_cyperus_parse_mains: function(resp, arg) {
-
+	_cyperus_parse_new_mains: function(resp, arg) {
             console.log(resp);
             
             let request_id = resp[0];
@@ -1488,7 +1488,7 @@ args
 			processing_outs = 1;
 		    }
 		}
-		if (line.includes('mains')) {
+		if (line.includes('-')) {
 		    if (processing_ins) {
 			ins.push(line);
 		    } else if (processing_outs) {
@@ -1511,6 +1511,50 @@ args
 	    this.graph.add(node_main_outputs);
 	},
 
+	_cyperus_parse_existing_mains: function(resp, arg) {
+            console.log(resp);
+
+            var node = arg;
+            
+            let request_id = resp[0];
+            let error_code = resp[1];
+            let mains = resp[2];
+            
+	    let ins = [];
+	    let outs = [];
+	    let processing_ins = 0;
+	    let processing_outs = 0;
+	    for (let line of mains.split('\n')) {
+		if (line.includes('in:')) {
+		    processing_ins = 1;
+		}
+		if (processing_ins) {
+		    if (line.includes('out:')) {
+			processing_ins = 0;
+			processing_outs = 1;
+		    }
+		}
+		if (line.includes('-')) {
+		    if (processing_ins) {
+			ins.push(line);
+		    } else if (processing_outs) {
+			outs.push(line);
+		    }
+		}
+		
+	    }
+	    LiteGraph.global_main_ins = ins;
+	    LiteGraph.global_main_outs = outs;
+	    let ret = {'in': ins, 'out': outs};
+
+            if (!node.type.localeCompare("cyperus/main/inputs")) {
+                node.properties.ids = ins;
+            } else if (!node.type.localeCompare("cyperus/main/outputs")) {
+                node.properties.ids = outs;
+            } else {
+                // FUCKIN ERROR
+            }
+	},
 	
         /**
          * Register a node class so it can be listed when the user wants to create a new one
@@ -1794,7 +1838,7 @@ args
                     node[i] = options[i];
                 }
             }
-
+            
             return node;
         },
 
@@ -2083,6 +2127,7 @@ args
         this.clear();
 
         if (o) {
+            console.log("litegraph.js::LGraph(), this.load_configure(o)");
             this.configure(o);
         }
 
@@ -2093,12 +2138,13 @@ args
 	    this._cyperus = new Cyperus('ws://127.0.0.1:8081');
 	    LiteGraph._cyperus = this._cyperus;
 	    this._cyperus.initialize();
-	    this._cyperus.osc_list_main(LiteGraph._cyperus_parse_mains, undefined);
+	    this._cyperus.osc_list_main(LiteGraph._cyperus_parse_new_mains, undefined);
 	}
 
-	if (litegraph_to_cyperus_ids) {
-	    LiteGraph._litegraph_to_cyperus_bus_id_record = litegraph_to_cyperus_ids;
-	}
+        // * i have a feeling we don't need the below commented-out code *
+	// if (litegraph_to_cyperus_ids) {
+	//     LiteGraph._litegraph_to_cyperus_bus_id_record = litegraph_to_cyperus_ids;
+	// }
     }
 
     global.LGraph = LiteGraph.LGraph = LGraph;
@@ -2699,49 +2745,11 @@ args
         }
     };
 
-    function _cyperus_util_get_current_bus_path() {
-	var paths = [];
-
-	console.log(LiteGraph._global_graph_stack);
-	
-	for (var i = 0; i < LiteGraph._global_graph_stack.length; i++) {
-	    paths.push(LiteGraph._global_graph_stack[i]);
-	}
-	return "/".concat('', paths.join('/'));
-    }
 
     function _cyperus_util_get_current_bus_id() {
 	return LiteGraph._global_graph_stack[LiteGraph._global_graph_stack.length - 1];
     }
 
-    function _cyperus_util_store_litegraph_to_cyperus_id(graph_id,
-							 lg_node_id,
-							 lg_slot_type,
-							 lg_slot_no,
-							 cyperus_id) {
-	if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id]) {
-	    if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id]) {
-		if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type]) {
-		    if (LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no]){
-		    }
-		} else {
-		    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
-		    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
-		}
-	    } else {
-		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id] = {}
-		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
-		LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
-	    }
-	} else {
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id] = {}
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id] = {}
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type] = {};
-	    LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] = cyperus_id;
-	}
-	LiteGraph._litegraph_to_cyperus_bus_id_record[graph_id][lg_node_id][lg_slot_type][lg_slot_no] =  cyperus_id;
-    }
-								
 
     function _cyperus_util_add_connection(response, args) {
 	console.log('response: ');
@@ -2749,9 +2757,67 @@ args
 	console.log('args: ');
 	console.log(args);
     }
-    
-    function _cyperus_util_create_bus_port_litegraph_nodes(bus_ports, args) {
 
+    function _cyperus_util_add_connections_from_serialized_links(subgraph, links) {
+        console.log('litegraph.js::_cyperus_util_add_connections_from_serialized_links()');
+        console.log('subgraph:');
+        console.log(subgraph);
+        console.log('links:');
+        console.log(links);
+
+        for (var i = 0; i < links.length; i++) {
+            if (links[i]) {
+                console.log('searching thru node list..');
+
+                var cyperus_id_out = undefined;
+                var cyperus_id_in = undefined;
+                
+                for (var j = 0; j < subgraph._nodes.length; j++) {
+                    if (subgraph._nodes[j].id == links[i].origin_id) {
+	                if (!subgraph._nodes[j].type.localeCompare("cyperus/main/inputs")) {
+	                    cyperus_id_out = subgraph._nodes[j].properties['ids'][links[i].origin_slot];
+	                } else if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input") ||
+                                   !subgraph._nodes[j].type.localeCompare("cyperus/bus/output") ) {
+                            cyperus_id_out = subgraph._nodes[j].properties.id;
+	                } else 	if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/add")) {
+                            cyperus_id_out = subgraph._nodes[j].properties.bus_output_ids[links[i].origin_slot];
+                        } else {
+                            cyperus_id_out = subgraph._nodes[j].outputs[links[i].origin_slot]['id'];
+                        }   
+                    }
+
+                    if (subgraph._nodes[j].id == links[i].target_id) {
+	                if (!subgraph._nodes[j].type.localeCompare("cyperus/main/outputs")) {
+	                    cyperus_id_in = subgraph._nodes[j].properties['ids'][links[i].target_slot];
+	                } else if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input") ||
+                                   !subgraph._nodes[j].type.localeCompare("cyperus/bus/output") ) {
+                            cyperus_id_in = subgraph._nodes[j].properties.id;
+	                } else 	if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/add")) {
+                            cyperus_id_in = subgraph._nodes[j].properties.bus_input_ids[links[i].target_slot];
+                        } else {
+                            cyperus_id_in = subgraph._nodes[j].inputs[links[i].target_slot]['id'];
+                        }
+	            }
+                }
+                if (cyperus_id_out && cyperus_id_in) {
+                    console.log('found cyperus_id_out and cyperus_id_in for connection!');
+                    LiteGraph._cyperus.osc_add_connection(
+                        LiteGraph._cyperus.uuidv4(),
+	                cyperus_id_out,
+	                cyperus_id_in,
+	                console.log,
+	                undefined
+	            );
+                }
+            }
+        }   
+    }
+    
+    function _cyperus_util_create_new_bus_port_litegraph_nodes(bus_ports, args) {
+
+        console.log('_cyperus_util_create_new_bus_port_litegraph_nodes(), bus_ports:');
+        console.log(bus_ports);
+        
 	var node = args['node'];
 	var my_id = args['my_id'];
 	var ins = [];
@@ -2761,7 +2827,7 @@ args
 	var processing_ins = 0;
 	var processing_outs = 0;
 
-        console.log(bus_ports);
+        // console.log(bus_ports);
         
 	for (var line of bus_ports[3].split('\n')) {
 	    if (line.includes('in:')) {
@@ -2792,12 +2858,17 @@ args
 	    var inval_split = inval.split('|');
 	    var id = inval_split[0];
 	    var name = inval_split[1];
+
+
+            console.log('calling createNode');
 	    var node_bus_input = LiteGraph.createNode("cyperus/bus/input", LiteGraph.GraphInput);
+            console.log('called createNode');            
 	    
 	    node_bus_input.properties = {
 		'id': id,
 		'name': name,
-		'is_bus_port': true
+		'is_bus_port': true,
+                'parent_node_id': node.subgraph.node_id
 	    }
 	    node_bus_input.widgets[0].value = name;
 	    node_bus_input.title = "input";
@@ -2807,32 +2878,6 @@ args
 	    node.subgraph.addInput(name, "number", {'id': id});
 
 	    in_ids.push(id);
-
-            console.log('INIT INPUT BUS PORT');
-            console.log('my_id', my_id);
-            console.log('node.properties[id]', node.properties['id']);
-            console.log('_cyperus_util_get_current_bus_id()', _cyperus_util_get_current_bus_id());
-            
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		_cyperus_util_get_current_bus_id(),
-		my_id,
-		'input',
-		i,
-		id);
-	    
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		node.properties['id'],
-		node_idx,
-		'output',
-		i,
-		id);
-	    
-	    //_cyperus_util_store_litegraph_to_cyperus_id(
-	    // 	node.properties['id'],
-	    // 	node_idx,
-	    // 	'output',
-	    // 	i,
-	    // 	id);
 
 	    i++;
 	}
@@ -2848,7 +2893,8 @@ args
 	    node_bus_output.properties = {
 		'id': id,
 		'name': name,
-		'is_bus_port': true
+		'is_bus_port': true,
+                'parent_node_id': node.subgraph.node_id 
 	    }
 	    node_bus_output.widgets[0].value = name;
 	    node_bus_output.title = "output";
@@ -2859,26 +2905,6 @@ args
 
 	    out_ids.push(id);
 
-
-            console.log('INIT OUTPUT BUS PORT');
-            console.log('my_id', my_id);
-            console.log('node.properties[id]', node.properties['id']);
-            console.log('_cyperus_util_get_current_bus_id()', _cyperus_util_get_current_bus_id());
-            
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		_cyperus_util_get_current_bus_id(),
-		my_id,
-		'output',
-		i,
-		id);
-	    
-	    _cyperus_util_store_litegraph_to_cyperus_id(
-		node.properties['id'],
-		node_idx,
-		'input',
-		i,
-		id);
-	    i++;
 	}
 
 	node.properties['bus_input_ids'] = in_ids;
@@ -2886,17 +2912,23 @@ args
     }
 
     function _cyperus_util_get_bus_descendants(response, args) {
+        console.log('litegraph.js::_cyperus_util_get_bus_descendants()');
+        
 	var node = args['node'];
         
 	var filtered = response[5].split('\n').filter(Boolean);
 
-        console.log('RESPONSE');
-        console.log(response);
-        console.log('FILTERED', filtered);
+        // console.log('RESPONSE');
+        // console.log(response);
+        // console.log('FILTERED', filtered);
         
 	var temp_bus_uuid = filtered[filtered.length - 1].split('|')[0];
-	var bus_path = `${response[2]}/${temp_bus_uuid}`;
+	var bus_path = `${temp_bus_uuid}`;
 
+        console.log('litegraph.js::_cyperus_util_get_bus_descendants(), response: ');
+        console.log(response);
+        
+        console.log('litegraph.js::_cyperus_util_get_bus_descendants(), osc_list_bus()');
 	LiteGraph._cyperus.osc_list_bus(
             LiteGraph._cyperus.uuidv4(),
             bus_path,
@@ -2905,58 +2937,201 @@ args
 	    args
         );
     }
-    
 
-    function _cyperus_util_store_new_bus_uuid(response, args) {	
+
+    function _cyperus_util_create_bus_ports_from_litegraph_nodes(bus_ports, args) {
+        console.log("litegraph.js::_cyperus_util_create_bus_ports_from_litegraph_nodes()");
+        
 	var node = args['node'];
-	var self = this;
+	var my_id = args['my_id'];
+        
+	var ins = [];
+	var outs = [];
+	var in_ids = []
+	var out_ids = []
+	var processing_ins = 0;
+	var processing_outs = 0;
+        
+	for (var line of bus_ports[3].split('\n')) {
+	    if (line.includes('in:')) {
+		processing_ins = 1;
+		continue;
+	    }
+	    else if (processing_ins) {
+		if (line.includes('out:')) {
+		    processing_ins = 0;
+		    processing_outs = 1;
+		    continue;
+		}
+	    }
+	    if( line.localeCompare("")) {
+		if (processing_ins) {
+		    ins.push(line);
+		} else if (processing_outs) {
+		    outs.push(line);
+		}
+	    }
+	}
+        
+        var bus_port_nodes = args['configure_payload']['bus_port_nodes'];
+        
+        for (var i = 0, l = bus_port_nodes.length; i < l; ++i) {            
+            var bus_port_node_n_info = bus_port_nodes[i];
+            bus_port_node = LiteGraph.createNode(bus_port_node_n_info.type, LiteGraph.GraphInput);            
+            bus_port_node.id = bus_port_node_n_info.id;
 
-        console.log('response')
-        console.log(response)
+            node.subgraph.add(bus_port_node);
+            bus_port_node.configure(bus_port_node_n_info);
+
+            var parent_cyperus_id = undefined;
+            if( args['configure_payload']['parent_subgraph_node'] != undefined ) {
+                parent_cyperus_id = args['configure_payload']['parent_subgraph_node'].bus_id;
+            }
+
+            if (!bus_port_node.type.localeCompare("cyperus/bus/input")) {
+                var lg_slot_number = 0;
+                var inval = undefined;
+                for(var raw_inval of ins) {
+                    if( raw_inval.includes(bus_port_node.properties.name) ) {
+                        inval = raw_inval;
+                        break;
+                    }
+                    lg_slot_number += 1;
+                }
+
+                if( inval == undefined ) {
+                    console.log('MATCHING INPUT BUS PORT NOT FOUND');
+                }
+
+                var inval_split = inval.split('|');
+                var id = inval_split[0];
+                var name = inval_split[1];
+
+                bus_port_node.properties.id = id;
+                in_ids.push(id);
+            }
+
+            if (!bus_port_node.type.localeCompare("cyperus/bus/output")) {
+                var lg_slot_number = 0;
+                outval = undefined;
+                for(var raw_outval of outs) {
+                    if( raw_outval.includes(bus_port_node.properties.name) ) {
+                        outval = raw_outval;
+                        break;
+                    }
+                    lg_slot_number += 1;
+                }
+
+                if( outval == undefined ) {
+                    console.log('MATCHING OUTPUT BUS PORT NOT FOUND');
+                }
+
+                var outval_split = outval.split('|');
+                var id = outval_split[0];
+                var name = outval_split[1];
+
+                bus_port_node.properties.id = id;
+                out_ids.push(id);
+            }
+        }
+        node.properties['bus_input_ids'] = in_ids;
+        node.properties['bus_output_ids'] = out_ids;
+
+        var node_payload = args['configure_payload']['bus_nodes'].shift();
+
+        if( node_payload ) {
+            configure_payload = {
+                'bus_n_info': node_payload['n_info'],
+                'parent_subgraph': args['configure_payload']['parent_subgraph'],
+                'parent_subgraph_node': node,
+                'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
+                'bus_nodes': args['configure_payload']['bus_nodes'],
+                'links': args['configure_payload']['links']
+            }            
+            
+            var skip_compute_order = true;
+            var from_load_configure = true;
+            args['configure_payload']['parent_subgraph'].add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
+        } else {
+            // process links
+            _cyperus_util_add_connections_from_serialized_links(args['configure_payload']['parent_subgraph'], args['configure_payload']['links']);
+        }
+
+        console.log("args['configure_payload']['bus_n_info']:");
+        console.log(args['configure_payload']['bus_n_info']);
+
+        // configure subgraph within bus
+        console.log("litegraph.js::_cyperus_util_create_bus_ports_from_litegraph_nodes(), node.type:");
+        console.log(node.type);
+        
+        if (!node.type.localeCompare("cyperus/bus/add")) {
+            var keep_old = true;
+            node.subgraph.load_configure(args['configure_payload']['bus_n_info'].subgraph, keep_old, node.subgraph);
+        }
+    }
+
+    // function _cyperus_util_
+    
+    function _cyperus_util_store_new_bus_uuid(response, args) {
+        console.log('litegraph.js::_cyperus_util_store_new_bus_uuid()');
+        
+	var node = args['node'];
+
+        // console.log('response')
+        // console.log(response)
         
 	var filtered = response[5].split('\n').filter(Boolean);
 
 	// get newest (last) bus id
-	var new_bus_uuid = filtered[filtered.length - 1].split('|')[0];
-	
-	var new_path = undefined;
-	if (LiteGraph._global_graph_stack.length == 0) {
-	    new_path = `/${new_bus_uuid}`;
-	} else {
-	    new_path = _cyperus_util_get_current_bus_path().concat('/', new_bus_uuid);
-	}
-	
-	node.properties['id'] = new_bus_uuid;
+	var new_bus_id = filtered[filtered.length - 1].split('|')[0];
+        
+        node.bus_id = new_bus_id;
+        node.subgraph.bus_id = new_bus_id;
+        
+	node.properties.id = new_bus_id;
 	node.properties['is_bus'] = true;
-	LiteGraph._cyperus.osc_list_bus_port(
-            LiteGraph._cyperus.uuidv4(),
-            new_path,
-	    _cyperus_util_create_bus_port_litegraph_nodes,
-	    args);
+
+        node.subgraph.node_id = node.id;
+        
+        console.log('node:');
+        console.log(node);
+        
+        console.log('ASSIGNED NEW BUS ID (new_bus_id):');
+        console.log(new_bus_id);
+        
+        if( args['from_load_configure'] == true) {
+            args['configure_payload']['bus_n_info'].bus_id = new_bus_id;
+            args['configure_payload']['bus_n_info'].properties.id = new_bus_id;
+            args['configure_payload']['bus_n_info'].subgraph.bus_id = new_bus_id;
+            
+            node.configure(args['configure_payload']['bus_n_info']);
+
+            
+            args['configure_payload']['parent_subgraph'].setDirtyCanvas(true, true);
+
+            LiteGraph._cyperus.osc_list_bus_port(
+                LiteGraph._cyperus.uuidv4(),
+                new_bus_id,
+                _cyperus_util_create_bus_ports_from_litegraph_nodes,
+                args);
+        } else {
+	    LiteGraph._cyperus.osc_list_bus_port(
+                LiteGraph._cyperus.uuidv4(),
+                new_bus_id,
+	        _cyperus_util_create_new_bus_port_litegraph_nodes,
+	        args);
+        }
     }
-
-
     
     function _cyperus_util_store_new_dsp_module_ports(response, args) {
-	var node = args;
-        
+	var node = args['node'];
+
 	console.log('module_parameters ', node.properties['module_parameters']);
 	var module_parameters = node.properties['module_parameters'];
 	for( var i=0; i<module_parameters.length; i++ ) {
 	    module_parameter = module_parameters[i];
-
-
-        console.log('module_parameter');
-        console.log(module_parameter);
-
-        options = undefined;
-        if( 'options' in module_parameter ) {
-            options = module_parameter['options'];
-        }
-
-        console.log("OPTIONS:");
-        console.log(options)
-
+            console.log("litegraph.js::_cyperus_util_store_new_dsp_module_ports(), module_parameter['param_name']:");
+            console.log(module_parameter['param_name']);
 	    node.addWidget(
 		module_parameter['param_type'],
 		module_parameter['param_name'],
@@ -2979,6 +3154,9 @@ args
 	var raw_input_ports = raw_ports[0].split('\n').slice(1);
 	var raw_output_ports = raw_ports[1].split('\n');
 
+        var cyperus_input_ports = [];
+        var cyperus_output_ports = [];
+        
 	console.log('raw_input_ports ', raw_input_ports);
 	console.log('raw_output_ports', raw_output_ports);
 
@@ -2993,12 +3171,7 @@ args
 		var cyperus_id = split_input_port[0];
 		var port_name = split_input_port[1];
 		node.addInput(port_name, "number", {'id': cyperus_id});
-		_cyperus_util_store_litegraph_to_cyperus_id(
-		    _cyperus_util_get_current_bus_id(),
-		    node.id,
-		    "input",
-		    i,
-		    cyperus_id);   
+                cyperus_input_ports.push(cyperus_id);
 	    }
 	}
 
@@ -3011,26 +3184,65 @@ args
 	    if( split_output_port.length > 1 ) {
 		var cyperus_id = split_output_port[0];
 		var port_name = split_output_port[1];
+
 		node.addOutput(port_name, "number", {'id': cyperus_id });
-		_cyperus_util_store_litegraph_to_cyperus_id(
-		    _cyperus_util_get_current_bus_id(),
-		    node.id,
-		    "output",
-		    i,
-		    cyperus_id);
 	    }
+            cyperus_output_ports.push(cyperus_id);
 	}
-	
-	node.graph.list_of_graphcanvas[0].drawNodeWidgets(
-	    node,
-	    0,
-	    node.graph.list_of_graphcanvas[0].bgctx,
-	    null
-	);
+
+        if (args['from_load_configure']) {
+            console.log('bus_n_info', args['configure_payload']['bus_n_info']);
+
+            
+            args['configure_payload']['bus_n_info'].properties  = node.properties;
+            node.configure(args['configure_payload']['bus_n_info']);
+            
+	    for (var i = 0; i < cyperus_input_ports.length; i++) {
+                node.inputs[i].id = cyperus_input_ports[i];
+	    }
+
+	    for (var i = 0; i < cyperus_output_ports.length; i++) {
+                node.outputs[i].id = cyperus_output_ports[i];                
+	    }                        
+            
+            var node_payload = args['configure_payload']['bus_nodes'].shift();
+            if( node_payload ) {
+                configure_payload = {
+                    'bus_n_info': node_payload['n_info'],
+                    'parent_subgraph': args['configure_payload']['parent_subgraph'],
+                    'parent_subgraph_node': node,
+                    'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
+                    'bus_nodes': args['configure_payload']['bus_nodes'],
+                    'links': args['configure_payload']['links']
+                }            
+                
+                var skip_compute_order = true;
+                var from_load_configure = true;
+                args['configure_payload']['parent_subgraph'].add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
+            } else {
+                // process links
+                _cyperus_util_add_connections_from_serialized_links(args['configure_payload']['parent_subgraph'], args['configure_payload']['links']);
+            }
+            
+            console.log("args['configure_payload']['bus_n_info']:");
+            console.log(args['configure_payload']['bus_n_info']);
+            
+        }
+        
+	// node.graph.list_of_graphcanvas[0].drawNodeWidgets(
+	//     node,
+	//     0,
+	//     node.graph.list_of_graphcanvas[0].bgctx,
+	//     null
+	// );
     }
 
     function _cyperus_util_create_new_dsp_module(response, args) {
-	var node = args;
+        console.log('litegraph.js::_cyperus_util_create_new_dsp_module()');
+        console.log('litegraph.js::_cyperus_util_create_new_dsp_module(), args:');
+        console.log(args);
+        
+	var node = args['node'];
 	var self = this;
         
 	// store id
@@ -3039,14 +3251,17 @@ args
 	if( node.properties['listener'] ) {
 	    LiteGraph._cyperus.register_osc_listener(response[2], node.osc_listener_callback, node);
 	}
-	
-	var module_path = _cyperus_util_get_current_bus_path().concat('?', response[2]);
 
+        console.log('');
+        console.log("NODE.PROPERTIES['id']:");
+        console.log(node.properties['id']);
+        console.log('');
+        
 	LiteGraph._cyperus.osc_list_module_port(
             LiteGraph._cyperus.uuidv4(),
-            module_path,
+            response[2],
 	    _cyperus_util_store_new_dsp_module_ports,
-	    node);
+	    args);
 					       
     }
     
@@ -3056,7 +3271,7 @@ args
      * @param {LGraphNode} node the instance of the node
      */
 
-    LGraph.prototype.add = function(node, skip_compute_order) {
+    LGraph.prototype.add = function(node, skip_compute_order, from_load_configure, configure_payload) {
         if (!node) {
             return;
         }
@@ -3119,340 +3334,392 @@ args
 	//
 	// build current path
 	//
-	
+	target_bus_id = undefined;
+        
+        if( this.bus_id == undefined )
+            target_bus_id = '';
+        else
+            target_bus_id = this.bus_id;
+        
 
-	console.log("node.type", node.type);
+	// console.log("node.type", node.type);
 	
-	// node.id=1 and node.id=2 are the main inputs/outputs
-	if ( LiteGraph._global_graph_stack.length ||
-	     !(
-		 !node.type.localeCompare("cyperus/main/inputs") ||
-		     !node.type.localeCompare("cyperus/main/outputs")
+	// // node.id=1 and node.id=2 are the main inputs/outputs
+	// if ( LiteGraph._global_graph_stack.length )
+	// {
+            if(
+		!node.type.localeCompare("cyperus/main/inputs") ||
+		    !node.type.localeCompare("cyperus/main/outputs")
 		 
-	     )
-	   )
-	{
-	    if (!node.type.localeCompare("cyperus/bus/add")) {
-		LiteGraph._cyperus.osc_add_bus(_cyperus_util_get_current_bus_path(),
-                                               LiteGraph._cyperus.uuidv4(),
+	    ) {
+                if( from_load_configure) {
+                    this._cyperus.osc_list_main(LiteGraph._cyperus_parse_existing_mains, node);
+                }
+	    } else if (!node.type.localeCompare("cyperus/bus/add")) {
+                console.log('litegraph.js::LGraph.prototype.add(), target_bus_id:');
+                console.log(target_bus_id);
+                
+		LiteGraph._cyperus.osc_add_bus(LiteGraph._cyperus.uuidv4(),
+                                               target_bus_id,
 					       'name',
 					       'in0',
 					       'out0',
 					       console.log,
 					       node);
-		console.log('_cyperus.osc_list_bus()');
-		var list_type = undefined;
-		if( LiteGraph._global_graph_stack.length == 0 ) {
+
+                args = {'node': node,
+                        'from_load_configure': from_load_configure,
+                        'configure_payload': configure_payload};
+
+		if( this.bus_id == undefined ) {
 		    LiteGraph._cyperus.osc_list_bus(
                         LiteGraph._cyperus.uuidv4(),
-                        _cyperus_util_get_current_bus_path(),
+                        target_bus_id,
 			1,
 			_cyperus_util_store_new_bus_uuid,
-			{'node': node,
-			 'my_id': this._nodes.length});
+                        args);
 		} else {
-                    console.log('calling _cyperus_util_get_current_bus_path()')
-                    console.log(_cyperus_util_get_current_bus_path);
 		    LiteGraph._cyperus.osc_list_bus(
                         LiteGraph._cyperus.uuidv4(),
-                        _cyperus_util_get_current_bus_path(),
+                        target_bus_id,
 			2,
 			_cyperus_util_get_bus_descendants,
-			{'node': node,
-			 'my_id': this._nodes.length});
+                        args);
 		}
-
 
 	    } else if (!node.type.localeCompare("cyperus/bus/input")) {
 
+                // if( from_load_configure ) {
+                //     args = {'node': node,
+                //             'from_load_configure': true};
+                //     console.log(this.bus_id);
+
+                //     console.log('ADD(), this:');
+                //     console.log(this);
+                    
+	        //     LiteGraph._cyperus.osc_list_bus_port(
+                //         LiteGraph._cyperus.uuidv4(),
+                //         this.bus_id,
+	        //         _cyperus_util_create_bus_port_from_litegraph_node,
+	        //         args);
+                // }
+
 	    } else if (!node.type.localeCompare("cyperus/bus/output")) {
+                // if( from_load_configure ) {
+                //     args = {'node': node,
+                //             'from_load_configure': true};
+                    
+                //     console.log('ADD(), this:');
+                //     console.log(this);
+                //     console.log(this.bus_id);
+                    
+	        //     LiteGraph._cyperus.osc_list_bus_port(
+                //         LiteGraph._cyperus.uuidv4(),
+                //         this.bus_id,
+	        //         _cyperus_util_create_bus_port_from_litegraph_node,
+	        //         args);
+                // }
+	    } else {
 
-	    } else if (!node.type.localeCompare("dsp/generator/sawtooth")) {
-		console.log('_cyperus.osc_add_module_sawtooth()');
-		var path = _cyperus_util_get_current_bus_path();
+                args = {'node': node,
+                        'from_load_configure': from_load_configure,
+                        'configure_payload': configure_payload};
 
-		node['properties']['frequency'] = "440.0";
-		node['properties']['amplitude'] = "1.0";
-		
-		LiteGraph._cyperus.osc_add_module_sawtooth(path,
-							   .06125,
-							   1.0,
-							   _cyperus_util_create_new_dsp_module,
-							   node);
-	    } else if (!node.type.localeCompare("oscillator/sine")) {
-		console.log('_cyperus.osc_add_module_oscillator_sine()');
-		var path = _cyperus_util_get_current_bus_path();
+                if (!node.type.localeCompare("oscillator/sine")) {
+                    console.log('_cyperus.osc_add_module_oscillator_sine()');
 
-		node['properties']['frequency'] = "440.0";
-		node['properties']['amplitude'] = "1.0";
-		node['properties']['phase'] = "0.0";
-
-                node['properties']['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_oscillator_sine(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-		    "440.0",
-		    "1.0",
-		    "0.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-	    } else if (!node.type.localeCompare("dsp/generator/square")) {
-		console.log('_cyperus.osc_add_module_square()');
-		var path = _cyperus_util_get_current_bus_path();
-		
-		node['properties']['frequency'] = "440.0";
-		node['properties']['amplitude'] = "1.0";
-
-		LiteGraph._cyperus.osc_add_module_square(path,
-							 "440.0",
-							 "1.0",
-							 _cyperus_util_create_new_dsp_module,
-							 node);
-	    } else if (!node.type.localeCompare("oscillator/triangle")) {
-		console.log('_cyperus.osc_add_module_oscillator_triangle()');
-		var path = _cyperus_util_get_current_bus_path();
-		
-		node['properties']['frequency'] = "440.0";
-		node['properties']['amplitude'] = "1.0";
-
-		LiteGraph._cyperus.osc_add_module_oscillator_triangle(
-                    LiteGraph._cyperus.uuidv4(), 
-                    path,
-		    "440",
-		    "1.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-	    } else if (!node.type.localeCompare("oscillator/clock")) {
-		console.log('_cyperus.osc_add_module_oscillator_clock()');
-		var path = _cyperus_util_get_current_bus_path();
-
-		node['properties']['frequency'] = "440.0";
-		node['properties']['amplitude'] = "1.0";
-
-                node['properties']['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_oscillator_clock(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-		    "440.0",
-		    "1.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);                
-	    } else if (!node.type.localeCompare("delay/simple")) {
-		console.log('_cyperus.osc_add_module_delay_simple()');
-		var path = _cyperus_util_get_current_bus_path();
-
-		node['properties']['amplitude'] = "1.0";
-		node['properties']['time'] = "1.0";
-		node['properties']['feedback'] = "0.5";
-		
-		LiteGraph._cyperus.osc_add_module_delay_simple(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-		    "1.0",
-		    "1.0",
-		    "0.5",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-	    } else if (!node.type.localeCompare("envelope/follower")) {
-		console.log('_cyperus.osc_add_module_envelope_follower()');
-		var path = _cyperus_util_get_current_bus_path();
-
-		node['properties']['attack'] = "1.0";
-		node['properties']['decay'] = "1.0";
-		node['properties']['scale'] = "1.0";
-		
-		LiteGraph._cyperus.osc_add_module_envelope_follower(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-		    "1.0",
-		    "1.0",
-		    "1.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-        } else if (!node.type.localeCompare("envelope/segment")) {
-            console.log('_cyperus.osc_add_module_envelope_segment()');
-            var path = _cyperus_util_get_current_bus_path();
-    
-                    node['properties']['rate'] = "0.0";
-            node['properties']['shape'] = "linear";
-            node['properties']['min'] = "0.0";
-                    node['properties']['max'] = "16.0";
-                    node['properties']['auto_reset'] = "0.0";
-    
+                    if (!from_load_configure) {
+                        node['properties']['frequency'] = "440.0";
+                        node['properties']['amplitude'] = "1.0";
+                        node['properties']['phase'] = "0.0";                        
+                    } else {
+                        node['properties']['frequency'] = configure_payload['bus_n_info'].properties['frequency'];
+                        node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
+                        node['properties']['phase'] = configure_payload['bus_n_info'].properties['phase'];
+                    }
+                    
                     node['properties']['listener'] = true;
-            
-            LiteGraph._cyperus.osc_add_module_envelope_segment(
+
+                    LiteGraph._cyperus.osc_add_module_oscillator_sine(
                         LiteGraph._cyperus.uuidv4(),
-                        path,
+                        this.bus_id,
+                        node['properties']['frequency'],
+                        node['properties']['amplitude'],
+                        node['properties']['phase'],
+                        _cyperus_util_create_new_dsp_module,
+                        args);
+                } else if (!node.type.localeCompare("dsp/generator/square")) {
+                    console.log('_cyperus.osc_add_module_square()');
+
+
+                    node['properties']['frequency'] = "440.0";
+                    node['properties']['amplitude'] = "1.0";
+
+                    LiteGraph._cyperus.osc_add_module_square(this.bus_id,
+                                                             "440.0",
+                                                             "1.0",
+                                                             _cyperus_util_create_new_dsp_module,
+                                                             node);
+                } else if (!node.type.localeCompare("oscillator/triangle")) {
+                    console.log('_cyperus.osc_add_module_oscillator_triangle()');
+
+
+                    node['properties']['frequency'] = "440.0";
+                    node['properties']['amplitude'] = "1.0";
+
+                    LiteGraph._cyperus.osc_add_module_oscillator_triangle(
+                        LiteGraph._cyperus.uuidv4(), 
+                        this.bus_id,
+                        "440",
+                        "1.0",
+                        _cyperus_util_create_new_dsp_module,
+                        node);
+                } else if (!node.type.localeCompare("oscillator/clock")) {
+                    console.log('_cyperus.osc_add_module_oscillator_clock()');
+
+
+                    node['properties']['frequency'] = "440.0";
+                    node['properties']['amplitude'] = "1.0";
+
+                    node['properties']['listener'] = true;
+
+                    LiteGraph._cyperus.osc_add_module_oscillator_clock(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        "440.0",
+                        "1.0",
+                        _cyperus_util_create_new_dsp_module,
+                        node);                
+                } else if (!node.type.localeCompare("delay/simple")) {
+                    console.log('_cyperus.osc_add_module_delay_simple()');
+                    
+                    if (!from_load_configure) {
+                        node['properties']['amplitude'] = "1.0";
+                        node['properties']['time'] = "1.0";
+                        node['properties']['feedback'] = "0.5";
+                    } else {
+                        node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
+                        node['properties']['time'] = configure_payload['bus_n_info'].properties['time'];
+                        node['properties']['feedback'] = configure_payload['bus_n_info'].properties['feedback'];  
+                    }
+
+                    LiteGraph._cyperus.osc_add_module_delay_simple(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        node['properties']['amplitude'],
+                        node['properties']['time'],
+                        node['properties']['feedback'],
+                        _cyperus_util_create_new_dsp_module,
+                        args);
+                } else if (!node.type.localeCompare("envelope/follower")) {
+                    console.log('_cyperus.osc_add_module_envelope_follower()');
+
+                    if (!from_load_configure) {
+                        node['properties']['attack'] = "1.0";
+                        node['properties']['decay'] = "1.0";
+                        node['properties']['scale'] = "1.0";
+                    } else {
+                        node['properties']['attack'] = configure_payload['bus_n_info'].properties['attack'];
+                        node['properties']['decay'] = configure_payload['bus_n_info'].properties['decay'];
+                        node['properties']['scale'] = configure_payload['bus_n_info'].properties['scale'];
+                    }
+
+                    LiteGraph._cyperus.osc_add_module_envelope_follower(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        node.properties['attack'],
+                        node.properties['decay'],
+                        node.properties['scale'],
+                        _cyperus_util_create_new_dsp_module,
+                        args);
+                    } else if (!node.type.localeCompare("envelope/segment")) {
+                        console.log('_cyperus.osc_add_module_envelope_segment()');
+                        node['properties']['rate'] = "0.0";
+                        node['properties']['shape'] = "linear";
+                        node['properties']['min'] = "0.0";
+                        node['properties']['max'] = "16.0";
+                        node['properties']['auto_reset'] = "0.0";
+                        node['properties']['listener'] = true;
+                        
+                        LiteGraph._cyperus.osc_add_module_envelope_segment(
+                                    LiteGraph._cyperus.uuidv4(),
+                                    this.bus_id,
+                                    "0.0",
+                                    "linear",
+                                    "0.0",
+                                    "16.0",
+                                    "0.0",
+                            _cyperus_util_create_new_dsp_module,
+                            args);
+
+                } else if (!node.type.localeCompare("filter/bandpass")) {
+                    console.log('_cyperus.osc_add_module_filter_bandpass()');
+
+
+                    node['properties']['cutoff_frequency'] = "100.0";
+                    node['properties']['q'] = "10.0";
+                    node['properties']['amplitude'] = "1.0";                
+
+                    LiteGraph._cyperus.osc_add_module_filter_bandpass(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        "100.0",
+                        "10.0",
+                        "1.0",
+                        _cyperus_util_create_new_dsp_module,
+                        node);
+                } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
+                    console.log('_cyperus.osc_add_module_filter_highpass()');
+
+
+                    node['properties']['amplitude'] = "1.0";
+                    node['properties']['cutoff'] = "100.0";
+
+                    LiteGraph._cyperus.osc_add_module_filter_highpass(this.bus_id,
+                                                                      "1.0",
+                                                                      "100.0",
+                                                                      _cyperus_util_create_new_dsp_module,
+                                                                      node);
+                } else if (!node.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
+                    console.log('_cyperus.osc_add_module_filter_varslope_lowpass()');
+
+
+                    node['properties']['amplitude'] = "1.0";
+                    node['properties']['slope'] = "10.0";
+                    node['properties']['cutoff_freq'] = "100.0";
+
+                    LiteGraph._cyperus.osc_add_module_filter_varslope_lowpass(this.bus_id,
+                                                                              "1.0",
+                                                                              "10.0",
+                                                                              "100.0",
+                                                                              _cyperus_util_create_new_dsp_module,
+                                                                              node);
+                } else if (!node.type.localeCompare("network/osc/transmit")) {
+                    console.log('_cyperus.osc_add_module_osc_transmit()');
+
+
+                    node['properties']['host'] = "127.0.0.1";
+                    node['properties']['port'] = "6001";
+                    node['properties']['path'] = "/default";
+                    node['properties']['samplerate_divisor'] = 48;
+
+                    LiteGraph._cyperus.osc_add_module_osc_transmit(this.bus_id,
+                                                                   "127.0.0.1",
+                                                                   "6001",
+                                                                   "/default",
+                                                                   48,
+                                                                   _cyperus_util_create_new_dsp_module,
+                                                                   node);
+                } else if (!node.type.localeCompare("movement/osc/metronome")) {
+                    console.log('_cyperus.osc_add_module_movement_osc_metronome()');
+
+
+                    node['properties']['beats_per_minute'] = "60.0";
+                    node.properties['listener'] = true;
+
+                    LiteGraph._cyperus.osc_add_module_movement_osc_metronome(this.bus_id,
+                                                                             60.0,
+                                                                             _cyperus_util_create_new_dsp_module,
+                                                                             node);
+                } else if (!node.type.localeCompare("osc/float")) {
+                    console.log('_cyperus.osc_add_module_osc_float()');
+
+                    if (!from_load_configure) {
+                        node['properties']['value'] = "0.0";
+                    } else {
+                        node['properties']['value'] = configure_payload['bus_n_info'].properties['value'];
+                        node['properties']['min'] = configure_payload['bus_n_info'].properties['min'];
+                        node['properties']['max'] = configure_payload['bus_n_info'].properties['max'];
+                        node['properties']['color'] = configure_payload['bus_n_info'].properties['color'];
+                        node['properties']['precision'] = configure_payload['bus_n_info'].properties['precision'];
+                    }
+                    node.properties['listener'] = true;
+
+                    LiteGraph._cyperus.osc_add_module_osc_float(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        node['properties']['value'],
+                        _cyperus_util_create_new_dsp_module,
+                        args);
+
+                } else if (!node.type.localeCompare("analysis/transient_detector")) {
+                    console.log('_cyperus.osc_add_moodule_analysis_transient_detector()');
+
+
+                    node['properties']['sensitivity'] = "0.50";
+                    node['properties']['attack_ms'] = "5.0";
+                    node['properties']['decay_ms'] = "5.0";
+                    node['properties']['scale'] = "1.0";
+                    node.properties['listener'] = true;
+
+                    LiteGraph._cyperus.osc_add_module_analysis_transient_detector(this.bus_id,
+                                                                                  0.5,
+                                                                                  5.0,
+                                                                                  5.0,
+                                                                                  1.0,
+                                                                                  _cyperus_util_create_new_dsp_module,
+                                                                                  node);
+                } else if (!node.type.localeCompare("utils/counter")) {
+                    console.log('_cyperus.osc_add_module_utils_counter()');
+
+
+                    node['properties']['reset'] = "0.0";
+                    node['properties']['start'] = "0.0";
+                    node['properties']['step_size'] = "1.0";
+                    node['properties']['min'] = "0.0";
+                    node['properties']['max'] = "16.0";
+                    node['properties']['direction'] = "1.0";
+                    node['properties']['auto_reset'] = "0.0";
+
+                    node['properties']['listener'] = true;
+
+                    LiteGraph._cyperus.osc_add_module_utils_counter(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
                         "0.0",
-                        "linear",
+                        "0.0",
+                        "1.0",
                         "0.0",
                         "16.0",
+                        "1.0",
                         "0.0",
-                _cyperus_util_create_new_dsp_module,
-                node);
-	    } else if (!node.type.localeCompare("filter/bandpass")) {
-		console.log('_cyperus.osc_add_module_filter_bandpass()');
-		var path = _cyperus_util_get_current_bus_path();
-		
-		node['properties']['cutoff_frequency'] = "100.0";
-		node['properties']['q'] = "10.0";
-		node['properties']['amplitude'] = "1.0";                
-		
-		LiteGraph._cyperus.osc_add_module_filter_bandpass(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-		    "100.0",
-		    "10.0",
-                    "1.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-	    } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
-		console.log('_cyperus.osc_add_module_filter_highpass()');
-		var path = _cyperus_util_get_current_bus_path();
+                        _cyperus_util_create_new_dsp_module,
+                        node);
+                } else if (!node.type.localeCompare("utils/equals")) {
+                    console.log('_cyperus.osc_add_module_utils_equals()');
 
-		node['properties']['amplitude'] = "1.0";
-		node['properties']['cutoff'] = "100.0";
 
-		LiteGraph._cyperus.osc_add_module_filter_highpass(path,
-								  "1.0",
-								  "100.0",
-								  _cyperus_util_create_new_dsp_module,
-								  node);
-	    } else if (!node.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
-		console.log('_cyperus.osc_add_module_filter_varslope_lowpass()');
-		var path = _cyperus_util_get_current_bus_path();
+                    node['properties']['x'] = "0.0";
+                    node['properties']['y'] = "1.0";
 
-		node['properties']['amplitude'] = "1.0";
-		node['properties']['slope'] = "10.0";
-		node['properties']['cutoff_freq'] = "100.0";
+                    node['properties']['listener'] = true;
 
-		LiteGraph._cyperus.osc_add_module_filter_varslope_lowpass(path,
-									  "1.0",
-									  "10.0",
-									  "100.0",
-									  _cyperus_util_create_new_dsp_module,
-									  node);
-	    } else if (!node.type.localeCompare("network/osc/transmit")) {
-		console.log('_cyperus.osc_add_module_osc_transmit()');
-		var path = _cyperus_util_get_current_bus_path();
-		
-		node['properties']['host'] = "127.0.0.1";
-		node['properties']['port'] = "6001";
-		node['properties']['path'] = "/default";
-		node['properties']['samplerate_divisor'] = 48;
-		
-		LiteGraph._cyperus.osc_add_module_osc_transmit(path,
-							       "127.0.0.1",
-							       "6001",
-							       "/default",
-							       48,
-							       _cyperus_util_create_new_dsp_module,
-							       node);
-	    } else if (!node.type.localeCompare("movement/osc/metronome")) {
-		console.log('_cyperus.osc_add_module_movement_osc_metronome()');
-		var path = _cyperus_util_get_current_bus_path();
+                    LiteGraph._cyperus.osc_add_module_utils_equals(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        "0.0",
+                        "1.0",
+                        _cyperus_util_create_new_dsp_module,
+                        node);
+                } else if (!node.type.localeCompare("utils/spigot")) {
+                    console.log('_cyperus.osc_add_module_utils_spigot()');
 
-		node['properties']['beats_per_minute'] = "60.0";
-		node.properties['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_movement_osc_metronome(path,
-									 60.0,
-									 _cyperus_util_create_new_dsp_module,
-									 node);
-	    } else if (!node.type.localeCompare("osc/float")) {
-		console.log('_cyperus.osc_add_module_osc_float()');
-		var path = _cyperus_util_get_current_bus_path();
 
-		node['properties']['value'] = "0.0";
-		node.properties['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_osc_float(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-		    0.0,
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-                
-	    } else if (!node.type.localeCompare("analysis/transient_detector")) {
-		console.log('_cyperus.osc_add_moodule_analysis_transient_detector()');
-		var path = _cyperus_util_get_current_bus_path();
+                    node['properties']['open'] = "0.0";
 
-		node['properties']['sensitivity'] = "0.50";
-		node['properties']['attack_ms'] = "5.0";
-		node['properties']['decay_ms'] = "5.0";
-		node['properties']['scale'] = "1.0";
-		node.properties['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_analysis_transient_detector(path,
-									      0.5,
-									      5.0,
-									      5.0,
-									      1.0,
-									      _cyperus_util_create_new_dsp_module,
-									      node);
-	    } else if (!node.type.localeCompare("utils/counter")) {
-		console.log('_cyperus.osc_add_module_utils_counter()');
-		var path = _cyperus_util_get_current_bus_path();
+                    node['properties']['listener'] = true;
 
-                node['properties']['reset'] = "0.0";
-		node['properties']['start'] = "0.0";
-		node['properties']['step_size'] = "1.0";
-		node['properties']['min'] = "0.0";
-                node['properties']['max'] = "16.0";
-                node['properties']['direction'] = "1.0";
-                node['properties']['auto_reset'] = "0.0";
-
-                node['properties']['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_utils_counter(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-                    "0.0",
-                    "0.0",
-                    "1.0",
-                    "0.0",
-                    "16.0",
-                    "1.0",
-                    "0.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-	    } else if (!node.type.localeCompare("utils/equals")) {
-		console.log('_cyperus.osc_add_module_utils_equals()');
-		var path = _cyperus_util_get_current_bus_path();
-
-                node['properties']['x'] = "0.0";
-		node['properties']['y'] = "1.0";
-
-                node['properties']['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_utils_equals(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-                    "0.0",
-                    "1.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-	    } else if (!node.type.localeCompare("utils/spigot")) {
-		console.log('_cyperus.osc_add_module_utils_spigot()');
-		var path = _cyperus_util_get_current_bus_path();
-
-                node['properties']['open'] = "0.0";
-
-                node['properties']['listener'] = true;
-		
-		LiteGraph._cyperus.osc_add_module_utils_spigot(
-                    LiteGraph._cyperus.uuidv4(),
-                    path,
-                    "0.0",
-		    _cyperus_util_create_new_dsp_module,
-		    node);
-            }
-
+                    LiteGraph._cyperus.osc_add_module_utils_spigot(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        "0.0",
+                        _cyperus_util_create_new_dsp_module,
+                        node);
+                }
             
-	}
+            }
+            
+	// }
 
 	
         return node; //to chain actions
@@ -4134,12 +4401,17 @@ args
             groups: groups_info,
             config: this.config,
 	    extra: this.extra,
-            cyperus_ids: LiteGraph._litegraph_to_cyperus_bus_id_record,
+            // cyperus_ids: LiteGraph._litegraph_to_cyperus_bus_id_record,
             version: LiteGraph.VERSION
         };
 
-        console.log('data');
-        console.log(data);
+        if( this.bus_id ) {
+            data['bus_id'] = this.bus_id;
+        }
+
+        if( this.node_id ) {
+            data['node_id'] = this.node_id;
+        }
         
 	if(this.onSerialize)
 	    this.onSerialize(data);
@@ -4147,7 +4419,7 @@ args
         return data;
     };
 
-    /**
+  /**
      * Configure a graph from a JSON string
      * @method configure
      * @param {String} str configure a graph from a JSON string
@@ -4220,6 +4492,7 @@ args
                 var n_info = nodes[i];
                 var node = this.getNodeById(n_info.id);
                 if (node) {
+                    console.log('Fuck?');
                     node.configure(n_info);
                 }
             }
@@ -4247,6 +4520,179 @@ args
         return error;
     };
 
+    /**
+     * Configure a graph from a JSON string
+     * @method configure
+     * @param {String} str configure a graph from a JSON string
+     * @param {Boolean} returns if there was any error parsing
+     */
+    LGraph.prototype.load_configure = function(data, keep_old, prev_subgraph_node) {
+        console.log("litegraph.js::LGraph.prototype.load_configure()");
+        if (!data) {
+            return;
+        }
+
+        if (!keep_old) {
+            this.clear();
+        }
+
+        var nodes = data.nodes;
+
+        // decode links info (they are very verbose)
+        if (data.links && data.links.constructor === Array) {
+            var links = [];
+            for (var i = 0; i < data.links.length; ++i) {
+                var link_data = data.links[i];
+		if(!link_data) //weird bug
+		{
+		    console.warn("serialized graph link data contains errors, skipping.");
+		    continue;
+		}
+                var link = new LLink();
+                link.configure(link_data);
+                links[link.id] = link;
+            }
+            data.links = links;
+        }
+        
+        //copy all stored fields
+        for (var i in data) {
+	    if(i == "nodes" || i == "groups" ) //links must be accepted
+		continue;
+            this[i] = data[i];
+        }
+        
+        var error = false;        
+
+        //create nodes
+        if (!keep_old) {
+            this._nodes = [];
+        }
+
+        var cyperus_bus_nodes = []
+        configure_payload = undefined;
+        if (nodes) {
+            for (var i = 0, l = nodes.length; i < l; ++i) {
+                
+                var n_info = nodes[i]; //stored info
+
+                if( !n_info.type.localeCompare("cyperus/bus/input") ||
+                           !n_info.type.localeCompare("cyperus/bus/output") ) {
+                    continue;
+                }
+                
+                var node = LiteGraph.createNode(n_info.type, n_info.title);
+                
+                if (!node) {
+                    console.log("LGraph.prototype.configure(), CREATE NODES, ERROR!!");
+                    if (LiteGraph.debug) {
+                        console.log(
+                            "Node not found or has errors: " + n_info.type
+                        );
+                    }
+                    
+                    //in case of error we create a replacement node to avoid losing info
+                    node = new LGraphNode();
+                    node.last_serialization = n_info;
+                    node.has_errors = true;
+                    error = true;
+                    //continue;
+                }
+
+                if(!node.type.localeCompare("cyperus/bus/add")) {
+                    subgraph_bus_port_nodes = [];
+                    for (var idx = 0, len = nodes[i].subgraph.nodes.length; idx < len; ++idx) {
+                        if( !nodes[i].subgraph.nodes[idx].type.localeCompare("cyperus/bus/input") ||
+                            !nodes[i].subgraph.nodes[idx].type.localeCompare("cyperus/bus/output") ) {
+                            subgraph_bus_port_nodes.push(nodes[i].subgraph.nodes[idx]);
+                        }
+                    }
+
+                    node.id = n_info.id; //id it or it will create a new id                    
+                    node_payload = {
+                        'n_info': n_info,
+                        'node': node,
+                        'subgraph_bus_port_nodes': subgraph_bus_port_nodes
+                    }
+                    
+                    cyperus_bus_nodes.push(node_payload);
+                } else if( !node.type.localeCompare("cyperus/main/inputs") ||
+                           !node.type.localeCompare("cyperus/main/outputs") ) {
+                    var skip_compute_order = true;
+                    var from_load_configure = true; 
+                    
+                    node.id = n_info.id;
+                    this.add(node, skip_compute_order, from_load_configure, configure_payload);
+                    node.configure(n_info);                    
+                } else {
+                    // var skip_compute_order = true;
+                    // node.id = n_info.id; //id it or it will create a new id                    
+                    // this.add(node, skip_compute_order); //add before configure, otherwise configure cannot create links
+                    node.id = n_info.id;
+                    node_payload = {
+                        'n_info': n_info,
+                        'node': node,
+                        'subgraph_bus_port_nodes': []
+                    }
+                    
+                    cyperus_bus_nodes.push(node_payload);
+                }
+                
+            }
+            
+            if(cyperus_bus_nodes.length) {
+
+                // we need to grab the first node off the 'cyperus_bus_nodes' list and
+                //  pass it down with corresponding bus input/output ports
+
+                var node_payload = cyperus_bus_nodes.shift()
+
+                console.log('litegraph.js::LGraph.prototype.load_configure(), node_payload:');
+                console.log(node_payload);
+
+                console.log('litegraph.js::LGraph.prototype.load_configure(), prev_subgraph_node:');
+                console.log(prev_subgraph_node);
+
+                                
+                
+                configure_payload = {
+                    'bus_n_info': node_payload['n_info'],
+                    'parent_subgraph': this,
+                    'parent_subgraph_node': prev_subgraph_node,
+                    'bus_port_nodes': node_payload['subgraph_bus_port_nodes'],
+                    'bus_nodes': cyperus_bus_nodes,
+                    'links': links
+                }
+
+                var skip_compute_order = true;
+                var from_load_configure = true; 
+                this.add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
+            }
+        }
+
+        //groups
+        this._groups.length = 0;
+        if (data.groups) {
+            for (var i = 0; i < data.groups.length; ++i) {
+                var group = new LiteGraph.LGraphGroup();
+                group.configure(data.groups[i]);
+                this.add(group);
+            }
+        }
+
+        this.updateExecutionOrder();
+
+	this.extra = data.extra || {};
+        
+	if(this.onConfigure)
+	    this.onConfigure(data);
+
+        this._version++;
+        this.setDirtyCanvas(true, true);
+        return error;
+    };
+    
+
     LGraph.prototype.load = function(url, callback) {
         var that = this;
 
@@ -4256,7 +4702,7 @@ args
 	    var reader = new FileReader();
 	    reader.addEventListener('load', function(event) {
 		var data = JSON.parse(event.target.result);
-		that.configure(data);
+		// that.load_configure(data);
 		if(callback)
 		    callback();
 	    });
@@ -4275,7 +4721,7 @@ args
                 return;
             }
             var data = JSON.parse( req.response );
-            that.configure(data);
+            // that.load_configure(data);
 	    if(callback)
 		callback();
         };
@@ -4301,6 +4747,24 @@ args
         this._pos = new Float32Array(2); //center
     }
 
+    LLink.prototype.load_configure = function(subgraph, o) {
+        if (o.constructor === Array) {
+            this.id = o[0];
+            this.origin_id = o[1];
+            this.origin_slot = o[2];
+            this.target_id = o[3];
+            this.target_slot = o[4];
+            this.type = o[5];
+        } else {
+            this.id = o.id;
+            this.type = o.type;
+            this.origin_id = o.origin_id;
+            this.origin_slot = o.origin_slot;
+            this.target_id = o.target_id;
+            this.target_slot = o.target_slot;
+        }
+    };
+    
     LLink.prototype.configure = function(o) {
         if (o.constructor === Array) {
             this.id = o[0];
@@ -4460,7 +4924,9 @@ args
             } else if (typeof info[j] == "object") {
                 //object
                 if (this[j] && this[j].configure) {
-                    this[j].configure(info[j]);
+                    
+                    // this[j].configure(info[j]);
+                    
                 } else {
                     this[j] = LiteGraph.cloneObject(info[j], this[j]);
                 }
@@ -4679,39 +5145,56 @@ args
             this.properties = {};
         }
 
-        if  (this.type.localeCompare("osc/float"))
-	    if( value === this.properties[name] ) {
-	        return;
+        if  (this.type.localeCompare("osc/float")) {
+            if(name === 'value') {
+	        if( value === this.properties[name] ) {
+	            return;
+                }
             }
+        }
         
 	var prev_value = this.properties[name];
         this.properties[name] = value;
         if (this.onPropertyChanged) {
             if( this.onPropertyChanged(name, value, prev_value) === false ) //abort change
+                console.log('ERROR');
 		this.properties[name] = prev_value;
         }
 
 
+	if(this.widgets) //widgets could be linked to properties
+	    for(var i = 0; i < this.widgets.length; ++i)
+	{
+	    var w = this.widgets[i];
+	    if(!w)
+		continue;
+	    if(w.options.property == name)
+	    {
+		w.value = value;
+		break;
+	    }
+	}
+        
 	// START CYPERUS CODE
-	
-	var current_path = _cyperus_util_get_current_bus_path().concat("?").concat(this.properties['id']);
-	if (!this.type.localeCompare("dsp/generator/sawtooth")) {
-	    console.log('frequency', this.properties['frequency']);
-	    console.log('amplitude', this.properties['amplitude']);
-	    LiteGraph._cyperus.osc_edit_module_sawtooth(
-		current_path,
-		this.widgets[0].value,
-		this.widgets[1].value,
-		console.log,
-		undefined
-	    )
-	} else if (!this.type.localeCompare("oscillator/sine")) {
+
+        console.log('litegraph.js::LGraphnode.prototype.setProperty(), this.type: ');
+        console.log(this.type);
+        console.log('litegraph.js::LGraphnode.prototype.setProperty(), name: ');
+        console.log(name);
+        console.log('litegraph.js::LGraphnode.prototype.setProperty(), value: ');
+        console.log(value);
+        
+        if (!this.type.localeCompare("oscillator/sine")) {
+            this.properties['frequency'] = this.widgets[0].value;
+            this.properties['amplitude'] = this.widgets[1].value;
+            this.properties['phase'] = this.widgets[2].value;
+            
 	    console.log('frequency', this.properties['frequency']);
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
 	    LiteGraph._cyperus.osc_edit_module_oscillator_sine(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4723,7 +5206,7 @@ args
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('phase', this.properties['phase']);	    
 	    LiteGraph._cyperus.osc_edit_module_square(
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		console.log,
@@ -4734,7 +5217,7 @@ args
 	    console.log('amplitude', this.properties['amplitude']); 
 	    LiteGraph._cyperus.osc_edit_module_oscillator_triangle(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		console.log,
@@ -4745,19 +5228,23 @@ args
 	    console.log('amplitude', this.properties['amplitude']);	    
 	    LiteGraph._cyperus.osc_edit_module_oscillator_clock(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		console.log,
 		undefined
 	    )
 	} else if (!this.type.localeCompare("delay/simple")) {
+            this.properties['amplitude'] = this.widgets[0].value;
+            this.properties['time'] = this.widgets[1].value;
+            this.properties['feedback'] = this.widgets[2].value;
+            
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('time', this.properties['time']);
 	    console.log('feeback', this.properties['feedback']);	    
 	    LiteGraph._cyperus.osc_edit_module_delay_simple(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4770,7 +5257,7 @@ args
 	    console.log('scale', this.properties['scale']);	    
 	    LiteGraph._cyperus.osc_edit_module_envelope_follower(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4801,7 +5288,7 @@ args
 	    console.log('q', this.properties['q']);	    
 	    LiteGraph._cyperus.osc_edit_module_filter_bandpass(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4812,7 +5299,7 @@ args
 	    console.log('amplitude', this.properties['amplitude']);
 	    console.log('cutoff', this.properties['cutoff']);
 	    LiteGraph._cyperus.osc_edit_module_filter_highpass(
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		console.log,
@@ -4823,7 +5310,7 @@ args
 	    console.log('slope', this.properties['slope']);
 	    console.log('cutoff_freq', this.properties['cutoff_freq']);
 	    LiteGraph._cyperus.osc_edit_module_filter_varslope_lowpass(
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4836,7 +5323,7 @@ args
 	    console.log('path', this.properties['path']);
 	    console.log('samplerate_divisor', this.properties['samplerate_divisor']);
 	    LiteGraph._cyperus.osc_edit_module_osc_transmit(
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4847,16 +5334,20 @@ args
 	}  else if (!this.type.localeCompare("movement/osc/metronome")) {
 	    console.log('beats_per_minute', this.properties['beats_per_minute']);
 	    LiteGraph._cyperus.osc_edit_module_movement_osc_metronome(
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		console.log,
 		undefined
 	    )
 	}  else if (!this.type.localeCompare("osc/float")) {
 	    console.log('value', this.properties['value']);
+
+            if( name != 'value' )
+                this.properties[name] = value;
+            
 	    LiteGraph._cyperus.osc_edit_module_osc_float(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.properties.value,
 		console.log,
 		undefined
@@ -4867,7 +5358,7 @@ args
 	    console.log('decay_ms', this.properties['decay_ms']);
 	    console.log('scale', this.properties['scale']);
 	    LiteGraph._cyperus.osc_edit_module_analysis_transient_detector(
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4885,7 +5376,7 @@ args
 	    console.log('auto_reset', this.properties['auto_reset']);	                
  	    LiteGraph._cyperus.osc_edit_module_utils_counter(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
@@ -4901,7 +5392,7 @@ args
 	    console.log('y', this.properties['y']);
  	    LiteGraph._cyperus.osc_edit_module_utils_equals(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		this.widgets[1].value,
 		console.log,
@@ -4911,7 +5402,7 @@ args
             console.log('open', this.properties['open']);
  	    LiteGraph._cyperus.osc_edit_module_utils_spigot(
                 LiteGraph._cyperus.uuidv4(),
-		current_path,
+		this.properties['id'],
 		this.widgets[0].value,
 		console.log,
 		undefined
@@ -4922,18 +5413,18 @@ args
 	// END CYPERUS CODE
 
 	
-		if(this.widgets) //widgets could be linked to properties
-			for(var i = 0; i < this.widgets.length; ++i)
-			{
-				var w = this.widgets[i];
-				if(!w)
-					continue;
-				if(w.options.property == name)
-				{
-					w.value = value;
-					break;
-				}
-			}
+	if(this.widgets) //widgets could be linked to properties
+	    for(var i = 0; i < this.widgets.length; ++i)
+	{
+	    var w = this.widgets[i];
+	    if(!w)
+		continue;
+	    if(w.options.property == name)
+	    {
+		w.value = value;
+		break;
+	    }
+	}
     };
 
     // Execution *************************
@@ -5462,7 +5953,7 @@ args
      * @param {string} type string defining the output type ("vec3","number",...)
      * @param {Object} extra_info this can be used to have special properties of an output (label, special color, position, etc)
      */
-    LGraphNode.prototype.addOutput = function(name, type, extra_info) {
+    LGraphNode.prototype.addOutput = function(name, type, extra_info) {        
         var o = { name: name, type: type, links: null };
         if (extra_info) {
             for (var i in extra_info) {
@@ -5473,7 +5964,9 @@ args
         if (!this.outputs) {
             this.outputs = [];
         }
+
         this.outputs.push(o);
+        
         if (this.onOutputAdded) {
             this.onOutputAdded(o);
         }
@@ -6122,70 +6615,56 @@ args
         
 	// START CYPERUS CODE
 	
-	var output_graph_id = undefined;
-	
-	if (LiteGraph._global_graph_stack.length) {
-	    output_graph_id = _cyperus_util_get_current_bus_id();
-	}
-        
-        
-	console.log('type: ');
-	console.log(this.type)
-	
 	var cyperus_id_out = undefined;
 	if (!this.type.localeCompare("cyperus/main/inputs")) {
 	    cyperus_id_out = this.properties['ids'][slot];
-	} else {
-            console.log('output_graph_id', output_graph_id);
-            console.log('this.id', this.id);
-            console.log('slot', slot);
-            console.log('LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id]',  LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id]);
-            console.log('LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]', LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]);
-	    cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][this.id]['output'][slot];
-	}
-	
-	var input_graph_id = undefined;
-	if (LiteGraph._global_graph_stack.length) {
-	    input_graph_id = _cyperus_util_get_current_bus_id();
-	}
-	
+	} else if (!this.type.localeCompare("cyperus/bus/input") ||
+                   !this.type.localeCompare("cyperus/bus/output") ) {
+            cyperus_id_out = this.properties.id;
+	} else 	if (!this.type.localeCompare("cyperus/bus/add")) {
+            cyperus_id_out = this.properties.bus_output_ids[slot];;
+        } else {
+            cyperus_id_out = this.outputs[slot]['id'];
+        }
+
+        var cyperus_id_in = undefined;
 	if (!target_node.type.localeCompare("cyperus/main/outputs")) {
 	    cyperus_id_in = target_node.properties['ids'][target_slot];
-	} else {
-	    cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
-	}
+	} else if (!target_node.type.localeCompare("cyperus/bus/input") ||
+                   !target_node.type.localeCompare("cyperus/bus/output") ) {
+            cyperus_id_in = target_node.properties.id;
+	} else 	if (!target_node.type.localeCompare("cyperus/bus/add")) {
+            cyperus_id_in = target_node.properties.bus_input_ids[target_slot];;
+        } else {
+            cyperus_id_in = target_node.inputs[slot]['id'];
+        }
         
-	var current_bus_path = _cyperus_util_get_current_bus_path();
-	if (!current_bus_path.localeCompare("/")) {
-	    current_bus_path = "";
-	}
-        
-	var connection_out_path = undefined;
-	if (this.properties['is_bus_port']) {
-	    connection_out_path = current_bus_path.concat(':', cyperus_id_out);
-	} else if (this.properties['is_module']) {
-	    connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
-	} else if (this.properties['is_bus']) {
-	    connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
-	} else {
-	    connection_out_path = cyperus_id_out;
-	}
+	// var connection_out_path = undefined;
+	// if (this.properties['is_bus_port']) {
+	//     connection_out_path = current_bus_path.concat(':', cyperus_id_out);
+	// } else if (this.properties['is_module']) {
+	//     connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
+	// } else if (this.properties['is_bus']) {
+	//     connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
+	// } else {
+	//     connection_out_path = cyperus_id_out;
+	// }
 	
-	var connection_in_path = undefined;
-	if (target_node.properties['is_bus_port']) {
-	    connection_in_path = current_bus_path.concat(':', cyperus_id_in);
-	} else if (target_node.properties['is_module']) {
-	    connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
-	} else if (target_node.properties['is_bus']) {
-	    connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
-	} else {
-	    connection_in_path = cyperus_id_in;
-	}
+	// var connection_in_path = undefined;
+	// if (target_node.properties['is_bus_port']) {
+	//     connection_in_path = current_bus_path.concat(':', cyperus_id_in);
+	// } else if (target_node.properties['is_module']) {
+	//     connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
+	// } else if (target_node.properties['is_bus']) {
+	//     connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
+	// } else {
+	//     connection_in_path = cyperus_id_in;
+	// }
         
 	LiteGraph._cyperus.osc_add_connection(
             LiteGraph._cyperus.uuidv4(),
-	    connection_out_path,
-	    connection_in_path,
+	    cyperus_id_out,
+	    cyperus_id_in,
 	    console.log,
 	    undefined
 	);
@@ -6489,38 +6968,11 @@ args
 	    } else {
 		cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
 	    }
-
-	    var current_bus_path = _cyperus_util_get_current_bus_path();
-	    if (!current_bus_path.localeCompare("/")) {
-		current_bus_path = "";
-	    }
-
-	    var connection_out_path = undefined;
-	    if (origin_node.properties['is_bus_port']) {
-		connection_out_path = current_bus_path.concat(':', cyperus_id_out);
-	    } else if (origin_node.properties['is_module']) {
-		connection_out_path = current_bus_path.concat('?', origin_node.properties['id']).concat('>', cyperus_id_out);
-	    } else if (origin_node.properties['is_bus']) {
-		connection_out_path = current_bus_path.concat('/', origin_node.properties['id']).concat(':', cyperus_id_out);
-	    } else {
-		connection_out_path = cyperus_id_out;
-	    }
-
-	    var connection_in_path = undefined;
-	    if (target_node.properties['is_bus_port']) {
-		connection_in_path = current_bus_path.concat(':', cyperus_id_in);
-	    } else if (target_node.properties['is_module']) {
-		connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
-	    } else if (target_node.properties['is_bus']) {
-		connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
-	    } else {
-		connection_in_path = cyperus_id_in;
-	    }
-
+                            
 	                    LiteGraph._cyperus.osc_remove_connection(
                                 LiteGraph._cyperus.uuidv4(),
-		                connection_out_path,
-		                connection_in_path,
+		                cyperus_id_out,
+		                cyperus_id_in,
 		                console.log,
 		                undefined
 	                    );
@@ -7387,8 +7839,6 @@ LGraphNode.prototype.executeAction = function(action)
 
 	    // START CYPERUS CODE
 
-	    console.log('graph._subgraph_node: ');
-	    console.log(graph._subgraph_node);
 	    LiteGraph._global_graph_stack.push(graph._subgraph_node.properties['id']);
 
 	    
@@ -8283,7 +8733,7 @@ LGraphNode.prototype.executeAction = function(action)
 
 			//node being dragged
             if (this.node_dragged && !this.live_mode) {
-				//console.log("draggin!",this.selected_nodes);
+		//console.log("draggin!",this.selected_nodes);
                 for (var i in this.selected_nodes) {
                     var n = this.selected_nodes[i];
                     n.pos[0] += delta[0] / this.ds.scale;
@@ -10752,6 +11202,7 @@ LGraphNode.prototype.executeAction = function(action)
 
 
                     if (!link) {
+                        console.log("litegraph.js::LGraphCanvas.prorotype.drawConnections(), this.graph.links[link_id] doesn't exist");
                         continue;
                     }
 
@@ -10759,6 +11210,11 @@ LGraphNode.prototype.executeAction = function(action)
                     //find link info
                     var start_node = this.graph.getNodeById(link.origin_id);
                     if (start_node == null) {
+                        console.log("litegraph.js::LGraphCanvas.prorotype.drawConnections(), start_node is null");
+                        console.log('this.graph');
+                        console.log(this.graph);
+                        console.log('link.origin_id');
+                        console.log(link.origin_id);
                         continue;
                     }
                     
@@ -10794,12 +11250,17 @@ LGraphNode.prototype.executeAction = function(action)
 
                     //skip links outside of the visible area of the canvas
                     if (!overlapBounding(link_bounding, margin_area)) {
+                        console.log('litegraph.js::LGraphCanvas.prorotype.drawConnections(), link outside visible canvas area');                        
                         continue;
                     }
 
+                    if (start_node.outputs === undefined)
+                        continue;
+                    
                     var start_slot = start_node.outputs[start_node_slot];
                     var end_slot = node.inputs[i];
                     if (!start_slot || !end_slot) {
+                        console.log('litegraph.js::LGraphCanvas.prorotype.drawConnections(), no start slot and end slot');
                         continue;
                     }
                     var start_dir =
@@ -10808,8 +11269,6 @@ LGraphNode.prototype.executeAction = function(action)
                     var end_dir =
                         end_slot.dir ||
                         (node.horizontal ? LiteGraph.UP : LiteGraph.LEFT);
-
-                    console.log('ATTEMPTING TO RENDER');
                     
                     this.renderLink(
                         ctx,
@@ -12805,6 +13264,11 @@ LGraphNode.prototype.executeAction = function(action)
     };
 
     LGraphCanvas.prototype.showEditPropertyValue = function( node, property, options ) {
+        console.log('litegraph.js::LGraphCanvas.prototype.showEditPropertyValue()');
+
+        console.log('litegraph.js::LGraphCanvas.prototype.showEditPropertyValue(), property:');
+        console.log(property);
+        
         if (!node || node.properties[property] === undefined) {
             return;
         }
@@ -12813,7 +13277,7 @@ LGraphNode.prototype.executeAction = function(action)
         var that = this;
 
         var info = node.getPropertyInfo(property);
-		var type = info.type;
+	var type = info.type;
 
         var input_html = "";
 

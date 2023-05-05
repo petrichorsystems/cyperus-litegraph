@@ -6,7 +6,7 @@ function Editor(container_id, options) {
     //fill container
     var html = "<div class='header'><div class='tools tools-left'></div><div class='tools tools-right'></div></div>";
     html += "<div class='content'><div class='editor-area'><canvas class='graphcanvas' width='1000' height='500' tabindex=10></canvas></div></div>";
-    html += "<div class='footer'><div class='tools tools-left'></div><div class='tools tools-right'></div></div>";
+    html += "<div class='footer'><div class='tools tools-left-bottom'></div><div class='tools tools-right'></div></div>";
 
     var root = document.createElement("div");
     this.root = root;
@@ -23,37 +23,30 @@ function Editor(container_id, options) {
     // var graph = (this.graph = new LGraph(undefined, global_cyperus));
     var graph = (this.graph = new LGraph());
     var graphcanvas = (this.graphcanvas = new LGraphCanvas(canvas, graph));
-    graphcanvas.background_image = "imgs/grid.png";
+    
+    // graphcanvas.background_image = "imgs/grids.png";
+    
     graph.onAfterExecute = function() {
         graphcanvas.draw(true);
     };
+    graph.start();
 
 	graphcanvas.onDropItem = this.onDropItem.bind(this);
 
     //add stuff
-    //this.addToolsButton("loadsession_button","Load","imgs/icon-load.png", this.onLoadButton.bind(this), ".tools-left" );
-    //this.addToolsButton("savesession_button","Save","imgs/icon-save.png", this.onSaveButton.bind(this), ".tools-left" );
-    this.addLoadCounter();
-    this.addToolsButton(
-        "playnode_button",
-        "Play",
-        "imgs/icon-play.png",
-        this.onPlayButton.bind(this),
-        ".tools-right"
-    );
-    this.addToolsButton(
-        "playstepnode_button",
-        "Step",
-        "imgs/icon-playstep.png",
-        this.onPlayStepButton.bind(this),
-        ".tools-right"
-    );
+    this.addToolsButton("loadsession_button","load","file_open", this.onLoadButton.bind(this), ".tools-left");
+    this.addToolsButton("savesession_button","save","save", this.onSaveButton.bind(this), ".tools-left" );
+    this.addToolsButton("downloadsession_button","download","download", this.onDownloadButton.bind(this), ".tools-left" );
 
+    this.addToolsButton("dsp_button","dsp","settop_component", undefined, ".footer .tools-left-bottom" );
+    
+    // this.addLoadCounter();
+    
     if (!options.skip_livemode) {
         this.addToolsButton(
             "livemode_button",
-            "Live",
-            "imgs/icon-record.png",
+            "live",
+            "fiber_manual_record",
             this.onLiveButton.bind(this),
             ".tools-right"
         );
@@ -61,12 +54,15 @@ function Editor(container_id, options) {
     if (!options.skip_maximize) {
         this.addToolsButton(
             "maximize_button",
-            "",
-            "imgs/icon-maximize.png",
+            "full screen",
+            "open_in_full",
             this.onFullscreenButton.bind(this),
             ".tools-right"
         );
     }
+
+    this.addToolsButton("lan_button","connection","lan", undefined, ".footer .tools-right" );
+    
     if (options.miniwindow) {
         this.addMiniWindow(300, 200);
     }
@@ -83,71 +79,79 @@ function Editor(container_id, options) {
 
 Editor.prototype.addLoadCounter = function() {
     var meter = document.createElement("div");
-    meter.className = "headerpanel loadmeter toolbar-widget";
+    meter.className = "footerpanel loadmeter toolbar-widget";
 
+    var html = "";
     var html =
-        "<div class='cpuload'><strong>CPU</strong> <div class='bgload'><div class='fgload'></div></div></div>";
-    html +=
-        "<div class='gpuload'><strong>GFX</strong> <div class='bgload'><div class='fgload'></div></div></div>";
+        "<div class='cpuload'><div class='bgload'><div class='fgload'></div></div></div>";
 
     meter.innerHTML = html;
-    this.root.querySelector(".header .tools-left").appendChild(meter);
+    this.root.querySelector(".footer .tools-left-bottom").appendChild(meter);
     var self = this;
 
     setInterval(function() {
         meter.querySelector(".cpuload .fgload").style.width =
             2 * self.graph.execution_time * 90 + "px";
-        if (self.graph.status == LGraph.STATUS_RUNNING) {
-            meter.querySelector(".gpuload .fgload").style.width =
-                self.graphcanvas.render_time * 10 * 90 + "px";
-        } else {
-            meter.querySelector(".gpuload .fgload").style.width = 4 + "px";
-        }
     }, 200);
 };
 
-Editor.prototype.addToolsButton = function( id, name, icon_url, callback, container ) {
+Editor.prototype.addToolsButton = function( id, name, materials_icon_name, callback, container ) {
     if (!container) {
         container = ".tools";
     }
 
-    var button = this.createButton(name, icon_url, callback);
+    var button = this.createSpan(name, materials_icon_name, callback);
     button.id = id;
     this.root.querySelector(container).appendChild(button);
 };
 
-Editor.prototype.createButton = function(name, icon_url, callback) {
-    var button = document.createElement("button");
-    if (icon_url) {
-        button.innerHTML = "<img src='" + icon_url + "'/> ";
+Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
+    var button = document.createElement("span");
+    if (materials_icon_name) {
+        button.innerHTML = materials_icon_name;
     }
-	button.classList.add("btn");
-    button.innerHTML += name;
-	if(callback)
-		button.addEventListener("click", callback );
+    button.classList.add("btn");
+    button.classList.add("btn-primary");    
+    button.classList.add("material-symbols-outlined");
+    button.setAttribute('title', name);
+    // button.innerHTML += name;
+    if(callback)
+	button.onclick = callback;
     return button;
 };
 
 Editor.prototype.onLoadButton = function() {
-    var panel = this.graphcanvas.createPanel("Load session",{closable:true});
+    // var panel = this.graphcanvas.createPanel("Load session",{closable:true});
 	//TO DO
 
-    this.root.appendChild(panel);
+    // this.root.appendChild(panel);
+
+    var data = localStorage.getItem( "graphdemo_save" );
+    if(data)
+	graph.load_configure( JSON.parse( data ) );
+    console.log("loaded");
 };
 
-Editor.prototype.onSaveButton = function() {};
-
-Editor.prototype.onPlayButton = function() {
+Editor.prototype.onSaveButton = function() {
     var graph = this.graph;
-    var button = this.root.querySelector("#playnode_button");
+    console.log("saved");
+    localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
+};
 
-    if (graph.status == LGraph.STATUS_STOPPED) {
-        button.innerHTML = "<img src='imgs/icon-stop.png'/> Stop";
-        graph.start();
-    } else {
-        button.innerHTML = "<img src='imgs/icon-play.png'/> Play";
-        graph.stop();
-    }
+Editor.prototype.onDownloadButton = function() {
+    console.log("downloaded");
+
+    var data = JSON.stringify( graph.serialize() );
+    var file = new Blob( [ data ] );
+    var url = URL.createObjectURL( file );
+    var element = document.createElement("a");
+    element.setAttribute('href', url);
+    element.setAttribute('download', "graph.JSON" );
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    setTimeout( function(){ URL.revokeObjectURL( url ); }, 1000*60 ); //wait one minute to revoke url	
 };
 
 Editor.prototype.onPlayStepButton = function() {
@@ -165,8 +169,8 @@ Editor.prototype.onLiveButton = function() {
         : "imgs/gauss_bg.jpg";
     var button = this.root.querySelector("#livemode_button");
     button.innerHTML = !is_live_mode
-        ? "<img src='imgs/icon-record.png'/> Live"
-        : "<img src='imgs/icon-gear.png'/> Edit";
+        ? "<img src='imgs/icon-record.png'/>"
+        : "<img src='imgs/icon-gear.png'/>";
 };
 
 Editor.prototype.onDropItem = function(e)
@@ -223,7 +227,9 @@ Editor.prototype.addMiniWindow = function(w, h) {
 
     var graphcanvas = new LGraphCanvas( canvas, this.graph );
     graphcanvas.show_info = false;
-    graphcanvas.background_image = "imgs/grid.png";
+    
+    // graphcanvas.background_image = "imgs/grids.png";
+    
     graphcanvas.scale = 0.25;
     graphcanvas.allow_dragnodes = false;
     graphcanvas.allow_interaction = false;

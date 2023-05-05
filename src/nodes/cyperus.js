@@ -287,7 +287,7 @@ class simple extends CyperusNode {
   title = 'delay simple';
   constructor(title) {
     super(title)
-      this.properties = { precision: 1, is_module: true};
+      this.properties = { precision: 1, is_module: true, amplitude: 0.0, time: 0.0, feedback: 0.0};
       this.properties['module_parameters'] = [
 	  {
 	      param_name: "amplitude",
