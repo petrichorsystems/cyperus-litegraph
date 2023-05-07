@@ -9813,11 +9813,11 @@ LGraphNode.prototype.executeAction = function(action)
             ctx.restore();
         }
 
-		// //draws panel in the corner 
-		// if (this._graph_stack && this._graph_stack.length) {
-		//     this.drawSubgraphPanel( ctx );
-		//     this.drawSubgraphPanelOutput( ctx );
-		// }
+		//draws panel in the corner 
+		if (this._graph_stack && this._graph_stack.length) {
+		    this.drawSubgraphPanel( ctx );
+		    this.drawSubgraphPanelOutput( ctx );
+		}
 
 
         if (this.onDrawOverlay) {
