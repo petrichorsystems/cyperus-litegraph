@@ -138,21 +138,21 @@
 
 		var y = this.size[1] - LiteGraph.NODE_TITLE_HEIGHT + 0.5;
 
-		//button
-		var over = LiteGraph.isInsideRectangle(pos[0],pos[1],this.pos[0],this.pos[1] + y,this.size[0],LiteGraph.NODE_TITLE_HEIGHT);
-		ctx.fillStyle = over ? "#555" : "#222";
-		ctx.beginPath();
-		if (this._shape == LiteGraph.BOX_SHAPE)
-			ctx.rect(0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT);
-		else
-			ctx.roundRect( 0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT, 0, 8);
-		ctx.fill();
+		// //button
+		// var over = LiteGraph.isInsideRectangle(pos[0],pos[1],this.pos[0],this.pos[1] + y,this.size[0],LiteGraph.NODE_TITLE_HEIGHT);
+		// ctx.fillStyle = over ? "#555" : "#222";
+		// ctx.beginPath();
+		// if (this._shape == LiteGraph.BOX_SHAPE)
+		// 	ctx.rect(0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT);
+		// else
+		// 	ctx.roundRect( 0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT, 0, 8);
+		// ctx.fill();
 
-		//button
-		ctx.textAlign = "center";
-		ctx.font = "24px Arial";
-		ctx.fillStyle = over ? "#DDD" : "#999";
-		ctx.fillText( "+", this.size[0] * 0.5, y + 24 );
+		// //button
+		// ctx.textAlign = "center";
+		// ctx.font = "24px Arial";
+		// ctx.fillStyle = over ? "#DDD" : "#999";
+		// ctx.fillText( "+", this.size[0] * 0.5, y + 24 );
 	}
 
 	Subgraph.prototype.onMouseDown = function(e, localpos, graphcanvas)
@@ -388,7 +388,7 @@
 
         this.name_widget = this.addWidget(
             "text",
-            "Name",
+            "name",
             this.properties.name,
             function(v) {
                 if (!v) {
@@ -397,26 +397,10 @@
                 that.setProperty("name",v);
             }
         );
-        this.type_widget = this.addWidget(
-            "text",
-            "Type",
-            this.properties.type,
-            function(v) {
-				that.setProperty("type",v);
-            }
-        );
 
-        this.value_widget = this.addWidget(
-            "number",
-            "Value",
-            this.properties.value,
-            function(v) {
-                that.setProperty("value",v);
-            }
-        );
 
         this.widgets_up = true;
-        this.size = [180, 90];
+        this.size = [180, 35];
     }
 
     GraphInput.title = "input";
@@ -584,10 +568,9 @@
             enumerable: true
         });
 
-        this.name_widget = this.addWidget("text","Name",this.properties.name,"name");
-        this.type_widget = this.addWidget("text","Type",this.properties.type,"type");
+        this.name_widget = this.addWidget("text","name",this.properties.name,"name");
         this.widgets_up = true;
-        this.size = [180, 60];
+        this.size = [180, 35];
     }
 
     GraphOutput.title = "output";
