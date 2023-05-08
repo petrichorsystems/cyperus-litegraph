@@ -113,6 +113,7 @@ Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
     button.classList.add("btn");
     button.classList.add("btn-primary");    
     button.classList.add("material-symbols-outlined");
+    button.classList.add("icons");
     button.setAttribute('title', name);
     // button.innerHTML += name;
     if(callback)
@@ -168,9 +169,17 @@ Editor.prototype.onLiveButton = function() {
         ? "imgs/gauss_bg_medium.jpg"
         : "imgs/gauss_bg.jpg";
     var button = this.root.querySelector("#livemode_button");
-    button.innerHTML = !is_live_mode
-        ? "<img src='imgs/icon-record.png'/>"
-        : "<img src='imgs/icon-gear.png'/>";
+
+    if (is_live_mode) {
+        button.style.setProperty('--variation', `'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48`);
+    } else {
+        button.style.setProperty('--variation', `'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 48`);
+    }
+    
+    // button.innerHTML = !is_live_mode
+    //     ? "fiber_manual_record"
+    //     : "<img src='imgs/icon-gear.png'/>";
+    
 };
 
 Editor.prototype.onDropItem = function(e)

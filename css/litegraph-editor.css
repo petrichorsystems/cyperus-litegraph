@@ -1,10 +1,5 @@
-.material-symbols-outlined {
-  font-variation-settings:
-  'FILL' 0,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 48
-}
+:root      { --variation: unset } /* Sets it to default Google settings */
+.icons     { font-variation-settings: var(--variation) } /* Use current settings */
 
 .litegraph-editor {
     width: 100%;
