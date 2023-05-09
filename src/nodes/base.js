@@ -397,26 +397,9 @@
                 that.setProperty("name",v);
             }
         );
-        this.type_widget = this.addWidget(
-            "text",
-            "Type",
-            this.properties.type,
-            function(v) {
-				that.setProperty("type",v);
-            }
-        );
-
-        this.value_widget = this.addWidget(
-            "number",
-            "Value",
-            this.properties.value,
-            function(v) {
-                that.setProperty("value",v);
-            }
-        );
 
         this.widgets_up = true;
-        this.size = [180, 90];
+        this.size = [180, 35];
     }
 
     GraphInput.title = "input";
@@ -424,51 +407,8 @@
 
 	GraphInput.prototype.onConfigure = function()
 	{
-		this.updateType();
 	}
 
-	//ensures the type in the node output and the type in the associated graph input are the same
-	GraphInput.prototype.updateType = function()
-	{
-		var type = this.properties.type;
-		this.type_widget.value = type;
-
-		//update output
-		if(this.outputs[0].type != type)
-		{
-	        if (!LiteGraph.isValidConnection(this.outputs[0].type,type))
-				this.disconnectOutput(0);
-			this.outputs[0].type = type;
-		}
-
-		//update widget
-		if(type == "number")
-		{
-			this.value_widget.type = "number";
-			this.value_widget.value = 0;
-		}
-		else if(type == "boolean")
-		{
-			this.value_widget.type = "toggle";
-			this.value_widget.value = true;
-		}
-		else if(type == "string")
-		{
-			this.value_widget.type = "text";
-			this.value_widget.value = "";
-		}
-		else
-		{
-			this.value_widget.type = null;
-			this.value_widget.value = null;
-		}
-		this.properties.value = this.value_widget.value;
-
-		//update graph
-		if (this.graph && this.name_in_graph) {
-			this.graph.changeInputType(this.name_in_graph, type);
-		}
-	}
 
 	//this is executed AFTER the property has changed
 	GraphInput.prototype.onPropertyChanged = function(name,v)
@@ -489,13 +429,6 @@
 			} //what if not?!
 			this.name_widget.value = v;
 			this.name_in_graph = v;
-		}
-		else if( name == "type" )
-		{
-			this.updateType();
-		}
-		else if( name == "value" )
-		{
 		}
 	}
 
@@ -585,9 +518,8 @@
         });
 
         this.name_widget = this.addWidget("text","Name",this.properties.name,"name");
-        this.type_widget = this.addWidget("text","Type",this.properties.type,"type");
         this.widgets_up = true;
-        this.size = [180, 60];
+        this.size = [180, 35];
     }
 
     GraphOutput.title = "output";
