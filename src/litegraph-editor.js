@@ -31,7 +31,7 @@ function Editor(container_id, options) {
     };
     graph.start();
 
-	graphcanvas.onDropItem = this.onDropItem.bind(this);
+    graphcanvas.onDropItem = this.onDropItem.bind(this);
 
     //add stuff
     this.addToolsButton("loadsession_button","load","file_open", this.onLoadButton.bind(this), ".tools-left");

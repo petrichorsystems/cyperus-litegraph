@@ -1288,7 +1288,7 @@ class Cyperus {
         NODE_TEXT_COLOR: "#AAA",
         NODE_SUBTEXT_SIZE: 12,
         NODE_DEFAULT_COLOR: "#333",
-        NODE_DEFAULT_BGCOLOR: "#353535",
+        NODE_DEFAULT_BGCOLOR: "#21262d",
         NODE_DEFAULT_BOXCOLOR: "#666",
         NODE_DEFAULT_SHAPE: "box",
         NODE_BOX_OUTLINE_COLOR: "#FFF",
@@ -10157,54 +10157,54 @@ LGraphNode.prototype.executeAction = function(action)
             ctx.save();
             this.ds.toCanvasContext(ctx);
 
-            //render BG
-            if (
-                this.background_image &&
-                this.ds.scale > 0.5 &&
-                !bg_already_painted
-            ) {
-                if (this.zoom_modify_alpha) {
-                    ctx.globalAlpha =
-                        (1.0 - 0.5 / this.ds.scale) * this.editor_alpha;
-                } else {
-                    ctx.globalAlpha = this.editor_alpha;
-                }
-                ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
-                if (
-                    !this._bg_img ||
-                    this._bg_img.name != this.background_image
-                ) {
-                    this._bg_img = new Image();
-                    this._bg_img.name = this.background_image;
-                    this._bg_img.src = this.background_image;
-                    var that = this;
-                    this._bg_img.onload = function() {
-                        that.draw(true, true);
-                    };
-                }
+            // //render BG
+            // if (
+            //     this.background_image &&
+            //     this.ds.scale > 0.5 &&
+            //     !bg_already_painted
+            // ) {
+            //     if (this.zoom_modify_alpha) {
+            //         ctx.globalAlpha =
+            //             (1.0 - 0.5 / this.ds.scale) * this.editor_alpha;
+            //     } else {
+            //         ctx.globalAlpha = this.editor_alpha;
+            //     }
+            //     ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
+            //     if (
+            //         !this._bg_img ||
+            //         this._bg_img.name != this.background_image
+            //     ) {
+            //         this._bg_img = new Image();
+            //         this._bg_img.name = this.background_image;
+            //         this._bg_img.src = this.background_image;
+            //         var that = this;
+            //         this._bg_img.onload = function() {
+            //             that.draw(true, true);
+            //         };
+            //     }
 
-                var pattern = null;
-                if (this._pattern == null && this._bg_img.width > 0) {
-                    pattern = ctx.createPattern(this._bg_img, "repeat");
-                    this._pattern_img = this._bg_img;
-                    this._pattern = pattern;
-                } else {
-                    pattern = this._pattern;
-                }
-                if (pattern) {
-                    ctx.fillStyle = pattern;
-                    ctx.fillRect(
-                        this.visible_area[0],
-                        this.visible_area[1],
-                        this.visible_area[2],
-                        this.visible_area[3]
-                    );
-                    ctx.fillStyle = "transparent";
-                }
+            //     var pattern = null;
+            //     if (this._pattern == null && this._bg_img.width > 0) {
+            //         pattern = ctx.createPattern(this._bg_img, "repeat");
+            //         this._pattern_img = this._bg_img;
+            //         this._pattern = pattern;
+            //     } else {
+            //         pattern = this._pattern;
+            //     }
+            //     if (pattern) {
+            //         ctx.fillStyle = pattern;
+            //         ctx.fillRect(
+            //             this.visible_area[0],
+            //             this.visible_area[1],
+            //             this.visible_area[2],
+            //             this.visible_area[3]
+            //         );
+            //         ctx.fillStyle = "transparent";
+            //     }
 
-                ctx.globalAlpha = 1.0;
-                ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = true;
-            }
+            //     ctx.globalAlpha = 1.0;
+            //     ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = true;
+            // }
 
             //groups
             if (this.graph._groups.length && !this.live_mode) {
