@@ -138,31 +138,31 @@
 
 		var y = this.size[1] - LiteGraph.NODE_TITLE_HEIGHT + 0.5;
 
-		//button
-		var over = LiteGraph.isInsideRectangle(pos[0],pos[1],this.pos[0],this.pos[1] + y,this.size[0],LiteGraph.NODE_TITLE_HEIGHT);
-		ctx.fillStyle = over ? "#555" : "#222";
-		ctx.beginPath();
-		if (this._shape == LiteGraph.BOX_SHAPE)
-			ctx.rect(0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT);
-		else
-			ctx.roundRect( 0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT, 0, 8);
-		ctx.fill();
+		// //button
+		// var over = LiteGraph.isInsideRectangle(pos[0],pos[1],this.pos[0],this.pos[1] + y,this.size[0],LiteGraph.NODE_TITLE_HEIGHT);
+		// ctx.fillStyle = over ? "#555" : "#222";
+		// ctx.beginPath();
+		// if (this._shape == LiteGraph.BOX_SHAPE)
+		// 	ctx.rect(0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT);
+		// else
+		// 	ctx.roundRect( 0, y, this.size[0]+1, LiteGraph.NODE_TITLE_HEIGHT, 0, 8);
+		// ctx.fill();
 
-		//button
-		ctx.textAlign = "center";
-		ctx.font = "24px Arial";
-		ctx.fillStyle = over ? "#DDD" : "#999";
-		ctx.fillText( "+", this.size[0] * 0.5, y + 24 );
+		// //button
+		// ctx.textAlign = "center";
+		// ctx.font = "24px Arial";
+		// ctx.fillStyle = over ? "#DDD" : "#999";
+		// ctx.fillText( "+", this.size[0] * 0.5, y + 24 );
 	}
 
-	Subgraph.prototype.onMouseDown = function(e, localpos, graphcanvas)
-	{
-		var y = this.size[1] - LiteGraph.NODE_TITLE_HEIGHT + 0.5;
-		if(localpos[1] > y)
-		{
-			graphcanvas.showSubgraphPropertiesDialog(this);
-		}
-	}
+	// Subgraph.prototype.onMouseDown = function(e, localpos, graphcanvas)
+	// {
+	// 	var y = this.size[1] - LiteGraph.NODE_TITLE_HEIGHT + 0.5;
+	// 	if(localpos[1] > y)
+	// 	{
+	// 		graphcanvas.showSubgraphPropertiesDialog(this);
+	// 	}
+	// }
 
 	Subgraph.prototype.computeSize = function()
 	{
