@@ -566,6 +566,7 @@ class osc_float extends CyperusNode {
   }
 
     osc_listener_callback(node, response) {
+
         var value = response['args'];
 
         if(value == node.properties.value)
@@ -578,6 +579,9 @@ class osc_float extends CyperusNode {
         if (value > node.properties.max) {
             value = node.properties.max
         }
+
+        console.log('INTERLINKED value: ');
+        console.log(value);
         
         node.properties.value = value;
         var node_value = (value - node.properties.min) / (node.properties.max - node.properties.min);
@@ -592,11 +596,11 @@ class osc_float extends CyperusNode {
             return;
         }
 
-        if (this.value == -1) {
-            this.value =
-                (this.properties.value - this.properties.min) /
-                (this.properties.max - this.properties.min);
-        }
+        // if (this.value == -1) {
+        //     this.value =
+        //         (this.properties.value - this.properties.min) /
+        //         (this.properties.max - this.properties.min);
+        // }
 
         var center_x = this.size[0] * 0.5;
         var center_y = this.size[1] * 0.6;
@@ -699,20 +703,22 @@ class osc_float extends CyperusNode {
         }
 
         var m = [e.canvasX - this.pos[0], e.canvasY - this.pos[1]];
-
+        
         var v = this.value;
         v -= (m[1] - this.oldmouse[1]) * 0.01;
+        
         if (v > 1.0) {
             v = 1.0;
         } else if (v < 0.0) {
             v = 0.0;
         }
         this.value = v;
-        this.properties.value =
-            this.properties.min +
+
+        var new_property_value = this.properties.min +
             (this.properties.max - this.properties.min) * this.value;
 
-        this.setProperty("value",this.properties.value);
+        this.properties.value = new_property_value;
+        this.setProperty("value", new_property_value);
         
         this.oldmouse = m;
         this.setDirtyCanvas(true);
@@ -728,7 +734,7 @@ class osc_float extends CyperusNode {
     onPropertyChanged = function(name, value) {
         if (name == "min" || name == "max" || name == "value") {
             this.properties[name] = parseFloat(value);
-            this.value = parseFloat(value);
+            // this.value = parseFloat(value);
             return true; //block
         }
     };
