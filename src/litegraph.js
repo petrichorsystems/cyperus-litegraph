@@ -32,7 +32,11 @@ class Cyperus {
 	var response_raw = await message.data.arrayBuffer().catch((err) => { console.error(err); });
 	var response = this.osc.readMessage(response_raw);
 
+        console.log('RESPONSE');
+        console.log(response);
+        
 	if( response['address'].includes('cyperus/listener/') ) {
+            
 	    var split_response = response['address'].split('/');
 	    var module_id = split_response[split_response.length - 1];
 	    var clbk_data = this.listeners[module_id]
@@ -1287,7 +1291,15 @@ class Cyperus {
         NODE_TEXT_SIZE: 14,
         NODE_TEXT_COLOR: "#AAA",
         NODE_SUBTEXT_SIZE: 12,
-        NODE_DEFAULT_COLOR: "#333",
+        
+        // NODE_DEFAULT_COLOR: "#424661",
+        // NODE_DEFAULT_COLOR: "#383d5e",
+        // NODE_DEFAULT_COLOR: "#5d66a1",
+        // NODE_DEFAULT_COLOR: "#292c40",
+        // NODE_DEFAULT_COLOR: "#0e4429",
+        // NODE_DEFAULT_COLOR: "#006d32",
+        NODE_DEFAULT_COLOR: "2e2a22",        
+        
         NODE_DEFAULT_BGCOLOR: "#21262d",
         NODE_DEFAULT_BOXCOLOR: "#666",
         NODE_DEFAULT_SHAPE: "box",
@@ -3504,10 +3516,8 @@ class Cyperus {
                 } else if (!node.type.localeCompare("osc/float")) {
                     console.log('_cyperus.osc_add_module_osc_float()');
 
-                    if (!from_load_configure) {
-                        node['properties']['value'] = "0.0";
-                    } else {
-                        node['properties']['value'] = configure_payload['bus_n_info'].properties['value'];
+                    if (from_load_configure) {
+                        // node['properties']['value'] = configure_payload['bus_n_info'].properties['value'];
                         node['properties']['min'] = configure_payload['bus_n_info'].properties['min'];
                         node['properties']['max'] = configure_payload['bus_n_info'].properties['max'];
                         node['properties']['color'] = configure_payload['bus_n_info'].properties['color'];
@@ -5028,6 +5038,8 @@ class Cyperus {
         if  (this.type.localeCompare("osc/float")) {
             if(name === 'value') {
 	        if( value === this.properties[name] ) {
+                    console.log("osc/float value: ");
+                    console.log(value);
 	            return;
                 }
             }
@@ -5203,6 +5215,7 @@ class Cyperus {
 	    )
 	}  else if (!this.type.localeCompare("osc/float")) {
 	    console.log('value', this.properties['value']);
+            console.log(name, value);
 
             if( name != 'value' )
                 this.properties[name] = value;

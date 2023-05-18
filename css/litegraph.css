@@ -17,7 +17,7 @@
     color: #aaf;
     padding: 0;
     box-shadow: 0 0 10px black !important;
-    background-color: #2e2e2e !important;
+    background-color: #21262d !important;
 	z-index: 10;
 }
 
@@ -37,7 +37,7 @@
 }
 
 .litegraph.litecontextmenu .litemenu-entry.submenu {
-    background-color: #2e2e2e !important;
+    background-color: #21262d !important;
 }
 
 .litegraph.litecontextmenu.dark .litemenu-entry.submenu {
