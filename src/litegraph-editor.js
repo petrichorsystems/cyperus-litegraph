@@ -1,4 +1,3 @@
-
 //Creates an interface to access extra features from a graph (like play, stop, live, etc)
 function Editor(container_id, options) {
     options = options || {};
@@ -40,7 +39,7 @@ function Editor(container_id, options) {
 
     this.addToolsButton("dsp_button","dsp","settop_component", undefined, ".footer .tools-left-bottom" );
     
-    // this.addLoadCounter();
+    this.addDSPMeter();
     
     if (!options.skip_livemode) {
         this.addToolsButton(
@@ -77,7 +76,7 @@ function Editor(container_id, options) {
     //graphcanvas.draw(true,true);
 }
 
-Editor.prototype.addLoadCounter = function() {
+Editor.prototype.addDSPMeter = function() {
     var meter = document.createElement("div");
     meter.className = "footerpanel loadmeter toolbar-widget";
 
@@ -86,12 +85,14 @@ Editor.prototype.addLoadCounter = function() {
         "<div class='cpuload'><div class='bgload'><div class='fgload'></div></div></div>";
 
     meter.innerHTML = html;
+
     this.root.querySelector(".footer .tools-left-bottom").appendChild(meter);
+    
     var self = this;
 
     setInterval(function() {
         meter.querySelector(".cpuload .fgload").style.width =
-            2 * self.graph.execution_time * 90 + "px";
+            2 * this.graph._cyperus.dsp_load * 90 + "px";
     }, 200);
 };
 

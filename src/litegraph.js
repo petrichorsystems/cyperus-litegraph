@@ -5,6 +5,7 @@ class Cyperus {
 	this.osc = osc;
 	this.callback_queue = [];
 	this.listeners = {};
+        this.dsp_load = 0.0;
 	console.log("Cyperus::constructor(url)");
     }
 
@@ -41,7 +42,9 @@ class Cyperus {
 	    var module_id = split_response[split_response.length - 1];
 	    var clbk_data = this.listeners[module_id]
 	    clbk_data[0](clbk_data[1], response);
-	    
+
+        } else if( response['address'].includes('cyperus/dsp/load')  ) {
+            this.dsp_load = response['args'];
 	} else {
 	    var dequeued = self.callback_queue.shift();
 	    var callback = dequeued['callback'];
@@ -1365,7 +1368,7 @@ class Cyperus {
 	global_main_outs: [],
 	global_node_id_to_cyperus_uuid : {},
 	global_cyperus_uuid_path_to_node_id : {},
-	
+        
         debug: false,
         catch_exceptions: true,
         throw_errors: true,
