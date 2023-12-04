@@ -32,9 +32,6 @@ class Cyperus {
 	
 	var response_raw = await message.data.arrayBuffer().catch((err) => { console.error(err); });
 	var response = this.osc.readMessage(response_raw);
-
-        console.log('RESPONSE');
-        console.log(response);
         
 	if( response['address'].includes('cyperus/listener/') ) {
             
@@ -46,6 +43,10 @@ class Cyperus {
         } else if( response['address'].includes('cyperus/dsp/load')  ) {
             this.dsp_load = response['args'];
 	} else {
+
+            console.log('RESPONSE');
+            console.log(response);
+            
 	    var dequeued = self.callback_queue.shift();
 	    var callback = dequeued['callback'];
 	    var args = dequeued['args'];
@@ -3417,7 +3418,9 @@ class Cyperus {
                         node['properties']['time'] = configure_payload['bus_n_info'].properties['time'];
                         node['properties']['feedback'] = configure_payload['bus_n_info'].properties['feedback'];  
                     }
-
+                    
+                    node['properties']['listener'] = true;
+                    
                     LiteGraph._cyperus.osc_add_module_delay_simple(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
@@ -6514,7 +6517,7 @@ class Cyperus {
 	} else 	if (!target_node.type.localeCompare("cyperus/bus/add")) {
             cyperus_id_in = target_node.properties.bus_input_ids[target_slot];;
         } else {
-            cyperus_id_in = target_node.inputs[slot]['id'];
+            cyperus_id_in = target_node.inputs[target_slot]['id'];
         }
         
 	// var connection_out_path = undefined;
