@@ -213,8 +213,6 @@ class sine extends CyperusNode {
 
     osc_listener_callback(node, response) {
         var value = response['args'];
-        console.log('oscillator/sine osc_listener_callbak()');
-        console.log(value);
         node.widgets[0].value = value[0].toFixed(8);
         node.widgets[1].value = value[1].toFixed(8);
         node.widgets[2].value = value[2].toFixed(8);
@@ -308,6 +306,17 @@ class simple extends CyperusNode {
     this.onExecute = () => {
     }
   }
+
+    osc_listener_callback(node, response) {
+        var value = response['args'];
+        console.log('delay/simple osc_listener_callbak()');
+        console.log(value);
+        node.widgets[0].value = value[0].toFixed(8);
+        node.widgets[1].value = value[1].toFixed(8);
+        node.widgets[2].value = value[2].toFixed(8);
+    }
+
+    
 }
 
 // envelope/follower
@@ -537,9 +546,9 @@ class metronome extends CyperusNode {
     }
 }
     
-// osc/float
-class osc_float extends CyperusNode {
-  type = 'osc/float';
+// utils/float
+class float extends CyperusNode {
+  type = 'utils/float';
     title = 'float';
     
   constructor(title) {
@@ -992,7 +1001,7 @@ LiteGraph.registerNodeType("oscillator/clock", clock );
 LiteGraph.registerNodeType("delay/simple", simple );
 LiteGraph.registerNodeType("envelope/follower", follower );
 LiteGraph.registerNodeType("filter/bandpass", bandpass);
-LiteGraph.registerNodeType("osc/float", osc_float);
+LiteGraph.registerNodeType("utils/float", float);
 LiteGraph.registerNodeType("utils/counter", counter);
 LiteGraph.registerNodeType("utils/equals", equals);
 LiteGraph.registerNodeType("utils/spigot", spigot);            

@@ -915,7 +915,7 @@ class Cyperus {
 	);				     
     }    
 
-    osc_add_module_osc_float(request_id,
+    osc_add_module_utils_float(request_id,
                             path,
 			    value,
 			    callback,
@@ -923,7 +923,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/add/module/osc/float",
+		address: "/cyperus/add/module/utils/float",
 		args: [
                     {
                         type: "s",
@@ -945,7 +945,7 @@ class Cyperus {
     }
     
     
-    osc_edit_module_osc_float(request_id,
+    osc_edit_module_utils_float(request_id,
                               path,
 			      value,
 			      callback,
@@ -953,7 +953,7 @@ class Cyperus {
 	var self = this;
 	self._send(
 	    {
-		address: "/cyperus/edit/module/osc/float",
+		address: "/cyperus/edit/module/utils/float",
 		args: [
                     {
                         type: "s",
@@ -3519,8 +3519,8 @@ class Cyperus {
                                                                              60.0,
                                                                              _cyperus_util_create_new_dsp_module,
                                                                              node);
-                } else if (!node.type.localeCompare("osc/float")) {
-                    console.log('_cyperus.osc_add_module_osc_float()');
+                } else if (!node.type.localeCompare("utils/float")) {
+                    console.log('_cyperus.osc_add_module_utils_float()');
 
                     if (from_load_configure) {
                         // node['properties']['value'] = configure_payload['bus_n_info'].properties['value'];
@@ -3531,7 +3531,7 @@ class Cyperus {
                     }
                     node.properties['listener'] = true;
 
-                    LiteGraph._cyperus.osc_add_module_osc_float(
+                    LiteGraph._cyperus.osc_add_module_utils_float(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
                         node['properties']['value'],
@@ -5041,10 +5041,10 @@ class Cyperus {
             this.properties = {};
         }
 
-        if  (this.type.localeCompare("osc/float")) {
+        if  (this.type.localeCompare("utils/float")) {
             if(name === 'value') {
 	        if( value === this.properties[name] ) {
-                    console.log("osc/float value: ");
+                    console.log("utils/float value: ");
                     console.log(value);
 	            return;
                 }
@@ -5219,14 +5219,14 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	}  else if (!this.type.localeCompare("osc/float")) {
+	}  else if (!this.type.localeCompare("utils/float")) {
 	    console.log('value', this.properties['value']);
             console.log(name, value);
 
             if( name != 'value' )
                 this.properties[name] = value;
             
-	    LiteGraph._cyperus.osc_edit_module_osc_float(
+	    LiteGraph._cyperus.osc_edit_module_utils_float(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
 		this.properties.value,
