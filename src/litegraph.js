@@ -3065,7 +3065,7 @@ class Cyperus {
 	    )
 	}
         
-	var raw_ports = response[3].split('out:\n');
+	var raw_ports = response[4].split('out:\n');
 
 	var raw_input_ports = raw_ports[0].split('\n').slice(1);
 	var raw_output_ports = raw_ports[1].split('\n');
