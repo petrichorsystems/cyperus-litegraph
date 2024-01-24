@@ -30,7 +30,12 @@ class Cyperus {
 	var self = this;
 	
 	var response_raw = await message.data.arrayBuffer().catch((err) => { console.error(err); });
-	var response = this.osc.readMessage(response_raw);
+
+	var response = this.osc.readMessage(response_raw,
+                                            {
+                                                metadata: true,
+                                                unpackSingleArgs: true
+                                            });
         
 	if( response['address'].includes('cyperus/listener/') ) {
             
@@ -42,23 +47,22 @@ class Cyperus {
         } else if( response['address'].includes('cyperus/dsp/load')  ) {
             this.dsp_load = response['args'];
 	} else {
-
             console.log('RESPONSE');
             console.log(response);
 
-            if( !(response['args'][0] in this.callbacks) ) {
+            if( !(response['args'][0]['value'] in this.callbacks) ) {
                 console.log("litegraph.js::Cyperus._recv(), REQUEST ID NOT FOUND");
             } else {
                 var process_callback = false;
                 var aggregate_messages = false;
                 var complete_msg_args = undefined;
 
-                var request_id = response['args'][0];
-                var multipart_no = response['args'][2];
+                var request_id = response['args'][0]['value'];
+                var multipart_no = response['args'][2]['value'];
                 var multipart_total = undefined;
                 
                 if( multipart_no >= 1 ) {
-                    multipart_total = response['args'][3];
+                    multipart_total = response['args'][3]['value'];
                     if( multipart_total > 1 ) {
                         this.callbacks[request_id]['messages'].push(response['args']);
                         if(this.callbacks[request_id]['messages'].length == multipart_total) {
@@ -81,19 +85,25 @@ class Cyperus {
                     if (multipart_total == undefined) {
                         console.log("litegraph.js::Cyperus._recv(), AGGREGATING MESSAGES BUT MULTIPART_TOTAL IS UNDEFINED");
                     }
-                    var complete_msg_indx = 0;
-                    complete_msg_str = ""
+                    var message_arg_count = response['args'].length;
+                    var complete_msg_str = "";
+
+                    console.log("this.callbacks[request_id][messages]: ");
+                    console.log(this.callbacks[request_id]['messages']);
+                    
                     for( var i = 0; i < multipart_total; i++) {
-                        for( var j = 0; j < this.callbacks[request_id]['messages'].length; j++) {
-                            if( this.callbacks[request_id]['messages'][j][2] == i ) {
-                                complete_msg_str = complete_msg_str.concat(this.callbacks[request_id]['messages'][j][-1])
+                        for( var j = 0; j < multipart_total; j++) {
+                            if( this.callbacks[request_id]['messages'][j][2]['value'] == i ) {
+                                console.log('msg:');
+                                console.log(this.callbacks[request_id]['messages'][j][message_arg_count-1]);
+                                complete_msg_str = complete_msg_str.concat(this.callbacks[request_id]['messages'][j][message_arg_count-1]['value']);
                                 break;
                             }
                         }
                     }
 
-                    print("COMPLETE_MSG_STR: ");
-                    print(complete_msg_str);
+                    console.log("COMPLETE_MSG_STR: ");
+                    console.log(complete_msg_str);
 
                     complete_msg_args = this.callbacks[request_id]['messages'][this.callbacks[request_id]['messages'].length - 1];
                     complete_msg_args[complete_msg_args.length - 1] = complete_msg_str;  
@@ -105,12 +115,20 @@ class Cyperus {
                         console.log("litegraph.js::Cyperus._recv(), PROCESSING MESSAGE BUT COMPLETE_MSG_ARGS IS UNDEFINED");
                     }
                     
+                    console.log('complete_msg_args:');
+                    console.log(complete_msg_args);
+
+                    var complete_msg_no_metadata = [];
+                    for( var i=0; i<complete_msg_args.length; i++) {
+                        complete_msg_no_metadata[i] = complete_msg_args[i]['value'];
+                    }
+                    
 	            var callback_obj = this.callbacks[request_id]; 
 	            var callback_fn = callback_obj['callback'];
 	            var callback_args = callback_obj['args'];
 
                     delete this.callbacks[request_id];
-	            callback_fn(complete_msg_args, callback_args);
+	            callback_fn(complete_msg_no_metadata, callback_args);
                 }
 
             }
@@ -309,6 +327,31 @@ class Cyperus {
 	);
     }
 
+    osc_list_filesystem_path(request_id,
+                             path,
+			     callback,
+			     args) {
+	console.log('osc_list_filesystem_path..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/list/filesystem/path",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }
+    
     osc_add_connection(
         request_id,
         id_out,
