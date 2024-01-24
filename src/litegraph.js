@@ -88,12 +88,12 @@ class Cyperus {
                     var message_arg_count = response['args'].length;
                     var complete_msg_str = "";
 
-                    console.log("this.callbacks[request_id][messages]: ");
-                    console.log(this.callbacks[request_id]['messages']);
+                    // console.log("this.callbacks[request_id][messages]: ");
+                    // console.log(this.callbacks[request_id]['messages']);
                     
                     for( var i = 0; i < multipart_total; i++) {
                         for( var j = 0; j < multipart_total; j++) {
-                            if( this.callbacks[request_id]['messages'][j][2]['value'] == i ) {
+                            if( this.callbacks[request_id]['messages'][j][2]['value'] == i + 1 ) {
                                 console.log('msg:');
                                 console.log(this.callbacks[request_id]['messages'][j][message_arg_count-1]);
                                 complete_msg_str = complete_msg_str.concat(this.callbacks[request_id]['messages'][j][message_arg_count-1]['value']);
@@ -115,20 +115,20 @@ class Cyperus {
                         console.log("litegraph.js::Cyperus._recv(), PROCESSING MESSAGE BUT COMPLETE_MSG_ARGS IS UNDEFINED");
                     }
                     
-                    console.log('complete_msg_args:');
-                    console.log(complete_msg_args);
+                    // console.log('complete_msg_args:');
+                    // console.log(complete_msg_args);
 
                     var complete_msg_no_metadata = [];
                     for( var i=0; i<complete_msg_args.length; i++) {
                         complete_msg_no_metadata[i] = complete_msg_args[i]['value'];
                     }
                     
-	            var callback_obj = this.callbacks[request_id]; 
-	            var callback_fn = callback_obj['callback'];
-	            var callback_args = callback_obj['args'];
+                    var callback_obj = this.callbacks[request_id]; 
+                    var callback_fn = callback_obj['callback'];
+                    var callback_args = callback_obj['args'];
 
                     delete this.callbacks[request_id];
-	            callback_fn(complete_msg_no_metadata, callback_args);
+                    callback_fn(complete_msg_no_metadata, callback_args);
                 }
 
             }
