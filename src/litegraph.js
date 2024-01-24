@@ -3,13 +3,12 @@ class Cyperus {
 	this.url = url;
 	this.socket = new WebSocket(url);
 	this.osc = osc;
-	this.callback_queue = [];
+	this.callbacks = {};
 	this.listeners = {};
         this.dsp_load = 0.0;
 	console.log("Cyperus::constructor(url)");
     }
 
-    
     uuidv4() {
         return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
             (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
@@ -46,12 +45,76 @@ class Cyperus {
 
             console.log('RESPONSE');
             console.log(response);
-            
-	    var dequeued = self.callback_queue.shift();
-	    var callback = dequeued['callback'];
-	    var args = dequeued['args'];
-	    callback(response['args'], args);
-	}
+
+            if( !(response['args'][0] in this.callbacks) ) {
+                console.log("litegraph.js::Cyperus._recv(), REQUEST ID NOT FOUND");
+            } else {
+                var process_callback = false;
+                var aggregate_messages = false;
+                var complete_msg_args = undefined;
+
+                var request_id = response['args'][0];
+                var multipart_no = response['args'][2];
+                var multipart_total = undefined;
+                
+                if( multipart_no >= 1 ) {
+                    multipart_total = response['args'][3];
+                    if( multipart_total > 1 ) {
+                        this.callbacks[request_id]['messages'].push(response['args']);
+                        if(this.callbacks[request_id]['messages'].length == multipart_total) {
+                            aggregate_messages = true;
+                            process_callback = true;                                                 
+                        }
+                    } else {
+                        // message is defined as multipart, but only
+                        //   consists of one message, process it
+                        complete_msg_args = response['args'];
+                        process_callback = true;
+                    }                                
+                } else {
+                    // process single part message
+                    complete_msg_args = response['args'];                    
+                    process_callback = true;
+                }
+
+                if( aggregate_messages ) {
+                    if (multipart_total == undefined) {
+                        console.log("litegraph.js::Cyperus._recv(), AGGREGATING MESSAGES BUT MULTIPART_TOTAL IS UNDEFINED");
+                    }
+                    var complete_msg_indx = 0;
+                    complete_msg_str = ""
+                    for( var i = 0; i < multipart_total; i++) {
+                        for( var j = 0; j < this.callbacks[request_id]['messages'].length; j++) {
+                            if( this.callbacks[request_id]['messages'][j][2] == i ) {
+                                complete_msg_str = complete_msg_str.concat(this.callbacks[request_id]['messages'][j][-1])
+                                break;
+                            }
+                        }
+                    }
+
+                    print("COMPLETE_MSG_STR: ");
+                    print(complete_msg_str);
+
+                    complete_msg_args = this.callbacks[request_id]['messages'][this.callbacks[request_id]['messages'].length - 1];
+                    complete_msg_args[complete_msg_args.length - 1] = complete_msg_str;  
+                }
+                
+                if( process_callback ) {
+
+                    if( complete_msg_args == undefined ) {
+                        console.log("litegraph.js::Cyperus._recv(), PROCESSING MESSAGE BUT COMPLETE_MSG_ARGS IS UNDEFINED");
+                    }
+                    
+	            var callback_obj = this.callbacks[request_id]; 
+	            var callback_fn = callback_obj['callback'];
+	            var callback_args = callback_obj['args'];
+
+                    delete this.callbacks[request_id];
+	            callback_fn(complete_msg_args, callback_args);
+                }
+
+            }
+        }
     }
 
     _send(message, callback, args) {
@@ -63,8 +126,22 @@ class Cyperus {
                                                       unpackSingleArgs: true
                                                   }));
             if (typeof callback !== 'undefined') {
-		self.callback_queue.push({'callback': callback,
-					  'args': args});
+
+                console.log('storing request_id: ');
+                console.log(message['args'][0]['value']);
+                
+                var request_id = message['args'][0]['value'];
+                self.callbacks[request_id] = {
+                    'callback': callback,
+                    'args': args,
+                    'messages': []
+                }
+
+                console.log('self.callbacks[request_id]:');
+                console.log(self.callbacks);
+                
+		// self.callbacks.push({'callback': callback,
+		// 			  'args': args});
             } else {
 		console.log('BARF');
 	    }
@@ -15250,7 +15327,7 @@ LGraphNode.prototype.executeAction = function(action)
     // Cyperus.prototype._ctor = function(url) {
     // 	this.url = url;
     // 	this.socket = new WebSocket(url);
-    // 	this.callback_queue = [];
+    // 	this.callbacks = [];
     // }
 
     
@@ -15260,7 +15337,7 @@ LGraphNode.prototype.executeAction = function(action)
     //     });
 	
     //     this.socket.addEventListener("message", function (oscMessage) {
-    // 	    var dequeued = this.callback_queue.shift();
+    // 	    var dequeued = this.callbacks.shift();
     // 	    var callback = dequeued['callback'];
     // 	    var args = dequeued['args'];
     // 	    this._recv(oscMessage, callback, args);
@@ -15288,7 +15365,7 @@ LGraphNode.prototype.executeAction = function(action)
     // 	Cyperus.prototype._waitForConnection(function () {
     //         this.socket.send(osc.writePacket(message));
     //         if (typeof callback !== 'undefined') {
-    // 		this.callback_queue.push({'callback': callback,
+    // 		this.callbacks.push({'callback': callback,
     // 					  'args': args});
     //         } else {
     // 		console.log('BARF');
