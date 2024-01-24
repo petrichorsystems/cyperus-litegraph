@@ -87,26 +87,17 @@ class Cyperus {
                     }
                     var message_arg_count = response['args'].length;
                     var complete_msg_str = "";
-
-                    // console.log("this.callbacks[request_id][messages]: ");
-                    // console.log(this.callbacks[request_id]['messages']);
                     
                     for( var i = 0; i < multipart_total; i++) {
                         for( var j = 0; j < multipart_total; j++) {
                             if( this.callbacks[request_id]['messages'][j][2]['value'] == i + 1 ) {
-                                console.log('msg:');
-                                console.log(this.callbacks[request_id]['messages'][j][message_arg_count-1]);
                                 complete_msg_str = complete_msg_str.concat(this.callbacks[request_id]['messages'][j][message_arg_count-1]['value']);
                                 break;
                             }
                         }
                     }
-
-                    console.log("COMPLETE_MSG_STR: ");
-                    console.log(complete_msg_str);
-
                     complete_msg_args = this.callbacks[request_id]['messages'][this.callbacks[request_id]['messages'].length - 1];
-                    complete_msg_args[complete_msg_args.length - 1] = complete_msg_str;  
+                    complete_msg_args[complete_msg_args.length - 1]['value'] = complete_msg_str;                    
                 }
                 
                 if( process_callback ) {
@@ -114,9 +105,6 @@ class Cyperus {
                     if( complete_msg_args == undefined ) {
                         console.log("litegraph.js::Cyperus._recv(), PROCESSING MESSAGE BUT COMPLETE_MSG_ARGS IS UNDEFINED");
                     }
-                    
-                    // console.log('complete_msg_args:');
-                    // console.log(complete_msg_args);
 
                     var complete_msg_no_metadata = [];
                     for( var i=0; i<complete_msg_args.length; i++) {
@@ -127,8 +115,8 @@ class Cyperus {
                     var callback_fn = callback_obj['callback'];
                     var callback_args = callback_obj['args'];
 
-                    delete this.callbacks[request_id];
                     callback_fn(complete_msg_no_metadata, callback_args);
+                    delete this.callbacks[request_id];                    
                 }
 
             }
