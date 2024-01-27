@@ -13428,10 +13428,15 @@ LGraphNode.prototype.executeAction = function(action)
 		options = options || {};
 
 		var ref_window = options.window || window;
-		var root = document.createElement("div");
+
+        var root = document.createElement("div");
+
 		root.className = "litegraph dialog";
 		root.innerHTML = "<div class='dialog-header'><span class='dialog-title'></span></div><div class='dialog-content'></div><div class='dialog-footer'></div>";
-		root.header = root.querySelector(".dialog-header");
+	root.header = root.querySelector(".dialog-header");
+
+        // root.style.outline = "1px rgba(255, 255, 255, 0.5) solid";
+        // root.style.outlineOffset = "5px";
 
 		if(options.width)
 			root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
@@ -13473,7 +13478,7 @@ LGraphNode.prototype.executeAction = function(action)
             var path_list = response[5].split("\n");
             var row_list = undefined;
 
-            var html_prefix = "<div class='file-panel'><table class='file-panel'><tr><th>name</th><th>size</th><th>type</th><th>modified</th></tr>";
+            var html_prefix = "<div class='file-panel-browser'><table class='file-panel-browser'><tr><th>name</th><th>size</th><th>type</th><th>modified</th></tr>";
             var html_suffix = "</table></div>";
 
             var html_table = html_prefix;
@@ -13629,7 +13634,7 @@ LGraphNode.prototype.executeAction = function(action)
 		root.className = "litegraph dialog";
 		root.innerHTML = "<div class='dialog-header'><span class='dialog-title'></span></div><div class='dialog-content'></div><div class='dialog-footer'></div>";
 		root.header = root.querySelector(".dialog-header");
-
+        
 		if(options.width)
 			root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
 		if(options.height)
