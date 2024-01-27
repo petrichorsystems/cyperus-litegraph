@@ -13470,15 +13470,17 @@ LGraphNode.prototype.executeAction = function(action)
             console.log(args);
 
             var parent_dir = response[4];
-            var path_list = response[5].split("\n");;
+            var path_list = response[5].split("\n");
+            var row_list = undefined;
 
-            var html_prefix = "<div class='file-panel'><table><tr><th>name</th><th>size</th><th>type</th><th>modified</th></tr>";
+            var html_prefix = "<div class='file-panel'><table class='file-panel'><tr><th>name</th><th>size</th><th>type</th><th>modified</th></tr>";
             var html_suffix = "</table></div>";
 
             var html_table = html_prefix;
             for(var i=0; i<path_list.length; i++) {
                 console.log(path_list[i]);
-                html_table += "<tr><td>" + path_list[i] + "</td></tr>";
+                row_list = path_list[i].split('\t');
+                html_table += "<tr><td>" + row_list[0] + "</td><td>" + row_list[1] + "</td><td>" + row_list[2] + "</td><td>" + row_list[3] + "</td></tr>";
             }
             html_table += html_suffix;
 
