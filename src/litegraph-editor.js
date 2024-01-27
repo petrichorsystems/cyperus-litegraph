@@ -113,7 +113,7 @@ Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
     }
     button.classList.add("btn");
     button.classList.add("btn-primary");    
-    button.classList.add("material-symbols-outlined");
+    button.classList.add("material-icons");
     button.classList.add("icons");
     button.style.setProperty('--variation', `'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48`);
     
@@ -125,20 +125,24 @@ Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
 };
 
 Editor.prototype.onLoadButton = function() {
-    // var panel = this.graphcanvas.createPanel("Load session",{closable:true});
-	//TO DO
+    var panel = this.graphcanvas.createFilePanel("Load session",{closable:true});
+    this.root.appendChild(panel);
 
-    // this.root.appendChild(panel);
-
-    var data = localStorage.getItem( "graphdemo_save" );
-    if(data)
-	graph.load_configure( JSON.parse( data ) );
-    console.log("loaded");
+    // var data = localStorage.getItem( "graphdemo_save" );
+    // if(data)
+    //     graph.load_configure( JSON.parse( data ) );
+    // console.log("loaded");
 };
 
 Editor.prototype.onSaveButton = function() {
     var graph = this.graph;
-    console.log("saved");
+    var panel = this.graphcanvas.createFilePanel("save session",{closable:true});
+    this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
+                                                 "/home/mfoster/Pictures",
+                                                 panel.buildFileSystemPathList,
+                                                 panel);    
+    this.root.appendChild(panel);
+    console.log("saved"); 
     localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
 };
 

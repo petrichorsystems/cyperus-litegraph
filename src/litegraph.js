@@ -13462,6 +13462,32 @@ LGraphNode.prototype.executeAction = function(action)
 			this.content.innerHTML = "";
 		}
 
+        root.buildFileSystemPathList = function(response, args) {
+            console.log("litegraph.js::_build_FileSystemPathList()");
+            console.log('response:');
+            console.log(response);
+            console.log('args:');
+            console.log(args);
+
+            var parent_dir = response[4];
+            var path_list = response[5].split("\n");;
+
+            var html_prefix = "<div class='file-panel'><table><tr><th>name</th><th>size</th><th>type</th><th>modified</th></tr>";
+            var html_suffix = "</table></div>";
+
+            var html_table = html_prefix;
+            for(var i=0; i<path_list.length; i++) {
+                console.log(path_list[i]);
+                html_table += "<tr><td>" + path_list[i] + "</td></tr>";
+            }
+            html_table += html_suffix;
+
+            console.log(html_table);
+
+            args.addHTML(html_table);
+            
+        }
+
 		root.addHTML = function(code, classname, on_footer)
 		{
 			var elem = document.createElement("div");
