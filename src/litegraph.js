@@ -13425,48 +13425,110 @@ LGraphNode.prototype.executeAction = function(action)
 
         console.log("CALLING LGraphCanvas.prototype.createFilePanel\n");
         
-		options = options || {};
+	options = options || {};
 
-		var ref_window = options.window || window;
-
+	var ref_window = options.window || window;
+        
         var root = document.createElement("div");
+        
 
-		root.className = "litegraph dialog";
-		root.innerHTML = "<div class='dialog-header'><span class='dialog-title'></span></div><div class='dialog-content'></div><div class='dialog-footer'></div>";
+	root.className = "litegraph dialog file-panel";
+	root.innerHTML = "<div class='dialog-header'><span class='dialog-title'></span></div><div class='dialog-content'></div><div class='dialog-footer'></div>";
 	root.header = root.querySelector(".dialog-header");
 
-        // root.style.outline = "1px rgba(255, 255, 255, 0.5) solid";
-        // root.style.outlineOffset = "5px";
 
-		if(options.width)
-			root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
-		if(options.height)
-			root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
-		if(options.closable)
-		{
-			var close = document.createElement("span");
-			close.innerHTML = "&#10005;";
-			close.classList.add("close");
-			close.addEventListener("click",function(){
-				root.close();
-			});
-			root.header.appendChild(close);
-		}
-		root.title_element = root.querySelector(".dialog-title");
-		root.title_element.innerText = title;
-		root.content = root.querySelector(".dialog-content");
-		root.footer = root.querySelector(".dialog-footer");
+        
+        root.header.onmousedown = dragMouseDown;
+        var elmnt = root;
 
-		root.close = function()
-		{
-			this.parentNode.removeChild(this);
-		}
+        console.log(root.style.top);
+        console.log(root.style.left);
 
-		root.clear = function()
-		{
-			this.content.innerHTML = "";
-		}
+        root.style.top = window.innerHeight * 0.5 + "px";
+        root.style.left = window.innerWidth * 0.5 + "px";        
 
+        console.log(root.style.top);
+        console.log(root.style.left);
+
+        var oldMouseX = 0;
+        var oldMouseY = 0;
+        var origDialogPosX = 0;
+        var origDialogPosY = 0;
+        
+	if(options.width)
+	    root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
+	if(options.height)
+	    root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
+	if(options.closable)
+	{
+	    var close = document.createElement("span");
+	    close.innerHTML = "&#10005;";
+	    close.classList.add("close");
+	    close.addEventListener("click",function(){
+		root.close();
+	    });
+	    root.header.appendChild(close);
+	}
+	root.title_element = root.querySelector(".dialog-title");
+	root.title_element.innerText = title;
+	root.content = root.querySelector(".dialog-content");
+	root.footer = root.querySelector(".dialog-footer");
+
+        
+        
+	root.close = function()
+	{
+	    this.parentNode.removeChild(this);
+	}
+        
+	root.clear = function()
+	{
+	    this.content.innerHTML = "";
+	}
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+
+            // get the mouse cursor position at startup:
+            oldMouseX = e.clientX;
+            oldMouseY = e.clientY;
+            origDialogPosX = parseInt(root.style.left);
+            origDialogPosY = parseInt(root.style.top);
+            
+            document.onmouseup = closeDragElement;
+            // call a function whenever the cursor moves:
+            document.onmousemove = elementDrag;
+        }
+        
+        function closeDragElement() {
+            /* stop moving when mouse button is released:*/
+            document.onmouseup = null;
+            document.onmousemove = null;
+            root.style.outline = "transparent";
+            root.style.outlineOffset = "0px";;
+            
+        }
+
+        function elementDrag(e) {
+            if (!elmnt) {
+                return;
+            }
+
+            root.style.outline = "1px rgba(255, 255, 255, 0.5) solid";
+            root.style.outlineOffset = "5px";
+            
+            e = e || window.event;
+            // calculate the new cursor position:
+            
+            var newX = e.clientX + origDialogPosX - oldMouseX;
+            var newY = e.clientY + origDialogPosY - oldMouseY;
+            
+            // set the element's new position:
+            elmnt.style.left = newX + "px";            
+            elmnt.style.top = newY + "px";
+
+        }
+        
         root.buildFileSystemPathList = function(response, args) {
             console.log("litegraph.js::_build_FileSystemPathList()");
             console.log('response:');
