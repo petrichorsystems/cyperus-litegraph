@@ -125,18 +125,23 @@ Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
 };
 
 Editor.prototype.onLoadButton = function() {
-    var panel = this.graphcanvas.createFilePanel("Load session",{closable:true});
-    this.root.appendChild(panel);
 
-    // var data = localStorage.getItem( "graphdemo_save" );
-    // if(data)
-    //     graph.load_configure( JSON.parse( data ) );
-    // console.log("loaded");
+    var graph = this.graph;
+    var panel = this.graphcanvas.createFilePanel("load graph",{closable:true});
+    this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
+                                                 "/home/mfoster/Pictures",
+                                                 panel.buildFileSystemPathList,
+                                                 panel);    
+    
+    var data = localStorage.getItem( "graphdemo_save" );
+    if(data)
+        graph.load_configure( JSON.parse( data ) );
+    console.log("loaded");
 };
 
 Editor.prototype.onSaveButton = function() {
     var graph = this.graph;
-    var panel = this.graphcanvas.createFilePanel("save session",{closable:true});
+    var panel = this.graphcanvas.createFilePanel("save graph",{closable:true});
     this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
                                                  "/home/mfoster/Pictures",
                                                  panel.buildFileSystemPathList,

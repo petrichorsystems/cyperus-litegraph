@@ -13430,30 +13430,42 @@ LGraphNode.prototype.executeAction = function(action)
 	var ref_window = options.window || window;
         
         var root = document.createElement("div");
-        
 
-	root.className = "litegraph dialog file-panel";
-	root.innerHTML = "<div class='dialog-header'><span class='dialog-title'></span></div><div class='dialog-content'></div><div class='dialog-footer'></div>";
-	root.header = root.querySelector(".dialog-header");
+	root.className = "litegraph file-dialog file-panel";
+	root.innerHTML = "<div class='file-dialog-header'><span class='file-dialog-title'></span></div><div class='file-dialog-content'></div><div class='file-dialog-footer'></div>";
+	root.header = root.querySelector(".file-dialog-header");
 
 
         
         root.header.onmousedown = dragMouseDown;
         var elmnt = root;
 
-        console.log(root.style.top);
-        console.log(root.style.left);
-
         root.style.top = window.innerHeight * 0.5 + "px";
         root.style.left = window.innerWidth * 0.5 + "px";        
-
-        console.log(root.style.top);
-        console.log(root.style.left);
 
         var oldMouseX = 0;
         var oldMouseY = 0;
         var origDialogPosX = 0;
         var origDialogPosY = 0;
+
+        var right = document.createElement("div");
+        right.className = "resizer-right";
+        root.appendChild(right);
+        right.addEventListener("mousedown", initResizeDrag, false);
+        // right.parentPopup = p;
+        
+        var bottom = document.createElement("div");
+        bottom.className = "resizer-bottom";
+        root.appendChild(bottom);
+        bottom.addEventListener("mousedown", initResizeDrag, false);
+        // bottom.parentPopup = p;
+        
+        var both = document.createElement("div");
+        both.className = "resizer-both";
+        root.appendChild(both);
+        both.addEventListener("mousedown", initResizeDrag, false);
+        // both.parentPopup = p;
+        
         
 	if(options.width)
 	    root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
@@ -13469,12 +13481,10 @@ LGraphNode.prototype.executeAction = function(action)
 	    });
 	    root.header.appendChild(close);
 	}
-	root.title_element = root.querySelector(".dialog-title");
+	root.title_element = root.querySelector(".file-dialog-title");
 	root.title_element.innerText = title;
-	root.content = root.querySelector(".dialog-content");
-	root.footer = root.querySelector(".dialog-footer");
-
-        
+	root.content = root.querySelector(".file-dialog-content");
+	root.footer = root.querySelector(".file-dialog-footer");;
         
 	root.close = function()
 	{
@@ -13513,20 +13523,52 @@ LGraphNode.prototype.executeAction = function(action)
             if (!elmnt) {
                 return;
             }
-
+            
             root.style.outline = "1px rgba(255, 255, 255, 0.5) solid";
             root.style.outlineOffset = "5px";
             
             e = e || window.event;
             // calculate the new cursor position:
             
-            var newX = e.clientX + origDialogPosX - oldMouseX;
-            var newY = e.clientY + origDialogPosY - oldMouseY;
+            var newX = null;
+            if(e.clientX > 0 && e.clientX < (window.innerWidth)) {
+                newX = e.clientX + origDialogPosX - oldMouseX;
+                elmnt.style.left = newX + "px";
+            }
             
-            // set the element's new position:
-            elmnt.style.left = newX + "px";            
-            elmnt.style.top = newY + "px";
+            var newY = null;
+            if(e.clientY > 0 && e.clientY < (window.innerHeight)) {
+                newY = e.clientY + origDialogPosY - oldMouseY;
+                elmnt.style.top = newY + "px";
+            }
+        }
 
+        function initResizeDrag(e) {
+            element = root;
+
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = parseInt(
+                document.defaultView.getComputedStyle(element).width,
+                10
+            );
+            startHeight = parseInt(
+                document.defaultView.getComputedStyle(element).height,
+                10
+            );
+            
+            document.documentElement.addEventListener("mousemove", doResizeDrag, false);
+            document.documentElement.addEventListener("mouseup", stopResizeDrag, false);
+        }
+
+        function doResizeDrag(e) {            
+            element.style.width = startWidth + e.clientX - startX + "px";
+            element.style.height = startHeight + e.clientY - startY + "px";
+        }
+        
+        function stopResizeDrag() {
+            document.documentElement.removeEventListener("mousemove", doResizeDrag, false);
+            document.documentElement.removeEventListener("mouseup", stopResizeDrag, false);
         }
         
         root.buildFileSystemPathList = function(response, args) {
@@ -13536,6 +13578,28 @@ LGraphNode.prototype.executeAction = function(action)
             console.log('args:');
             console.log(args);
 
+            args.properties = {
+                path: '/home/mfoster',
+                filename: 'preset.json'
+            };
+
+            
+	    args.addWidget( "string", 'path', args.properties.path, {type: 'string'}, function(name,value){
+		// graphcanvas.graph.beforeChange(node);
+		// node.setProperty(name,value);
+		graphcanvas.graph.afterChange();
+		graphcanvas.dirty_canvas = true;
+	    });
+
+            args.addWidget( "string", 'filename', args.properties.filename, {type: 'string'}, function(name,value){
+		// graphcanvas.graph.beforeChange(node);
+		// node.setProperty(name,value);
+		graphcanvas.graph.afterChange();
+		graphcanvas.dirty_canvas = true;
+	    });
+            
+            args.addSeparator();
+            
             var parent_dir = response[4];
             var path_list = response[5].split("\n");
             var row_list = undefined;
@@ -13553,136 +13617,167 @@ LGraphNode.prototype.executeAction = function(action)
 
             console.log(html_table);
 
-            args.addHTML(html_table);
+            args.addHTML(html_table, 'file-panel-browser');
+            window.onload = args.addRowHandlers();
             
+            args.addButton("save",function(){
+		args.close();
+	    }).classList.add("save");
+            args.addButton("cancel",function(){
+		args.close();
+	    }).classList.add("cancel_save");            
         }
 
-		root.addHTML = function(code, classname, on_footer)
-		{
-			var elem = document.createElement("div");
-			if(classname)
-				elem.className = classname;
-			elem.innerHTML = code;
-			if(on_footer)
-				root.footer.appendChild(elem);
-			else
-				root.content.appendChild(elem);
-			return elem;
+        root.addRowHandlers = function()
+        {
+            var table = document.getElementsByClassName("file-panel-browser")[2];
+
+            console.log('table:');
+            console.log(table);
+            
+            var rows = table.getElementsByTagName("tr");
+            for (i = 0; i < rows.length; i++) {
+                var currentRow = table.rows[i];
+                var createClickHandler = 
+                    function(row) 
+                {
+                    return function() { 
+                        var cell = row.getElementsByTagName("td")[0];
+                        var id = cell.innerHTML;
+                        alert("id:" + id);
+                    };
+                };
+                
+                currentRow.onclick = createClickHandler(currentRow);
+            }
+        }
+
+	root.addHTML = function(code, classname, on_footer)
+	{
+	    var elem = document.createElement("div");
+	    if(classname)
+		elem.className = classname;
+	    elem.innerHTML = code;
+	    if(on_footer)
+		root.footer.appendChild(elem);
+	    else
+		root.content.appendChild(elem);
+	    return elem;
+	}
+        
+	root.addButton = function( name, callback, options )
+	{
+	    var elem = document.createElement("button");
+	    elem.innerText = name;
+	    elem.options = options;
+	    elem.classList.add("btn");
+	    elem.addEventListener("click",callback);
+	    root.footer.appendChild(elem);
+	    return elem;
+	}
+        
+	root.addSeparator = function()
+	{
+	    var elem = document.createElement("div");
+	    elem.className = "separator";
+	    root.content.appendChild(elem);
+	}
+        
+	root.addWidget = function( type, name, value, options, callback )
+	{
+	    options = options || {};
+	    var str_value = String(value);
+	    type = type.toLowerCase();
+	    if(type == "number")
+		str_value = value.toFixed(3);
+            
+	    var elem = document.createElement("div");
+	    elem.className = "property";
+	    elem.innerHTML = "<span class='property_name'></span><span class='property_value'></span>";
+	    elem.querySelector(".property_name").innerText = name;
+	    var value_element = elem.querySelector(".property_value");
+	    value_element.innerText = str_value;
+	    elem.dataset["property"] = name;
+	    elem.dataset["type"] = options.type || type;
+	    elem.options = options;
+	    elem.value = value;
+            
+	    //if( type == "code" )
+	    //	elem.addEventListener("click", function(){ inner_showCodePad( node, this.dataset["property"] ); });
+	    if (type == "boolean")
+	    {
+		elem.classList.add("boolean");
+		if(value)
+		    elem.classList.add("bool-on");
+		elem.addEventListener("click", function(){ 
+		    //var v = node.properties[this.dataset["property"]]; 
+		    //node.setProperty(this.dataset["property"],!v); this.innerText = v ? "true" : "false"; 
+		    var propname = this.dataset["property"];
+		    this.value = !this.value;
+		    this.classList.toggle("bool-on");
+		    this.querySelector(".property_value").innerText = this.value ? "true" : "false";
+		    innerChange(propname, this.value );
+		});
+	    }
+	    else if (type == "string" || type == "number")
+	    {
+		value_element.setAttribute("contenteditable",true);
+		value_element.addEventListener("keydown", function(e){ 
+		    if(e.code == "Enter")
+		    {
+			e.preventDefault();
+			this.blur();
+		    }
+		});
+		value_element.addEventListener("blur", function(){ 
+		    var v = this.innerText;
+		    var propname = this.parentNode.dataset["property"];
+		    var proptype = this.parentNode.dataset["type"];
+		    if( proptype == "number")
+			v = Number(v);
+		    innerChange(propname, v);
+		});
+	    }
+	    else if (type == "enum" || type == "combo")
+		var str_value = LGraphCanvas.getPropertyPrintableValue( value, options.values );
+	    value_element.innerText = str_value;
+            
+	    value_element.addEventListener("click", function(event){ 
+		var values = options.values || [];
+		var propname = this.parentNode.dataset["property"];
+		var elem_that = this;
+		var menu = new LiteGraph.ContextMenu(values,{
+		    event: event,
+		    className: "dark",
+		    callback: inner_clicked
+		},
+						     ref_window);
+		function inner_clicked(v, option, event) {
+		    //node.setProperty(propname,v); 
+		    //graphcanvas.dirty_canvas = true;
+		    elem_that.innerText = v;
+		    innerChange(propname,v);
+		    return false;
 		}
-
-		root.addButton = function( name, callback, options )
-		{
-			var elem = document.createElement("button");
-			elem.innerText = name;
-			elem.options = options;
-			elem.classList.add("btn");
-			elem.addEventListener("click",callback);
-			root.footer.appendChild(elem);
-			return elem;
-		}
-
-		root.addSeparator = function()
-		{
-			var elem = document.createElement("div");
-			elem.className = "separator";
-			root.content.appendChild(elem);
-		}
-
-		root.addWidget = function( type, name, value, options, callback )
-		{
-			options = options || {};
-			var str_value = String(value);
-			type = type.toLowerCase();
-			if(type == "number")
-				str_value = value.toFixed(3);
-
-			var elem = document.createElement("div");
-			elem.className = "property";
-			elem.innerHTML = "<span class='property_name'></span><span class='property_value'></span>";
-			elem.querySelector(".property_name").innerText = name;
-			var value_element = elem.querySelector(".property_value");
-			value_element.innerText = str_value;
-			elem.dataset["property"] = name;
-			elem.dataset["type"] = options.type || type;
-			elem.options = options;
-			elem.value = value;
-
-			//if( type == "code" )
-			//	elem.addEventListener("click", function(){ inner_showCodePad( node, this.dataset["property"] ); });
-			if (type == "boolean")
-			{
-				elem.classList.add("boolean");
-				if(value)
-					elem.classList.add("bool-on");
-				elem.addEventListener("click", function(){ 
-					//var v = node.properties[this.dataset["property"]]; 
-					//node.setProperty(this.dataset["property"],!v); this.innerText = v ? "true" : "false"; 
-					var propname = this.dataset["property"];
-					this.value = !this.value;
-					this.classList.toggle("bool-on");
-					this.querySelector(".property_value").innerText = this.value ? "true" : "false";
-					innerChange(propname, this.value );
-				});
-			}
-			else if (type == "string" || type == "number")
-			{
-				value_element.setAttribute("contenteditable",true);
-				value_element.addEventListener("keydown", function(e){ 
-					if(e.code == "Enter")
-					{
-						e.preventDefault();
-						this.blur();
-					}
-				});
-				value_element.addEventListener("blur", function(){ 
-					var v = this.innerText;
-					var propname = this.parentNode.dataset["property"];
-					var proptype = this.parentNode.dataset["type"];
-					if( proptype == "number")
-						v = Number(v);
-					innerChange(propname, v);
-				});
-			}
-			else if (type == "enum" || type == "combo")
-				var str_value = LGraphCanvas.getPropertyPrintableValue( value, options.values );
-				value_element.innerText = str_value;
-
-				value_element.addEventListener("click", function(event){ 
-					var values = options.values || [];
-					var propname = this.parentNode.dataset["property"];
-					var elem_that = this;
-					var menu = new LiteGraph.ContextMenu(values,{
-							event: event,
-							className: "dark",
-							callback: inner_clicked
-						},
-						ref_window);
-					function inner_clicked(v, option, event) {
-						//node.setProperty(propname,v); 
-						//graphcanvas.dirty_canvas = true;
-						elem_that.innerText = v;
-						innerChange(propname,v);
-						return false;
-					}
-				});
-
-			root.content.appendChild(elem);
-
-			function innerChange(name, value)
-			{
-				console.log("change",name,value);
-				//that.dirty_canvas = true;
-				if(options.callback)
-					options.callback(name,value);
-				if(callback)
-					callback(name,value);
-			}
-
-			return elem;
-		}
-
-		return root;
-	};
+	    });
+            
+	    root.content.appendChild(elem);
+            
+	    function innerChange(name, value)
+	    {
+		console.log("change",name,value);
+		//that.dirty_canvas = true;
+		if(options.callback)
+		    options.callback(name,value);
+		if(callback)
+		    callback(name,value);
+	    }
+            
+	    return elem;
+	}
+        
+	return root;
+    };
 
     
     LGraphCanvas.prototype.createPanel = function(title, options) {
