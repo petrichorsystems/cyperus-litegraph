@@ -13440,8 +13440,8 @@ LGraphNode.prototype.executeAction = function(action)
         root.header.onmousedown = dragMouseDown;
         var elmnt = root;
 
-        root.style.top = window.innerHeight * 0.5 + "px";
-        root.style.left = window.innerWidth * 0.5 + "px";        
+        root.style.top = window.innerHeight * 0.1 + "px";
+        root.style.left = window.innerWidth * 0.15 + "px";        
 
         var oldMouseX = 0;
         var oldMouseY = 0;
@@ -13452,25 +13452,25 @@ LGraphNode.prototype.executeAction = function(action)
         right.className = "resizer-right";
         root.appendChild(right);
         right.addEventListener("mousedown", initResizeDrag, false);
-        // right.parentPopup = p;
         
         var bottom = document.createElement("div");
         bottom.className = "resizer-bottom";
         root.appendChild(bottom);
         bottom.addEventListener("mousedown", initResizeDrag, false);
-        // bottom.parentPopup = p;
         
         var both = document.createElement("div");
         both.className = "resizer-both";
         root.appendChild(both);
         both.addEventListener("mousedown", initResizeDrag, false);
-        // both.parentPopup = p;
         
         
 	if(options.width)
 	    root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
 	if(options.height)
 	    root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
+        else
+            root.style.height = window.innerHeight * 0.5 + "px";
+        
 	if(options.closable)
 	{
 	    var close = document.createElement("span");
@@ -13523,7 +13523,7 @@ LGraphNode.prototype.executeAction = function(action)
             if (!elmnt) {
                 return;
             }
-            
+
             root.style.outline = "1px rgba(255, 255, 255, 0.5) solid";
             root.style.outlineOffset = "5px";
             
@@ -13533,13 +13533,25 @@ LGraphNode.prototype.executeAction = function(action)
             var newX = null;
             if(e.clientX > 0 && e.clientX < (window.innerWidth)) {
                 newX = e.clientX + origDialogPosX - oldMouseX;
-                elmnt.style.left = newX + "px";
+
+                // console.log('newX: ');
+                // console.log(newX);
+                // console.log('document.defaultView.getComputedStyle(elmnt).width: ')
+                // console.log(document.defaultView.getComputedStyle(elmnt).width)
+                console.log('window.innerWidth: ');
+                console.log(window.innerWidth);
+                console.log('newX + elmnt.style.left: ');
+                console.log(parseInt(newX) + parseInt(document.defaultView.getComputedStyle(elmnt).width));                
+                
+                if( newX > 0 && (parseInt(newX) + parseInt(document.defaultView.getComputedStyle(elmnt).width) < window.innerWidth))
+                    elmnt.style.left = newX + "px";
             }
             
             var newY = null;
             if(e.clientY > 0 && e.clientY < (window.innerHeight)) {
                 newY = e.clientY + origDialogPosY - oldMouseY;
-                elmnt.style.top = newY + "px";
+                if( newY > 0 && (parseInt(newY) + parseInt(document.defaultView.getComputedStyle(elmnt).height) < window.innerHeight))
+                    elmnt.style.top = newY + "px";
             }
         }
 
@@ -13641,7 +13653,7 @@ LGraphNode.prototype.executeAction = function(action)
                 var createClickHandler = 
                     function(row) 
                 {
-                    return function() { 
+                    return function() {
                         var cell = row.getElementsByTagName("td")[0];
                         var id = cell.innerHTML;
                         alert("id:" + id);
