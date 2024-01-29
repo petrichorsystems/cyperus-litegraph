@@ -13564,8 +13564,12 @@ LGraphNode.prototype.executeAction = function(action)
         }
 
         function doResizeDrag(e) {            
-            element.style.width = startWidth + e.clientX - startX + "px";
-            element.style.height = startHeight + e.clientY - startY + "px";
+
+            if( e.clientX < window.innerWidth )
+                element.style.width = startWidth + e.clientX - startX + "px";
+
+            if( e.clientY < window.innerHeight )
+                element.style.height = startHeight + e.clientY - startY + "px";
         }
         
         function stopResizeDrag() {
