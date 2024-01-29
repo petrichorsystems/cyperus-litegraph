@@ -2314,7 +2314,7 @@ class Cyperus {
         interval = interval || 0;
         var that = this;
 
-		//execute once per frame
+	//execute once per frame
         if ( interval == 0 && typeof window != "undefined" && window.requestAnimationFrame ) {
             function on_frame() {
                 if (that.execution_timer_id != -1) {
@@ -13533,16 +13533,6 @@ LGraphNode.prototype.executeAction = function(action)
             var newX = null;
             if(e.clientX > 0 && e.clientX < (window.innerWidth)) {
                 newX = e.clientX + origDialogPosX - oldMouseX;
-
-                // console.log('newX: ');
-                // console.log(newX);
-                // console.log('document.defaultView.getComputedStyle(elmnt).width: ')
-                // console.log(document.defaultView.getComputedStyle(elmnt).width)
-                console.log('window.innerWidth: ');
-                console.log(window.innerWidth);
-                console.log('newX + elmnt.style.left: ');
-                console.log(parseInt(newX) + parseInt(document.defaultView.getComputedStyle(elmnt).width));                
-                
                 if( newX > 0 && (parseInt(newX) + parseInt(document.defaultView.getComputedStyle(elmnt).width) < window.innerWidth))
                     elmnt.style.left = newX + "px";
             }
