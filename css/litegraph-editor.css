@@ -292,17 +292,25 @@
 
 .file-panel-browser {
     height: 100%;
+    width: 100%;
     text-align: right;
-    overflow: auto;
+    overflow-y: scroll;
+    table-layout: fixed;
+
 }
 
 table .file-panel-browser tr, td, th {
-    padding: 0px 30px;
+    padding: 0px 10px;  
 }
 
 table.file-panel-browser tr:hover td {
     cursor: grab;
     color: #fff;
+}
+
+.name-col {
+    width: 300px;
+    text-overflow: ellipsis;
 }
 
 .file-panel .resizer-right {

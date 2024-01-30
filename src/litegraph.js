@@ -126,6 +126,10 @@ class Cyperus {
     _send(message, callback, args) {
 	var self = this;
 	self._waitForConnection(function () {
+
+            console.log('sendin message: ');
+            console.log(message);
+            
             self.socket.send(self.osc.writePacket(message,
                                                   {
                                                       metadata: true,
@@ -13434,10 +13438,8 @@ LGraphNode.prototype.executeAction = function(action)
 	root.className = "litegraph file-dialog file-panel";
 	root.innerHTML = "<div class='file-dialog-header'><span class='file-dialog-title'></span></div><div class='file-dialog-content'></div><div class='file-dialog-footer'></div>";
 	root.header = root.querySelector(".file-dialog-header");
-
-
-        
         root.header.onmousedown = dragMouseDown;
+
         var elmnt = root;
 
         root.style.top = window.innerHeight * 0.1 + "px";
@@ -13584,62 +13586,94 @@ LGraphNode.prototype.executeAction = function(action)
             console.log('args:');
             console.log(args);
 
-            args.properties = {
-                path: '/home/mfoster',
-                filename: 'preset.json'
-            };
-
+            var on_initialize = false;
             
-	    args.addWidget( "string", 'path', args.properties.path, {type: 'string'}, function(name,value){
-		// graphcanvas.graph.beforeChange(node);
-		// node.setProperty(name,value);
-		graphcanvas.graph.afterChange();
-		graphcanvas.dirty_canvas = true;
-	    });
-
-            args.addWidget( "string", 'filename', args.properties.filename, {type: 'string'}, function(name,value){
-		// graphcanvas.graph.beforeChange(node);
-		// node.setProperty(name,value);
-		graphcanvas.graph.afterChange();
-		graphcanvas.dirty_canvas = true;
-	    });
+            root.panel = args['panel'];
+            root.graph = args['graph'];
             
-            args.addSeparator();
+            this.panel = args['panel'];
+            this.graph = args['graph'];
+            
+            if( this.panel.properties == null ) {
+                this.panel.properties = {
+                    path: response[4],
+                    filename: 'preset.json'
+                };
+                on_initialize = true;
+            } else {
+                
+            }
+
+            console.log('this.panel.innerHTML: ');
+            console.log(this.panel.innerHTML);
+
+            if( on_initialize ) {
+	        this.panel.addWidget( "string", 'path', this.panel.properties.path, {type: 'string'}, function(name,value){
+		    // graphcanvas.graph.beforeChange(node);
+		    // node.setProperty(name,value);
+		    graphcanvas.graph.afterChange();
+		    graphcanvas.dirty_canvas = true;
+	        });
+                
+                this.panel.addWidget( "string", 'filename', this.panel.properties.filename, {type: 'string'}, function(name,value){
+		    // graphcanvas.graph.beforeChange(node);
+		    // node.setProperty(name,value);
+		    graphcanvas.graph.afterChange();
+		    graphcanvas.dirty_canvas = true;
+	        });
+                
+                this.panel.addSeparator();
+            }
+
+
             
             var parent_dir = response[4];
             var path_list = response[5].split("\n");
             var row_list = undefined;
 
-            var html_prefix = "<div class='file-panel-browser'><table class='file-panel-browser'><tr><th>name</th><th>size</th><th>type</th><th>modified</th></tr>";
+            var html_prefix = "<div><table class='file-panel-browser'><tr><th class='name-col'>name</th><th>size</th><th>type</th><th>modified</th></tr>";
             var html_suffix = "</table></div>";
 
             var html_table = html_prefix;
             for(var i=0; i<path_list.length; i++) {
                 console.log(path_list[i]);
                 row_list = path_list[i].split('\t');
-                html_table += "<tr><td>" + row_list[0] + "</td><td>" + row_list[1] + "</td><td>" + row_list[2] + "</td><td>" + row_list[3] + "</td></tr>";
+                html_table += "<tr><td class='name-col'>" + row_list[0] + "</td><td>" + row_list[1] + "</td><td>" + row_list[2] + "</td><td>" + row_list[3] + "</td></tr>";
             }
             html_table += html_suffix;
 
-            console.log(html_table);
+            if( on_initialize ) {
+                this.panel.addHTML(html_table, 'file-panel-browser');
+                window.onload = this.panel.addRowHandlers();
+            } else {
+                elems = document.getElementsByClassName("file-dialog-content");
+                var children = elems[0].childNodes;
+                for(var i=0; i<children.length; i++) {
+                    if( children[i].className == 'file-panel-browser')
+                        elems[0].removeChild(children[i]);
+                }
+                
+                this.panel.addHTML(html_table, 'file-panel-browser');
+                window.onload = this.panel.addRowHandlers();
+            }
 
-            args.addHTML(html_table, 'file-panel-browser');
-            window.onload = args.addRowHandlers();
+
             
-            args.addButton("save",function(){
-		args.close();
-	    }).classList.add("save");
-            args.addButton("cancel",function(){
-		args.close();
-	    }).classList.add("cancel_save");            
+            if( on_initialize) {
+                this.panel.addButton("save",function(){
+		    this.panel.close();
+	        }).classList.add("save");
+                this.panel.addButton("cancel",function(){
+		    this.panel.close();
+	        }).classList.add("cancel_save");
+            }
         }
 
         root.addRowHandlers = function()
         {
-            var table = document.getElementsByClassName("file-panel-browser")[2];
-
-            console.log('table:');
-            console.log(table);
+            console.log(document.getElementsByClassName("file-panel-browser"));
+            
+            var table = document.getElementsByClassName("file-panel-browser")[1];
             
             var rows = table.getElementsByTagName("tr");
             for (i = 0; i < rows.length; i++) {
@@ -13648,9 +13682,47 @@ LGraphNode.prototype.executeAction = function(action)
                     function(row) 
                 {
                     return function() {
-                        var cell = row.getElementsByTagName("td")[0];
-                        var id = cell.innerHTML;
-                        alert("id:" + id);
+                        var cell_name = row.getElementsByTagName("td")[0];
+                        var cell_type = row.getElementsByTagName("td")[2];
+                        
+                        var name = cell_name.innerHTML;
+                        var filetype = cell_type.innerHTML;
+
+                        console.log(root);
+                        console.log(root.properties);
+                        
+                        if( filetype == "file" ) {
+                            root.properties.filename = name;
+                            filename_widget = document.getElementsByClassName("property")[1];
+                            var value_elem = filename_widget.querySelector(".property_value");
+                            value_elem.innerText = name;
+                            filename_widget.value = name;                            
+
+                        } else {
+                            path_widget = document.getElementsByClassName("property")[0];
+
+                            new_path = root.properties.path;
+                            if( new_path[new_path.length] != '/' )
+                                new_path += '/';
+                            new_path += name;
+
+                            root.properties.path = new_path;
+                            var value_elem = path_widget.querySelector(".property_value");
+                            value_elem.innerText = new_path;
+                            path_widget.value = new_path;
+                            
+                            args = {
+                                'graph': root.graph,
+                                'panel': root.panel
+                            }
+                            
+                            root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
+                                                                         new_path,
+                                                                         root.buildFileSystemPathList,
+                                                                         args);    
+
+                            
+                        }
                     };
                 };
                 
@@ -13728,7 +13800,7 @@ LGraphNode.prototype.executeAction = function(action)
 	    else if (type == "string" || type == "number")
 	    {
 		value_element.setAttribute("contenteditable",true);
-		value_element.addEventListener("keydown", function(e){ 
+		value_element.addEventListener("keydown", function(e){
 		    if(e.code == "Enter")
 		    {
 			e.preventDefault();
