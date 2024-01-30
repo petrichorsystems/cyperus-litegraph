@@ -128,10 +128,16 @@ Editor.prototype.onLoadButton = function() {
 
     var graph = this.graph;
     var panel = this.graphcanvas.createFilePanel("load graph",{closable:true});
+
+    var args = {
+        'graph': graph,
+        'panel': panel
+    }
+    
     this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
-                                                 "/home/mfoster/Pictures",
+                                                 "/home/mfoster",
                                                  panel.buildFileSystemPathList,
-                                                 panel);    
+                                                 args);    
     
     var data = localStorage.getItem( "graphdemo_save" );
     if(data)
@@ -142,10 +148,16 @@ Editor.prototype.onLoadButton = function() {
 Editor.prototype.onSaveButton = function() {
     var graph = this.graph;
     var panel = this.graphcanvas.createFilePanel("save graph",{closable:true});
+
+    var args = {
+        'graph': graph,
+        'panel': panel
+    }
+    
     this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
-                                                 "/home/mfoster/Pictures",
+                                                 "/home/mfoster",
                                                  panel.buildFileSystemPathList,
-                                                 panel);    
+                                                 args);    
     this.root.appendChild(panel);
     console.log("saved"); 
     localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    

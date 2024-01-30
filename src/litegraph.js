@@ -1531,10 +1531,10 @@ class Cyperus {
 	    let ret = {'in': ins, 'out': outs};
 	    
 	    var node_main_inputs = LiteGraph.createNode("cyperus/main/inputs");
-	    node_main_inputs.pos = [250,200];
+	    node_main_inputs.pos = [(window.innerWidth * 0.10), (window.innerHeight * 0.33)];
 	    
 	    var node_main_outputs = LiteGraph.createNode("cyperus/main/outputs");
-	    node_main_outputs.pos = [1000,200];
+	    node_main_outputs.pos = [(window.innerWidth * 0.75), (window.innerHeight * 0.33)];
 	    
 	    this.graph.add(node_main_inputs);
 	    this.graph.add(node_main_outputs);
@@ -13472,7 +13472,7 @@ LGraphNode.prototype.executeAction = function(action)
 	    root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
         else
             root.style.height = window.innerHeight * 0.5 + "px";
-            root.style.width = window.innerWidth * 0.5 + "px";        
+            root.style.width = window.innerWidth * 0.75 + "px";        
         
 	if(options.closable)
 	{

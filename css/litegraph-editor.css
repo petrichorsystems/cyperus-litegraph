@@ -295,11 +295,11 @@
     text-align: right;
     overflow-y: scroll;
     table-layout: fixed;
-
 }
 
 table .file-panel-browser tr, td, th {
-    padding: 0px 10px;  
+    padding: 0px 10px;
+    text-overflow: ellipsis;
 }
 
 table.file-panel-browser tr:hover td {
@@ -309,7 +309,6 @@ table.file-panel-browser tr:hover td {
 
 .name-col {
     width: 300px;
-    text-overflow: ellipsis;
 }
 
 .file-panel .resizer-right {
