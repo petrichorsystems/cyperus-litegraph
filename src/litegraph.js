@@ -13472,6 +13472,7 @@ LGraphNode.prototype.executeAction = function(action)
 	    root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
         else
             root.style.height = window.innerHeight * 0.5 + "px";
+            root.style.width = window.innerWidth * 0.5 + "px";        
         
 	if(options.closable)
 	{
