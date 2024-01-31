@@ -213,9 +213,9 @@ class sine extends CyperusNode {
 
     osc_listener_callback(node, response) {
         var value = response['args'];
-        node.widgets[0].value = value[0].toFixed(8);
-        node.widgets[1].value = value[1].toFixed(8);
-        node.widgets[2].value = value[2].toFixed(8);
+        node.widgets[0].value = value[0]['value'].toFixed(8);
+        node.widgets[1].value = value[1]['value'].toFixed(8);
+        node.widgets[2].value = value[2]['value'].toFixed(8);
     }
 
 }
@@ -309,11 +309,9 @@ class simple extends CyperusNode {
 
     osc_listener_callback(node, response) {
         var value = response['args'];
-        console.log('delay/simple osc_listener_callbak()');
-        console.log(value);
-        node.widgets[0].value = value[0].toFixed(8);
-        node.widgets[1].value = value[1].toFixed(8);
-        node.widgets[2].value = value[2].toFixed(8);
+        node.widgets[0].value = value[0]['value'].toFixed(8);
+        node.widgets[1].value = value[1]['value'].toFixed(8);   
+        node.widgets[2].value = value[2]['value'].toFixed(8);
     }
 
     
@@ -576,7 +574,7 @@ class float extends CyperusNode {
 
     osc_listener_callback(node, response) {
 
-        var value = response['args'];
+        var value = response['args']['value'];
 
         if(value == node.properties.value)
             return;
@@ -588,9 +586,6 @@ class float extends CyperusNode {
         if (value > node.properties.max) {
             value = node.properties.max
         }
-
-        console.log('INTERLINKED value: ');
-        console.log(value);
         
         node.properties.value = value;
         var node_value = (value - node.properties.min) / (node.properties.max - node.properties.min);
