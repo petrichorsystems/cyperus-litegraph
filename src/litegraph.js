@@ -36,16 +36,14 @@ class Cyperus {
                                                 metadata: true,
                                                 unpackSingleArgs: true
                                             });
-        
-	if( response['address'].includes('cyperus/listener/') ) {
-            
+	if( response['address'].includes('cyperus/listener/') ) {            
 	    var split_response = response['address'].split('/');
 	    var module_id = split_response[split_response.length - 1];
 	    var clbk_data = this.listeners[module_id]
 	    clbk_data[0](clbk_data[1], response);
 
         } else if( response['address'].includes('cyperus/dsp/load')  ) {
-            this.dsp_load = response['args'];
+            this.dsp_load = response['args']['value'];
 	} else {
             console.log('RESPONSE');
             console.log(response);
