@@ -9,7 +9,7 @@
 }
 
 .litegraph.litecontextmenu {
-    font-family: Tahoma, sans-serif;
+    font-family: Open_Sans;
     position: fixed;
     top: 100px;
     left: 100px;
@@ -45,7 +45,7 @@
 }
 
 .litegraph .litemenubar ul {
-    font-family: Tahoma, sans-serif;
+    font-family: Open_Sans;
     margin: 0;
     padding: 0;
 }
@@ -163,7 +163,7 @@
 }
 
 .litegraph.litesearchbox {
-    font-family: Tahoma, sans-serif;
+    font-family: Open_Sans;
     position: absolute;
     background-color: rgba(0, 0, 0, 0.5);
     padding-top: 4px;
@@ -195,7 +195,7 @@
 }
 
 .litegraph.lite-search-item {
-    font-family: Tahoma, sans-serif;
+    font-family: Open_Sans;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     padding-top: 2px;
@@ -259,7 +259,7 @@
 .litegraph .dialog .dialog-footer { height: 50px; padding: 10px; border-top: 1px solid #1a1a1a;}
 
 .litegraph .dialog .dialog-header .dialog-title {
-    font: 20px "Arial";
+    font: 20px Open_Sans;
     margin: 4px;
     padding: 4px 10px;
     display: inline-block;
@@ -417,18 +417,18 @@
 .litegraph .file-dialog .file-dialog-footer { height: 50px; padding: 10px; border-top: 1px solid #1a1a1a;}
 
 .litegraph .file-dialog .file-dialog-header .file-dialog-title {
-    font: 20px "Arial";
+    font: 20px "Open_Sans";
     margin: 4px;
     padding: 4px 10px;
     display: inline-block;
 }
 
 .litegraph .file-dialog .file-dialog-content {
-    height: calc(100% - 189px);
+    height: calc(100% - 251px);
     width: 100%;
     min-height: 100px;
     display: inline-block;
-	color: #AAA;
+    color: #AAA;
     /*background-color: black;*/
 }
 
@@ -507,7 +507,7 @@
 }
 
 .litegraph .file-dialog .btn {
-	border-radius: 4px;
+    border-radius: 4px;
     padding: 4px 20px;
     margin-left: 0px;
     background-color: #060606;
@@ -522,6 +522,31 @@
 .litegraph .file-dialog .btn.delete:hover {
     background-color: #F33;
     color: black;
+}
+
+.litegraph .file-dialog .file-btn {
+    /*font-family: "Metro Light";*/
+    color: #ccc;
+    font-size: 20px;
+    min-width: 30px;
+    /*border-radius: 0.3em;*/
+    border: 0 solid #666;
+    background-color: transparent;
+    /*box-shadow: 0 0 3px black;*/
+    padding: 10px 10px;
+    cursor: pointer;
+    transition: all 1s;
+    -moz-transition: all 1s;
+    -webkit-transition: all 0.4s;
+}
+
+.litegraph .file-tools-left {
+    left: auto;
+    height: 20px;
+    right: auto;
+    left: 4px;
+    width: 40px;
+    display: inline-block;
 }
 
 /* SUBGRAPHS *****/

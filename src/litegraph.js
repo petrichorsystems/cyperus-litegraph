@@ -7615,9 +7615,9 @@ LGraphNode.prototype.executeAction = function(action)
         this.ds = new DragAndScale();
         this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
 
-        this.title_text_font = "" + LiteGraph.NODE_TEXT_SIZE + "px Arial";
+        this.title_text_font = "" + LiteGraph.NODE_TEXT_SIZE + "px Open_Sans";
         this.inner_text_font =
-            "normal " + LiteGraph.NODE_SUBTEXT_SIZE + "px Arial";
+            "normal " + LiteGraph.NODE_SUBTEXT_SIZE + "px Open_Sans";
         this.node_title_color = LiteGraph.NODE_TITLE_COLOR;
         this.default_link_color = LiteGraph.LINK_COLOR;
         this.default_connection_color = {
@@ -9989,7 +9989,7 @@ LGraphNode.prototype.executeAction = function(action)
 		ctx.globalAlpha = 1;
 
 		ctx.fillStyle = "#888";
-		ctx.font = "14px Arial";
+		ctx.font = "14px Open_Sans";
 		ctx.textAlign = "left";
 		ctx.fillText( "Graph Inputs", 20, 34 );
 		var pos = this.mouse;
@@ -10001,7 +10001,7 @@ LGraphNode.prototype.executeAction = function(action)
 		}
 
 		var y = 50;
-		ctx.font = "20px Arial";
+		ctx.font = "20px Open_Sans";
 		if(subnode.inputs)
 		for(var i = 0; i < subnode.inputs.length; ++i)
 		{
@@ -10080,7 +10080,7 @@ LGraphNode.prototype.executeAction = function(action)
 			{
 				ctx.fillStyle = textcolor;
 				ctx.textAlign = "center";
-				ctx.font = ((h * 0.65)|0) + "px Arial";
+				ctx.font = ((h * 0.65)|0) + "px Open_Sans";
 				ctx.fillText( text, x + w * 0.5,y + h * 0.75 );
 				ctx.textAlign = "left";
 			}
@@ -10129,7 +10129,7 @@ LGraphNode.prototype.executeAction = function(action)
 		ctx.globalAlpha = 1;
 
 		ctx.fillStyle = "#888";
-		ctx.font = "14px Arial";
+		ctx.font = "14px Open_Sans";
 		ctx.textAlign = "left";
 		ctx.fillText( "Graph Outputs", this.canvas.width - w, 34 );
 		var pos = this.mouse;
@@ -10141,7 +10141,7 @@ LGraphNode.prototype.executeAction = function(action)
 		}
 
 		var y = 50;
-		ctx.font = "20px Arial";
+		ctx.font = "20px Open_Sans";
 		if(subnode.outputs)
 		for(var i = 0; i < subnode.outputs.length; ++i)
 		{
@@ -10206,7 +10206,7 @@ LGraphNode.prototype.executeAction = function(action)
         ctx.save();
         ctx.translate(x, y);
 
-        ctx.font = "10px Arial";
+        ctx.font = "10px Open_Sans";
         ctx.fillStyle = "#888";
         if (this.graph) {
             ctx.fillText( "T: " + this.graph.globaltime.toFixed(2) + "s", 5, 13 * 1 );
@@ -10255,7 +10255,7 @@ LGraphNode.prototype.executeAction = function(action)
             ctx.lineWidth = 10;
             ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
             ctx.lineWidth = 1;
-            ctx.font = "40px Arial";
+            ctx.font = "40px Open_Sans";
             ctx.textAlign = "center";
             ctx.fillStyle = subgraph_node.bgcolor || "#AAA";
             var title = "";
@@ -10810,7 +10810,7 @@ LGraphNode.prototype.executeAction = function(action)
 			return;
 		text = text.substr(0,30); //avoid weird
 
-		ctx.font = "14px Courier New";
+		ctx.font = "14px Open_Sans";
 		var info = ctx.measureText(text);
 		var w = info.width + 20;
 		var h = 24;
@@ -12266,7 +12266,7 @@ LGraphNode.prototype.executeAction = function(action)
 
             var font_size =
                 group.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE;
-            ctx.font = font_size + "px Arial";
+            ctx.font = font_size + "px Open_Sans";
             ctx.fillText(group.title, pos[0] + 4, pos[1] + font_size);
         }
 
@@ -13607,6 +13607,13 @@ LGraphNode.prototype.executeAction = function(action)
             console.log(this.panel.innerHTML);
 
             if( on_initialize ) {
+
+                this.panel.addToolsButton("refresh_dir_btn", "refresh", "sync", this.panel.addToolsButton, 'refresh', ".tools-left");
+                this.panel.addToolsButton("back_dir_btn", "back", "arrow_back", this.panel.addToolsButton, 'back', ".tools-left");
+                this.panel.addToolsButton("ascend_dir_btn", "up", "arrow_upward", this.panel.addToolsButton, 'ascend', ".tools-left");
+                
+                this.panel.addSeparator();
+                
 	        this.panel.addWidget( "string", 'path', this.panel.properties.path, {type: 'string'}, function(name,value){
 		    // graphcanvas.graph.beforeChange(node);
 		    // node.setProperty(name,value);
@@ -13668,6 +13675,47 @@ LGraphNode.prototype.executeAction = function(action)
             }
         }
 
+        root.addToolsButton = function( id, name, materials_icon_name, callback, args, container ) {
+            if (!container) {
+                container = ".file-tools-left";
+            }
+            
+            var button = this.createSpan(name, materials_icon_name, callback, args);
+            button.id = id;
+
+            console.log('container:');
+            console.log(container);
+
+            var container = root.querySelector(container);
+            if( !container ) {
+                container = document.createElement("div");
+                container.classList.add("file-tools-left");
+            }
+            
+            container.appendChild(button);
+            root.content.appendChild(container);
+        }
+        
+        root.createSpan = function(name, materials_icon_name, callback, args) {
+            var button = document.createElement("span");
+            if (materials_icon_name) {
+                button.innerHTML = materials_icon_name;
+            }
+            button.classList.add("file-btn");
+            button.classList.add("file-btn-primary");    
+            button.classList.add("material-icons");
+            button.classList.add("icons");
+            button.style.setProperty('--variation', `'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48`);
+            
+            button.setAttribute('title', name);
+            // button.innerHTML += name;
+            if(callback)
+	        button.addEventListener('click', function() {
+                    root.addFilePanelNavButtonHandler(args);
+                });
+            return button;
+        }
+        
         root.addRowHandlers = function()
         {
             console.log(document.getElementsByClassName("file-panel-browser"));
@@ -13718,7 +13766,7 @@ LGraphNode.prototype.executeAction = function(action)
                             root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
                                                                          new_path,
                                                                          root.buildFileSystemPathList,
-                                                                         args);    
+                                                                         args); 
 
                             
                         }
@@ -13729,6 +13777,37 @@ LGraphNode.prototype.executeAction = function(action)
             }
         }
 
+        root.addFilePanelNavButtonHandler = function(button_action)
+        {
+            console.log("litegraph.js::addFilePanelNavButtonHandler()");
+
+            path_widget = document.getElementsByClassName("property")[0];
+            if( button_action == "refresh" ) {
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'refresh'");
+                new_path = root.properties.path;
+            }
+
+            // if( new_path[new_path.length] != '/' )
+            //     new_path += '/';
+            // new_path += name;
+            
+            root.properties.path = new_path;
+            var value_elem = path_widget.querySelector(".property_value");
+            value_elem.innerText = new_path;
+            path_widget.value = new_path;
+            
+            args = {
+                'graph': root.graph,
+                'panel': root.panel
+            }
+                            
+            root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
+                                                         new_path,
+                                                         root.buildFileSystemPathList,
+                                                         args);                             
+        }               
+
+        
 	root.addHTML = function(code, classname, on_footer)
 	{
 	    var elem = document.createElement("div");

@@ -11,6 +11,49 @@
     url(material-design-icons/variablefont/MaterialSymbolsOutlined\[FILL\,GRAD\,opsz\,wght\].ttf) format('truetype');
 }
 
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  src: url(Montserrat/Montserrat-VariableFont_wght.ttf) format('truetype'),url(Montserrat/Montserrat-Italic-VariableFont_wght.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto_Sans_Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url(Noto_Sans_Mono/NotoSansMono-VariableFont_wdth,wght.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Open_Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(Open_Sans/OpenSans-VariableFont_wdth,wght.ttf) format('truetype'),url(Open_Sans/OpenSans-Italic-VariableFont_wdth,wght.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'PT_Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(PT_Sans/PTSans-Regular.ttf) format('truetype'),url(PT_Sans/PTSans-BoldItalic.ttf) format('truetype'),url(PT_Sans/PTSans-Bold.ttf) format('truetype'),url(PT_Sans/PTSans-Italic.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Roboto_Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url(Roboto_Mono/RobotoMono-VariableFont_wght.ttf) format('truetype'),url(Roboto_Mono/RobotoMono-Italic-VariableFont_wght.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Work_Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(Work_Sans/WorkSans-VariableFont_wght.ttf) format('truetype'),
+       url(Work_Sans/WorkSans-Italic-VariableFont_wght.ttf) format('truetype');
+}
+
 .material-icons {
   font-family: 'Material Icons';
   font-weight: normal;
@@ -70,13 +113,13 @@
 
     background-color: #333;
     color: #eee;
-    font: 14px Tahoma;
+    font: 14px Open_Sans;
 
     position: relative;
 }
 
 .litegraph-editor h1 {
-    font-family: "Metro Light", Tahoma;
+    font-family: Open_Sans;
     color: #ddd;
     font-size: 28px;
     padding-left: 10px;
@@ -86,14 +129,14 @@
 }
 
 .litegraph-editor h1 span {
-    font-family: "Arial";
+    font-family: Open_Sans;
     font-size: 14px;
     font-weight: normal;
     color: #aaa;
 }
 
 .litegraph-editor h2 {
-    font-family: "Metro Light";
+    font-family: Open_Sans;
     padding: 5px;
     margin-left: 10px;
 }
@@ -172,7 +215,7 @@
     position: absolute;
     top: 2px;
     right: 2px;
-    font-family: "Tahoma";
+    font-family: Open_Sans;
     font-size: 14px;
     color: #aaa;
     cursor: pointer;
@@ -248,7 +291,7 @@
 
 
 .litegraph-editor .loadmeter {
-    font-family: "Tahoma";
+    font-family: Open_Sans;
     color: #aaa;
     font-size: 12px;
     border-radius: 2px;
