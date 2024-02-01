@@ -13792,18 +13792,22 @@ LGraphNode.prototype.executeAction = function(action)
                 if( root.properties.path == '/' ) {
                     new_path = root.properties.path;
                 } else {
-                    var subpaths = root.properties.path.split('/');
-                    subpaths.pop();
-                    new_path = subpaths.join('/')
+                    var subpaths = root.properties.path.split('/').filter(String);                    
+                    if( subpaths == ["/"] ) {
+                        new_path = "/";
+                    } else {
+                        subpaths.pop();
+                        new_path = subpaths.join('/')
+                    }
+                    if( new_path[0] != '/' )
+                        new_path = '/' + new_path;
+                    
                 }
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend', ascending to: " + new_path);
             } else {
                 /* probably want to error out here */
             }
 
-            // if( new_path[new_path.length] != '/' )
-            //     new_path += '/';
-            // new_path += name;
             
             root.properties.path = new_path;
             var value_elem = path_widget.querySelector(".property_value");
