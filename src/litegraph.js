@@ -13609,7 +13609,7 @@ LGraphNode.prototype.executeAction = function(action)
             if( on_initialize ) {
 
                 this.panel.addToolsButton("refresh_dir_btn", "refresh", "sync", this.panel.addToolsButton, 'refresh', ".tools-left");
-                this.panel.addToolsButton("back_dir_btn", "back", "arrow_back", this.panel.addToolsButton, 'back', ".tools-left");
+                // this.panel.addToolsButton("back_dir_btn", "back", "arrow_back", this.panel.addToolsButton, 'back', ".tools-left");
                 this.panel.addToolsButton("ascend_dir_btn", "up", "arrow_upward", this.panel.addToolsButton, 'ascend', ".tools-left");
                 
                 this.panel.addSeparator();
@@ -13781,10 +13781,24 @@ LGraphNode.prototype.executeAction = function(action)
         {
             console.log("litegraph.js::addFilePanelNavButtonHandler()");
 
-            path_widget = document.getElementsByClassName("property")[0];
+            var path_widget = document.getElementsByClassName("property")[0];
+            var new_path = null;
+
             if( button_action == "refresh" ) {
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'refresh'");
                 new_path = root.properties.path;
+            } else if( button_action == "ascend" ) {
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend'");
+                if( root.properties.path == '/' ) {
+                    new_path = root.properties.path;
+                } else {
+                    var subpaths = root.properties.path.split('/');
+                    subpaths.pop();
+                    new_path = subpaths.join('/')
+                }
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend', ascending to: " + new_path);
+            } else {
+                /* probably want to error out here */
             }
 
             // if( new_path[new_path.length] != '/' )
