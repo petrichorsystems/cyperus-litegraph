@@ -317,6 +317,26 @@ class Cyperus {
 	);
     }
 
+    osc_get_filesystem_cwd(request_id,
+			   callback,
+			   args) {
+	console.log('osc_get_filesystem_cwd..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/get/filesystem/cwd",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }
+    
     osc_list_filesystem_path(request_id,
                              path,
 			     callback,
@@ -13577,6 +13597,19 @@ LGraphNode.prototype.executeAction = function(action)
             document.documentElement.removeEventListener("mousemove", doResizeDrag, false);
             document.documentElement.removeEventListener("mouseup", stopResizeDrag, false);
         }
+
+        root.retrieveFileSystemCWD = function(response, args) {
+            console.log("litegraph.js::_retrieveFileSystemCWD()");
+            
+            args['graph'].last_filesystem_path_visited = response[3];;
+            
+            /* parse out cwd */
+            args['graph']._cyperus.osc_list_filesystem_path(args['graph']._cyperus.uuidv4(),
+                                                            args['graph'].last_filesystem_path_visited,
+                                                            root.buildFileSystemPathList,
+                                                            args); 
+            
+        }
         
         root.buildFileSystemPathList = function(response, args) {
             console.log("litegraph.js::_build_FileSystemPathList()");
@@ -13596,7 +13629,8 @@ LGraphNode.prototype.executeAction = function(action)
             if( this.panel.properties == null ) {
                 this.panel.properties = {
                     path: response[4],
-                    filename: 'preset.json'
+                    filename: 'preset.json',
+                    selected_row: null
                 };
                 on_initialize = true;
             } else {
@@ -13608,9 +13642,13 @@ LGraphNode.prototype.executeAction = function(action)
 
             if( on_initialize ) {
 
-                this.panel.addToolsButton("refresh_dir_btn", "refresh", "sync", this.panel.addToolsButton, 'refresh', ".tools-left");
-                // this.panel.addToolsButton("back_dir_btn", "back", "arrow_back", this.panel.addToolsButton, 'back', ".tools-left");
-                this.panel.addToolsButton("ascend_dir_btn", "up", "arrow_upward", this.panel.addToolsButton, 'ascend', ".tools-left");
+                this.panel.addToolsButton("refresh_dir_btn", "refresh", "sync", this.panel.addToolsButton, 'refresh', "file-tools-left");
+                this.panel.addToolsButton("ascend_dir_btn", "up", "arrow_upward", this.panel.addToolsButton, 'ascend', "file-tools-left");
+                this.panel.addToolsButton("new_dir_btn", "new folder", "create_new_folder", this.panel.addToolsButton, 'new_dir', "file-tools-left");
+                this.panel.addToolsButton("upload_file_btn", "upload file", "upload", this.panel.addToolsButton, 'upload_file', "file-tools-left");                
+                this.panel.addToolsButton("download_file_btn", "download file", "download", this.panel.addToolsButton, 'download_file', "file-tools-left");
+                this.panel.addToolsButton("save_file_btn", "save", "file_save", this.panel.addToolsButton, 'save', "file-tools-left");
+                this.panel.addToolsButton("load_file_btn", "load", "file_open", this.panel.addToolsButton, 'load', "file-tools-left");               
                 
                 this.panel.addSeparator();
                 
@@ -13629,9 +13667,10 @@ LGraphNode.prototype.executeAction = function(action)
 	        });
                 
                 this.panel.addSeparator();
+                
             }
 
-
+            this.panel.properties.selected_row = null;
             
             var parent_dir = response[4];
             var path_list = response[5].split("\n");
@@ -13641,6 +13680,7 @@ LGraphNode.prototype.executeAction = function(action)
             var html_suffix = "</table></div>";
 
             var html_table = html_prefix;
+            path_list.sort();
             for(var i=0; i<path_list.length; i++) {
                 console.log(path_list[i]);
                 row_list = path_list[i].split('\t');
@@ -13651,6 +13691,7 @@ LGraphNode.prototype.executeAction = function(action)
             if( on_initialize ) {
                 this.panel.addHTML(html_table, 'file-panel-browser');
                 window.onload = this.panel.addRowHandlers();
+                window.onload = this.panel.addRowActionHandlers();
             } else {
                 elems = document.getElementsByClassName("file-dialog-content");
                 var children = elems[0].childNodes;
@@ -13661,35 +13702,36 @@ LGraphNode.prototype.executeAction = function(action)
                 
                 this.panel.addHTML(html_table, 'file-panel-browser');
                 window.onload = this.panel.addRowHandlers();
+                window.onload = this.panel.addRowActionHandlers();                
             }
 
-
-            
             if( on_initialize) {
-                this.panel.addButton("save",function(){
-		    this.panel.close();
-	        }).classList.add("save");
-                this.panel.addButton("cancel",function(){
-		    this.panel.close();
-	        }).classList.add("cancel_save");
+                var button = root.createSpan("remove", "delete_forever", this.panel.addToolsButton, 'remove', 'file-dialog-footer');
+                button.classList.add("file-delete");
+                console.log('class list:');
+                console.log(button.classList);
+                button.id = "remove_btn";
+                this.panel.footer.appendChild(button);
+                
+                this.panel.addButton("close",function(){
+                    root.close()
+	        }).classList.add("close");
+
             }
         }
 
-        root.addToolsButton = function( id, name, materials_icon_name, callback, args, container ) {
-            if (!container) {
-                container = ".file-tools-left";
+        root.addToolsButton = function( id, name, materials_icon_name, callback, args, container_name ) {
+            if (!container_name) {
+                container_name = "file-tools-left";
             }
             
             var button = this.createSpan(name, materials_icon_name, callback, args);
             button.id = id;
 
-            console.log('container:');
-            console.log(container);
-
             var container = root.querySelector(container);
             if( !container ) {
                 container = document.createElement("div");
-                container.classList.add("file-tools-left");
+                container.classList.add(container_name);
             }
             
             container.appendChild(button);
@@ -13726,6 +13768,41 @@ LGraphNode.prototype.executeAction = function(action)
             for (i = 0; i < rows.length; i++) {
                 var currentRow = table.rows[i];
                 var createClickHandler = 
+                    function(row) 
+                {
+                    return function() {
+                        console.log('selected_row:');
+                        console.log(root.properties.selected_row);
+                        
+                        if( root.properties.selected_row ) {
+                            root.properties.selected_row.style.backgroundColor = "transparent";
+                            root.properties.selected_row.style.color = "#ccc";
+                        }
+                        
+                        var cell_name = row.getElementsByTagName("td")[0];
+                        var cell_type = row.getElementsByTagName("td")[2];
+
+                        row.style.backgroundColor = "#0969da";
+                        row.style.color = "#fff";                        
+                        root.properties.selected_row = row;
+
+                    };
+                };
+                
+                currentRow.onclick = createClickHandler(currentRow);
+            }
+        }
+
+        root.addRowActionHandlers = function()
+        {
+            console.log(document.getElementsByClassName("file-panel-browser"));
+            
+            var table = document.getElementsByClassName("file-panel-browser")[1];
+            
+            var rows = table.getElementsByTagName("tr");
+            for (i = 0; i < rows.length; i++) {
+                var currentRow = table.rows[i];
+                var createDblClickHandler = 
                     function(row) 
                 {
                     return function() {
@@ -13773,9 +13850,9 @@ LGraphNode.prototype.executeAction = function(action)
                     };
                 };
                 
-                currentRow.onclick = createClickHandler(currentRow);
+                currentRow.ondblclick = createDblClickHandler(currentRow);
             }
-        }
+        }        
 
         root.addFilePanelNavButtonHandler = function(button_action)
         {
@@ -13806,6 +13883,8 @@ LGraphNode.prototype.executeAction = function(action)
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend', ascending to: " + new_path);
             } else {
                 /* probably want to error out here */
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action '" + button_action + "' uknown! returning");
+                return;
             }
 
             

@@ -424,7 +424,7 @@
 }
 
 .litegraph .file-dialog .file-dialog-content {
-    height: calc(100% - 251px);
+    height: calc(100% - 259px);
     width: 100%;
     min-height: 100px;
     display: inline-block;
@@ -519,18 +519,13 @@
     color: #FFF;
 }
 
-.litegraph .file-dialog .btn.delete:hover {
-    background-color: #F33;
-    color: black;
-}
-
 .litegraph .file-dialog .file-btn {
     /*font-family: "Metro Light";*/
     color: #ccc;
     font-size: 20px;
     min-width: 30px;
     /*border-radius: 0.3em;*/
-    border: 0 solid #666;
+    border: none;
     background-color: transparent;
     /*box-shadow: 0 0 3px black;*/
     padding: 10px 10px;
@@ -540,11 +535,23 @@
     -webkit-transition: all 0.4s;
 }
 
+#remove_btn:hover {
+    color: #F33;
+}
+
 .litegraph .file-tools-left {
-    left: auto;
     height: 20px;
     right: auto;
     left: 4px;
+    width: 40px;
+    display: inline-block;
+}
+
+.litegraph .file-tools-right {
+    position: absolute;
+    height: 20px;
+    right: 4px;
+    left: auto;
     width: 40px;
     display: inline-block;
 }

@@ -33,9 +33,8 @@ function Editor(container_id, options) {
     graphcanvas.onDropItem = this.onDropItem.bind(this);
 
     //add stuff
-    this.addToolsButton("loadsession_button","load","file_open", this.onLoadButton.bind(this), ".tools-left");
-    this.addToolsButton("savesession_button","save","save", this.onSaveButton.bind(this), ".tools-left" );
-    this.addToolsButton("downloadsession_button","download","download", this.onDownloadButton.bind(this), ".tools-left" );
+    this.addToolsButton("loadsession_button","quicksave","file_save_off", this.onLoadButton.bind(this), ".tools-left");
+    this.addToolsButton("savesession_button","files","hard_drive", this.onSaveButton.bind(this), ".tools-left" );
 
     this.addToolsButton("dsp_button","dsp","settop_component", undefined, ".footer .tools-left-bottom" );
     
@@ -127,17 +126,27 @@ Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
 Editor.prototype.onLoadButton = function() {
 
     var graph = this.graph;
-    var panel = this.graphcanvas.createFilePanel("load graph",{closable:true});
+    var panel = this.graphcanvas.createFilePanel("file browser",{closable:true});
 
     var args = {
         'graph': graph,
         'panel': panel
     }
-    
-    this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
-                                                 "/home/mfoster",
-                                                 panel.buildFileSystemPathList,
-                                                 args);    
+
+    /* we need to store some kind of variable where we keep track of whethere
+       we're aware of an existing file panel path. if there isn't one, we store it.
+       then we continue to update it as the user moves through the filesystem.
+       this wll likely be on the graph object */
+
+    if( graph.last_filesystem_path_visited == null )
+        this.graph._cyperus.osc_get_filesystem_cwd(this.graph._cyperus.uuidv4(),
+                                                   panel.retrieveFileSystemCWD,
+                                                   args);            
+    else
+        this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
+                                                     graph.last_filesystem_path_visited,
+                                                     panel.buildFileSystemPathList,
+                                                     args);    
     
     var data = localStorage.getItem( "graphdemo_save" );
     if(data)
@@ -147,17 +156,23 @@ Editor.prototype.onLoadButton = function() {
 
 Editor.prototype.onSaveButton = function() {
     var graph = this.graph;
-    var panel = this.graphcanvas.createFilePanel("save graph",{closable:true});
+    var panel = this.graphcanvas.createFilePanel("file browser",{closable:true});
 
     var args = {
         'graph': graph,
         'panel': panel
     }
+
+    if( graph.last_filesystem_path_visited == null )
+        this.graph._cyperus.osc_get_filesystem_cwd(this.graph._cyperus.uuidv4(),
+                                                   panel.retrieveFileSystemCWD,
+                                                   args);            
+    else
+        this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
+                                                     graph.last_filesystem_path_visited,
+                                                     panel.buildFileSystemPathList,
+                                                     args);    
     
-    this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
-                                                 "/home/mfoster",
-                                                 panel.buildFileSystemPathList,
-                                                 args);    
     this.root.appendChild(panel);
     console.log("saved"); 
     localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    

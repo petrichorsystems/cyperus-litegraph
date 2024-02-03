@@ -365,6 +365,7 @@
     text-align: right;
     overflow-y: scroll;
     table-layout: fixed;
+    border-collapse:collapse;
 }
 
 table .file-panel-browser tr, td, th {
