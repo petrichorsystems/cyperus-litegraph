@@ -13601,7 +13601,7 @@ LGraphNode.prototype.executeAction = function(action)
         root.retrieveFileSystemCWD = function(response, args) {
             console.log("litegraph.js::_retrieveFileSystemCWD()");
             
-            args['graph'].last_filesystem_path_visited = response[3];;
+            args['graph'].last_filesystem_path_visited = response[3];
             
             /* parse out cwd */
             args['graph']._cyperus.osc_list_filesystem_path(args['graph']._cyperus.uuidv4(),
@@ -13622,9 +13622,13 @@ LGraphNode.prototype.executeAction = function(action)
             
             root.panel = args['panel'];
             root.graph = args['graph'];
+            root.graphcanvas = args['graphcanvas'];
+            root.editor = args['editor'];
             
             this.panel = args['panel'];
             this.graph = args['graph'];
+            this.graphcanvas = args['graphcanvas'];
+            this.editor = args['editor'];
             
             if( this.panel.properties == null ) {
                 this.panel.properties = {
@@ -13837,8 +13841,11 @@ LGraphNode.prototype.executeAction = function(action)
                             
                             args = {
                                 'graph': root.graph,
-                                'panel': root.panel
+                                'panel': root.panel,
+                                'graphcanvas': root.graphcanvas,
+                                'editor': root.edit
                             }
+                            args['graph'].last_filesystem_path_visited = new_path;
                             
                             root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
                                                                          new_path,
@@ -13861,9 +13868,11 @@ LGraphNode.prototype.executeAction = function(action)
             var path_widget = document.getElementsByClassName("property")[0];
             var new_path = null;
 
+            var rebuild_file_browser_table = false;
             if( button_action == "refresh" ) {
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'refresh'");
                 new_path = root.properties.path;
+                rebuild_file_browser_table = true;                
             } else if( button_action == "ascend" ) {
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend'");
                 if( root.properties.path == '/' ) {
@@ -13881,27 +13890,36 @@ LGraphNode.prototype.executeAction = function(action)
                     
                 }
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend', ascending to: " + new_path);
+                rebuild_file_browser_table = true;                
+            } else if( button_action == "new_dir" ) {
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'new_dir'");
+                var panel = this.graphcanvas.createPopUpPanel("folder exists",{closable:true});
+                root.editor.appendChild(panel);
             } else {
                 /* probably want to error out here */
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action '" + button_action + "' uknown! returning");
-                return;
             }
 
+            if( rebuild_file_browser_table ) {
+                root.properties.path = new_path;
+                var value_elem = path_widget.querySelector(".property_value");
+                value_elem.innerText = new_path;
+                path_widget.value = new_path;
+
+                args = {
+                    'graph': root.graph,
+                    'panel': root.panel,
+                    'graphcanvas': root.graphcanvas,
+                    'editor': root.editor
+                }
+
+                args['graph'].last_filesystem_path_visited = new_path;
             
-            root.properties.path = new_path;
-            var value_elem = path_widget.querySelector(".property_value");
-            value_elem.innerText = new_path;
-            path_widget.value = new_path;
-            
-            args = {
-                'graph': root.graph,
-                'panel': root.panel
+                root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
+                                                             new_path,
+                                                             root.buildFileSystemPathList,
+                                                             args);
             }
-                            
-            root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
-                                                         new_path,
-                                                         root.buildFileSystemPathList,
-                                                         args);                             
         }               
 
         
@@ -14032,6 +14050,328 @@ LGraphNode.prototype.executeAction = function(action)
 	return root;
     };
 
+
+    LGraphCanvas.prototype.createPopUpPanel = function(title, options) {
+
+        console.log("CALLING LGraphCanvas.prototype.createPopUpPanel\n");
+        
+	options = options || {};
+
+	var ref_window = options.window || window;
+        
+        var root = document.createElement("div");
+
+	root.className = "litegraph popup-dialog popup-panel";
+	root.innerHTML = "<div class='popup-dialog-header'><span class='popup-dialog-title'></span></div><div class='popup-dialog-content'></div><div class='popup-dialog-footer'></div>";
+	root.header = root.querySelector(".popup-dialog-header");
+        root.header.onmousedown = dragMouseDown;
+
+        var elmnt = root;
+
+        root.style.top = window.innerHeight * 0.1 + "px";
+        root.style.left = window.innerWidth * 0.15 + "px";        
+
+        var oldMouseX = 0;
+        var oldMouseY = 0;
+        var origDialogPosX = 0;
+        var origDialogPosY = 0;
+
+        var right = document.createElement("div");
+        right.className = "resizer-right";
+        root.appendChild(right);
+        right.addEventListener("mousedown", initResizeDrag, false);
+        
+        var bottom = document.createElement("div");
+        bottom.className = "resizer-bottom";
+        root.appendChild(bottom);
+        bottom.addEventListener("mousedown", initResizeDrag, false);
+        
+        var both = document.createElement("div");
+        both.className = "resizer-both";
+        root.appendChild(both);
+        both.addEventListener("mousedown", initResizeDrag, false);
+        
+        
+	if(options.width)
+	    root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
+	if(options.height)
+	    root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
+        else
+            root.style.height = window.innerHeight * 0.5 + "px";
+            root.style.width = window.innerWidth * 0.75 + "px";        
+        
+	if(options.closable)
+	{
+	    var close = document.createElement("span");
+	    close.innerHTML = "&#10005;";
+	    close.classList.add("close");
+	    close.addEventListener("click",function(){
+		root.close();
+	    });
+	    root.header.appendChild(close);
+	}
+	root.title_element = root.querySelector(".popup-dialog-title");
+	root.title_element.innerText = title;
+	root.content = root.querySelector(".popup-dialog-content");
+	root.footer = root.querySelector(".popup-dialog-footer");;
+        
+	root.close = function()
+	{
+	    this.parentNode.removeChild(this);
+	}
+        
+	root.clear = function()
+	{
+	    this.content.innerHTML = "";
+	}
+
+        root.addToolsButton = function( id, name, materials_icon_name, callback, args, container_name ) {
+            if (!container_name) {
+                container_name = "popup-tools-left";
+            }
+            
+            var button = this.createSpan(name, materials_icon_name, callback, args);
+            button.id = id;
+
+            var container = root.querySelector(container);
+            if( !container ) {
+                container = document.createElement("div");
+                container.classList.add(container_name);
+            }
+            
+            container.appendChild(button);
+            root.content.appendChild(container);
+        }
+        
+        root.createSpan = function(name, materials_icon_name, callback, args) {
+            var button = document.createElement("span");
+            if (materials_icon_name) {
+                button.innerHTML = materials_icon_name;
+            }
+            button.classList.add("popup-btn");
+            button.classList.add("popup-btn-primary");    
+            button.classList.add("material-icons");
+            button.classList.add("icons");
+            button.style.setProperty('--variation', `'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48`);
+            
+            button.setAttribute('title', name);
+            // button.innerHTML += name;
+            if(callback)
+	        button.addEventListener('click', function() {
+                    root.addPopupPanelNavButtonHandler(args);
+                });
+            return button;
+        }        
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+
+            // get the mouse cursor position at startup:
+            oldMouseX = e.clientX;
+            oldMouseY = e.clientY;
+            origDialogPosX = parseInt(root.style.left);
+            origDialogPosY = parseInt(root.style.top);
+            
+            document.onmouseup = closeDragElement;
+            // call a function whenever the cursor moves:
+            document.onmousemove = elementDrag;
+        }
+        
+        function closeDragElement() {
+            /* stop moving when mouse button is released:*/
+            document.onmouseup = null;
+            document.onmousemove = null;
+            root.style.outline = "transparent";
+            root.style.outlineOffset = "0px";;
+            
+        }
+
+        function elementDrag(e) {
+            if (!elmnt) {
+                return;
+            }
+
+            root.style.outline = "1px rgba(255, 255, 255, 0.5) solid";
+            root.style.outlineOffset = "5px";
+            
+            e = e || window.event;
+            // calculate the new cursor position:
+            
+            var newX = null;
+            if(e.clientX > 0 && e.clientX < (window.innerWidth)) {
+                newX = e.clientX + origDialogPosX - oldMouseX;
+                if( newX > 0 && (parseInt(newX) + parseInt(document.defaultView.getComputedStyle(elmnt).width) < window.innerWidth))
+                    elmnt.style.left = newX + "px";
+            }
+            
+            var newY = null;
+            if(e.clientY > 0 && e.clientY < (window.innerHeight)) {
+                newY = e.clientY + origDialogPosY - oldMouseY;
+                if( newY > 0 && (parseInt(newY) + parseInt(document.defaultView.getComputedStyle(elmnt).height) < window.innerHeight))
+                    elmnt.style.top = newY + "px";
+            }
+        }
+
+        function initResizeDrag(e) {
+            element = root;
+
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = parseInt(
+                document.defaultView.getComputedStyle(element).width,
+                10
+            );
+            startHeight = parseInt(
+                document.defaultView.getComputedStyle(element).height,
+                10
+            );
+            
+            document.documentElement.addEventListener("mousemove", doResizeDrag, false);
+            document.documentElement.addEventListener("mouseup", stopResizeDrag, false);
+        }
+
+        function doResizeDrag(e) {            
+
+            if( e.clientX < window.innerWidth )
+                element.style.width = startWidth + e.clientX - startX + "px";
+
+            if( e.clientY < window.innerHeight )
+                element.style.height = startHeight + e.clientY - startY + "px";
+        }
+        
+        function stopResizeDrag() {
+            document.documentElement.removeEventListener("mousemove", doResizeDrag, false);
+            document.documentElement.removeEventListener("mouseup", stopResizeDrag, false);
+        }
+                
+	root.addHTML = function(code, classname, on_footer)
+	{
+	    var elem = document.createElement("div");
+	    if(classname)
+		elem.className = classname;
+	    elem.innerHTML = code;
+	    if(on_footer)
+		root.footer.appendChild(elem);
+	    else
+		root.content.appendChild(elem);
+	    return elem;
+	}
+        
+	root.addButton = function( name, callback, options )
+	{
+	    var elem = document.createElement("button");
+	    elem.innerText = name;
+	    elem.options = options;
+	    elem.classList.add("btn");
+	    elem.addEventListener("click",callback);
+	    root.footer.appendChild(elem);
+	    return elem;
+	}
+        
+	root.addSeparator = function()
+	{
+	    var elem = document.createElement("div");
+	    elem.className = "separator";
+	    root.content.appendChild(elem);
+	}
+        
+	root.addWidget = function( type, name, value, options, callback )
+	{
+	    options = options || {};
+	    var str_value = String(value);
+	    type = type.toLowerCase();
+	    if(type == "number")
+		str_value = value.toFixed(3);
+            
+	    var elem = document.createElement("div");
+	    elem.className = "property";
+	    elem.innerHTML = "<span class='property_name'></span><span class='property_value'></span>";
+	    elem.querySelector(".property_name").innerText = name;
+	    var value_element = elem.querySelector(".property_value");
+	    value_element.innerText = str_value;
+	    elem.dataset["property"] = name;
+	    elem.dataset["type"] = options.type || type;
+	    elem.options = options;
+	    elem.value = value;
+            
+	    //if( type == "code" )
+	    //	elem.addEventListener("click", function(){ inner_showCodePad( node, this.dataset["property"] ); });
+	    if (type == "boolean")
+	    {
+		elem.classList.add("boolean");
+		if(value)
+		    elem.classList.add("bool-on");
+		elem.addEventListener("click", function(){ 
+		    //var v = node.properties[this.dataset["property"]]; 
+		    //node.setProperty(this.dataset["property"],!v); this.innerText = v ? "true" : "false"; 
+		    var propname = this.dataset["property"];
+		    this.value = !this.value;
+		    this.classList.toggle("bool-on");
+		    this.querySelector(".property_value").innerText = this.value ? "true" : "false";
+		    innerChange(propname, this.value );
+		});
+	    }
+	    else if (type == "string" || type == "number")
+	    {
+		value_element.setAttribute("contenteditable",true);
+		value_element.addEventListener("keydown", function(e){
+		    if(e.code == "Enter")
+		    {
+			e.preventDefault();
+			this.blur();
+		    }
+		});
+		value_element.addEventListener("blur", function(){ 
+		    var v = this.innerText;
+		    var propname = this.parentNode.dataset["property"];
+		    var proptype = this.parentNode.dataset["type"];
+		    if( proptype == "number")
+			v = Number(v);
+		    innerChange(propname, v);
+		});
+	    }
+	    else if (type == "enum" || type == "combo")
+		var str_value = LGraphCanvas.getPropertyPrintableValue( value, options.values );
+	    value_element.innerText = str_value;
+            
+	    value_element.addEventListener("click", function(event){ 
+		var values = options.values || [];
+		var propname = this.parentNode.dataset["property"];
+		var elem_that = this;
+		var menu = new LiteGraph.ContextMenu(values,{
+		    event: event,
+		    className: "dark",
+		    callback: inner_clicked
+		},
+						     ref_window);
+		function inner_clicked(v, option, event) {
+		    //node.setProperty(propname,v); 
+		    //graphcanvas.dirty_canvas = true;
+		    elem_that.innerText = v;
+		    innerChange(propname,v);
+		    return false;
+		}
+	    });
+            
+	    root.content.appendChild(elem);
+            
+	    function innerChange(name, value)
+	    {
+		console.log("change",name,value);
+		//that.dirty_canvas = true;
+		if(options.callback)
+		    options.callback(name,value);
+		if(callback)
+		    callback(name,value);
+	    }
+            
+	    return elem;
+	}
+        
+	return root;
+    };
+
+    
     
     LGraphCanvas.prototype.createPanel = function(title, options) {
 

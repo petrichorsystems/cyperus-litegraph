@@ -159,8 +159,10 @@ Editor.prototype.onSaveButton = function() {
     var panel = this.graphcanvas.createFilePanel("file browser",{closable:true});
 
     var args = {
+        'graphcanvas': this.graphcanvas,
         'graph': graph,
-        'panel': panel
+        'panel': panel,
+        'editor': this.root
     }
 
     if( graph.last_filesystem_path_visited == null )
