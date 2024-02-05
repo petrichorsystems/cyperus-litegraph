@@ -13799,7 +13799,7 @@ LGraphNode.prototype.executeAction = function(action)
             var table = document.getElementsByClassName("file-panel-browser")[1];
             
             var rows = table.getElementsByTagName("tr");
-            for (i = 0; i < rows.length; i++) {
+            for (i = 1; i < rows.length; i++) {
                 var currentRow = table.rows[i];
                 var createClickHandler = 
                     function(row) 
