@@ -588,13 +588,37 @@
 
 .litegraph .popup-dialog .close {
     float: right;
-	margin: 4px;
-	margin-right: 10px;
-	cursor: pointer;
-	font-size: 1.4em;
+    margin: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 1.4em;
 }
 
 .litegraph .popup-dialog .close:hover {
+	color: white;
+}
+
+.litegraph .popup-dialog .cancel {
+    float: right;
+    margin: 4px;
+    margin-right: 5px;
+    cursor: pointer;
+    font-size: 1.4em;
+}
+
+.litegraph .popup-dialog .cancel:hover {
+	color: white;
+}
+
+.litegraph .popup-dialog .confirm {
+    float: left;
+    margin: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 1.4em;
+}
+
+.litegraph .popup-dialog .confirm:hover {
 	color: white;
 }
 
@@ -614,9 +638,9 @@
 }
 
 .litegraph .popup-dialog .popup-dialog-content {
-    height: calc(100% - 259px);
+    height: calc(100% - 110px);
     width: 100%;
-    min-height: 100px;
+    min-height: 55x;
     display: inline-block;
     color: #AAA;
     /*background-color: black;*/

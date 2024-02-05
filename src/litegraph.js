@@ -361,6 +361,36 @@ class Cyperus {
 	    args
 	);
     }
+
+    osc_make_filesystem_dir(request_id,
+                            dirpath,
+                            dirname,
+			    callback,
+			    args) {
+	console.log('osc_make_filesystem_dir..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/make/filesystem/dir",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: dirpath
+                    },
+                    {
+                        type: "s",
+                        value: dirname
+                    }                    
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }    
     
     osc_add_connection(
         request_id,
@@ -13648,7 +13678,7 @@ LGraphNode.prototype.executeAction = function(action)
 
                 this.panel.addToolsButton("refresh_dir_btn", "refresh", "sync", this.panel.addToolsButton, 'refresh', "file-tools-left");
                 this.panel.addToolsButton("ascend_dir_btn", "up", "arrow_upward", this.panel.addToolsButton, 'ascend', "file-tools-left");
-                this.panel.addToolsButton("new_dir_btn", "new folder", "create_new_folder", this.panel.addToolsButton, 'new_dir', "file-tools-left");
+                this.panel.addToolsButton("new_dir_btn", "create directory", "create_new_folder", this.panel.addToolsButton, 'new_dir', "file-tools-left");
                 this.panel.addToolsButton("upload_file_btn", "upload file", "upload", this.panel.addToolsButton, 'upload_file', "file-tools-left");                
                 this.panel.addToolsButton("download_file_btn", "download file", "download", this.panel.addToolsButton, 'download_file', "file-tools-left");
                 this.panel.addToolsButton("save_file_btn", "save", "file_save", this.panel.addToolsButton, 'save', "file-tools-left");
@@ -13843,7 +13873,7 @@ LGraphNode.prototype.executeAction = function(action)
                                 'graph': root.graph,
                                 'panel': root.panel,
                                 'graphcanvas': root.graphcanvas,
-                                'editor': root.edit
+                                'editor': root.editor
                             }
                             args['graph'].last_filesystem_path_visited = new_path;
                             
@@ -13893,7 +13923,69 @@ LGraphNode.prototype.executeAction = function(action)
                 rebuild_file_browser_table = true;                
             } else if( button_action == "new_dir" ) {
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'new_dir'");
-                var panel = this.graphcanvas.createPopUpPanel("folder exists",{closable:true});
+                var panel = this.graphcanvas.createPopUpPanel("create directory",{closable:true});
+                
+	        panel.addWidget( "string", 'name', "new_directory", {type: 'string'}, function(name,value){
+		    // graphcanvas.graph.beforeChange(node);
+		    // node.setProperty(name,value);
+		    graphcanvas.graph.afterChange();
+		    graphcanvas.dirty_canvas = true;
+	        });
+                panel.addButton("ok",function(){
+
+                    var path_widget = document.getElementsByClassName("property")[0];                    
+                    var path_elem = path_widget.querySelector(".property_value");                    
+                    var dirpath = path_elem.innerText;
+                    
+                    var create_dirname_widget = document.getElementsByClassName("property")[2];
+                    var value_elem = create_dirname_widget.querySelector(".property_value");                    
+                    var new_dir_name = value_elem.innerText;
+                    
+                    var table = document.getElementsByClassName("file-panel-browser")[1];
+                    var rows = table.getElementsByTagName("tr");
+                    for (i = 0; i < rows.length; i++) {
+                        var currentRow = table.rows[i];
+                        var cell_name = currentRow.getElementsByTagName("td")[0];
+                        var cell_type = currentRow.getElementsByTagName("td")[2];
+
+                        if( cell_name ) {
+                            if( cell_name.innerHTML == new_dir_name) {
+                                alert("folder name already taken");
+                                return;
+                            }
+                        }
+                    }
+
+                    var fullpath = dirpath;
+                    if( dirpath[dirpath.length - 1] != '/' )
+                        fullpath += '/';
+                    fullpath += new_dir_name;
+                    console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new direcotry: " + fullpath);
+
+                    args = {
+                        'graph': root.graph,
+                        'panel': root.panel,
+                        'graphcanvas': root.graphcanvas,
+                        'editor': root.editor
+                    }
+                    
+                    root.graph._cyperus.osc_make_filesystem_dir(root.graph._cyperus.uuidv4(),
+                                                                dirpath,
+                                                                new_dir_name,
+                                                                root.rebuildFileBrowserTable,
+                                                                args);
+                    panel.close();
+	        }).classList.add("confirm");
+
+                panel.addButton("cancel",function(){
+                    panel.close()
+	        }).classList.add("cancel");
+                
+                // panel.addButton("cancel",function(){
+                //     root.close()
+	        // }).classList.add("cancel");
+
+                
                 root.editor.appendChild(panel);
             } else {
                 /* probably want to error out here */
@@ -13901,6 +13993,7 @@ LGraphNode.prototype.executeAction = function(action)
             }
 
             if( rebuild_file_browser_table ) {
+                console.log("REBUILDING BROWSER TABLE");
                 root.properties.path = new_path;
                 var value_elem = path_widget.querySelector(".property_value");
                 value_elem.innerText = new_path;
@@ -13922,6 +14015,15 @@ LGraphNode.prototype.executeAction = function(action)
             }
         }               
 
+
+        root.rebuildFileBrowserTable = function(response, args) {
+            console.log("REBUILDING BROWSER TABLE");
+            root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
+                                                         root.properties.path,
+                                                         root.buildFileSystemPathList,
+                                                         args);
+        }
+        
         
 	root.addHTML = function(code, classname, on_footer)
 	{
@@ -14068,8 +14170,8 @@ LGraphNode.prototype.executeAction = function(action)
 
         var elmnt = root;
 
-        root.style.top = window.innerHeight * 0.1 + "px";
-        root.style.left = window.innerWidth * 0.15 + "px";        
+        root.style.top = window.innerHeight * 0.4 + "px";
+        root.style.left = window.innerWidth * 0.5 + "px";        
 
         var oldMouseX = 0;
         var oldMouseY = 0;
@@ -14097,8 +14199,8 @@ LGraphNode.prototype.executeAction = function(action)
 	if(options.height)
 	    root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
         else
-            root.style.height = window.innerHeight * 0.5 + "px";
-            root.style.width = window.innerWidth * 0.75 + "px";        
+            root.style.height = window.innerHeight * 0.1 + "px";
+            root.style.width = window.innerWidth * 0.5 + "px";        
         
 	if(options.closable)
 	{
