@@ -14096,14 +14096,11 @@ LGraphNode.prototype.executeAction = function(action)
                 
                 /* break up file into multiple 768-byte sized messages */
 
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new file: " + fullpath);
-
                 console.log("JSON.stringify(root.graph.serialize())");
                 console.log(JSON.stringify(root.graph.serialize()).length);
                 console.log(JSON.stringify(root.graph.serialize()));                
 
                 var graph_json_split = JSON.stringify(root.graph.serialize()).match(/.{1,768}/g);
-                var graph_json_first_part = graph_json_split.shift();
                 
                 args = {
                     'graph': root.graph,
@@ -14162,25 +14159,12 @@ LGraphNode.prototype.executeAction = function(action)
 
         root.continueSavingSerializedGraphParts = function(response, args) {
             console.log("litegraph.js::continueSavingSerializedGraphParts()");
-            if( args['graph_json'] ) {
-
-                console.log("litegraph.js::continueSavingSerializedGraphParts(), reponse:");
-                console.log(response);
-
-                var graph_json = args['graph_json'];
-                var next_json_chunk = graph_json.shift();
-                args['graph_json'] = graph_json;
-
-                console.log('graph_json: ');
-                console.log(graph_json);
-                console.log('next_json_chunk: ');
-                console.log(next_json_chunk);
-
-                return;
+            
+            if( args['graph_json'].length > 0 ) {
                 
                 root.graph._cyperus.osc_append_filesystem_file(root.graph._cyperus.uuidv4(),
                                                                response[3],
-                                                               next_json_chunk,
+                                                               args['graph_json'].shift(),
                                                                root.continueSavingSerializedGraphParts,
                                                                args);
             } else {
