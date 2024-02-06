@@ -362,6 +362,66 @@ class Cyperus {
 	);
     }
 
+    osc_write_filesystem_file(request_id,
+                              filepath,
+                              content,
+			      callback,
+			      args) {
+	console.log('osc_write_filesystem_file..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/write/filesystem/file",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: filepath
+                    },
+                    {
+                        type: "s",
+                        value: content
+                    }                    
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }    
+
+    osc_append_filesystem_file(request_id,
+                               filepath,
+                               content,
+			       callback,
+			       args) {
+	console.log('osc_append_filesystem_file..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/append/filesystem/file",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: filepath
+                    },
+                    {
+                        type: "s",
+                        value: content
+                    }                    
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }    
+    
     osc_make_filesystem_dir(request_id,
                             dirpath,
                             dirname,
@@ -13681,7 +13741,7 @@ LGraphNode.prototype.executeAction = function(action)
                 this.panel.addToolsButton("new_dir_btn", "create directory", "create_new_folder", this.panel.addToolsButton, 'new_dir', "file-tools-left");
                 this.panel.addToolsButton("upload_file_btn", "upload file", "upload", this.panel.addToolsButton, 'upload_file', "file-tools-left");                
                 this.panel.addToolsButton("download_file_btn", "download file", "download", this.panel.addToolsButton, 'download_file', "file-tools-left");
-                this.panel.addToolsButton("save_file_btn", "save", "file_save", this.panel.addToolsButton, 'save', "file-tools-left");
+                this.panel.addToolsButton("save_file_btn", "save", "file_save", this.panel.addToolsButton, 'file_save', "file-tools-left");
                 this.panel.addToolsButton("load_file_btn", "load", "file_open", this.panel.addToolsButton, 'load', "file-tools-left");               
                 
                 this.panel.addSeparator();
@@ -13987,6 +14047,81 @@ LGraphNode.prototype.executeAction = function(action)
 
                 
                 root.editor.appendChild(panel);
+            } else if( button_action == "file_save" ) {
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_save'");
+
+                var path_widget = document.getElementsByClassName("property")[0];                    
+                var path_elem = path_widget.querySelector(".property_value");                    
+                var dirpath = path_elem.innerText;
+                
+                var create_filename_widget = document.getElementsByClassName("property")[1];
+                var value_elem = create_filename_widget.querySelector(".property_value");                    
+                var new_filename = value_elem.innerText;
+                    
+                var table = document.getElementsByClassName("file-panel-browser")[1];
+                var rows = table.getElementsByTagName("tr");
+                for (i = 0; i < rows.length; i++) {
+                    var currentRow = table.rows[i];
+                    var cell_name = currentRow.getElementsByTagName("td")[0];
+                    var cell_type = currentRow.getElementsByTagName("td")[2];
+                    
+                    if( cell_name ) {
+                        if( cell_name.innerHTML == new_filename) {
+                            alert("overwrite existing file?");
+                            var panel = this.graphcanvas.createPopUpPanel("create directory",{closable:true});
+                            // panel.addButton("ok",function(){
+                            
+                            //    panel.close();
+	                    // }).classList.add("confirm");
+                            
+                            // panel.addButton("cancel",function(){
+                            //     panel.close()
+	                    // }).classList.add("cancel");
+                            // root.editor.appendChild(panel);                
+                            return;
+                        }
+                    }
+                }
+                
+                var fullpath = dirpath;
+                if( dirpath[dirpath.length - 1] != '/' )
+                    fullpath += '/';
+                fullpath += new_filename;
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new file: " + fullpath);
+
+                // localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
+                // var data = localStorage.getItem( "graphdemo_save" );
+                // if(data)
+                //     graph.load_configure( JSON.parse( data ) );
+                
+                /* break up file into multiple 768-byte sized messages */
+
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new file: " + fullpath);
+
+                console.log("JSON.stringify(root.graph.serialize())");
+                console.log(JSON.stringify(root.graph.serialize()).length);
+                console.log(JSON.stringify(root.graph.serialize()));                
+
+                var graph_json_split = JSON.stringify(root.graph.serialize()).match(/.{1,768}/g);
+                var graph_json_first_part = graph_json_split.shift();
+                
+                args = {
+                    'graph': root.graph,
+                    'panel': root.panel,
+                    'graphcanvas': root.graphcanvas,
+                    'editor': root.editor,
+                    'graph_json': graph_json_split
+                }
+                
+                root.graph._cyperus.osc_write_filesystem_file(root.graph._cyperus.uuidv4(),
+                                                              fullpath,
+                                                              graph_json_split.shift(),
+                                                              root.continueSavingSerializedGraphParts,
+                                                              args);
+                // panel.addButton("cancel",function(){
+                //     root.close()
+	        // }).classList.add("cancel");
+
             } else {
                 /* probably want to error out here */
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action '" + button_action + "' uknown! returning");
@@ -14007,7 +14142,7 @@ LGraphNode.prototype.executeAction = function(action)
                 }
 
                 args['graph'].last_filesystem_path_visited = new_path;
-            
+                
                 root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
                                                              new_path,
                                                              root.buildFileSystemPathList,
@@ -14024,6 +14159,35 @@ LGraphNode.prototype.executeAction = function(action)
                                                          args);
         }
         
+
+        root.continueSavingSerializedGraphParts = function(response, args) {
+            console.log("litegraph.js::continueSavingSerializedGraphParts()");
+            if( args['graph_json'] ) {
+
+                console.log("litegraph.js::continueSavingSerializedGraphParts(), reponse:");
+                console.log(response);
+
+                var graph_json = args['graph_json'];
+                var next_json_chunk = graph_json.shift();
+                args['graph_json'] = graph_json;
+
+                console.log('graph_json: ');
+                console.log(graph_json);
+                console.log('next_json_chunk: ');
+                console.log(next_json_chunk);
+
+                return;
+                
+                root.graph._cyperus.osc_append_filesystem_file(root.graph._cyperus.uuidv4(),
+                                                               response[3],
+                                                               next_json_chunk,
+                                                               root.continueSavingSerializedGraphParts,
+                                                               args);
+            } else {
+                console.log("litegraph.js::continueSavingSerializedGraphParts(), done saving");
+            }
+        }
+
         
 	root.addHTML = function(code, classname, on_footer)
 	{

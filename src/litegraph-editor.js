@@ -33,7 +33,7 @@ function Editor(container_id, options) {
     graphcanvas.onDropItem = this.onDropItem.bind(this);
 
     //add stuff
-    this.addToolsButton("loadsession_button","quicksave","file_save_off", this.onLoadButton.bind(this), ".tools-left");
+    this.addToolsButton("loadsession_button","quicksave","file_save_off", this.onQuickSaveButton.bind(this), ".tools-left");
     this.addToolsButton("savesession_button","files","hard_drive", this.onSaveButton.bind(this), ".tools-left" );
 
     this.addToolsButton("dsp_button","dsp","settop_component", undefined, ".footer .tools-left-bottom" );
@@ -123,7 +123,7 @@ Editor.prototype.createSpan = function(name, materials_icon_name, callback) {
     return button;
 };
 
-Editor.prototype.onLoadButton = function() {
+Editor.prototype.onQuickSaveButton = function() {
 
     var graph = this.graph;
     var panel = this.graphcanvas.createFilePanel("file browser",{closable:true});
