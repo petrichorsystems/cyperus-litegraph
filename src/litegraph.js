@@ -13739,8 +13739,8 @@ LGraphNode.prototype.executeAction = function(action)
                 this.panel.addToolsButton("refresh_dir_btn", "refresh", "sync", this.panel.addToolsButton, 'refresh', "file-tools-left");
                 this.panel.addToolsButton("ascend_dir_btn", "up", "arrow_upward", this.panel.addToolsButton, 'ascend', "file-tools-left");
                 this.panel.addToolsButton("new_dir_btn", "create directory", "create_new_folder", this.panel.addToolsButton, 'new_dir', "file-tools-left");
-                this.panel.addToolsButton("upload_file_btn", "upload file", "upload", this.panel.addToolsButton, 'upload_file', "file-tools-left");                
-                this.panel.addToolsButton("download_file_btn", "download file", "download", this.panel.addToolsButton, 'download_file', "file-tools-left");
+                // this.panel.addToolsButton("upload_file_btn", "upload file", "upload", this.panel.addToolsButton, 'upload_file', "file-tools-left");                
+                // this.panel.addToolsButton("download_file_btn", "download file", "download", this.panel.addToolsButton, 'download_file', "file-tools-left");
                 this.panel.addToolsButton("save_file_btn", "save", "file_save", this.panel.addToolsButton, 'file_save', "file-tools-left");
                 this.panel.addToolsButton("load_file_btn", "load", "file_open", this.panel.addToolsButton, 'load', "file-tools-left");               
                 
@@ -14067,54 +14067,26 @@ LGraphNode.prototype.executeAction = function(action)
                     
                     if( cell_name ) {
                         if( cell_name.innerHTML == new_filename) {
-                            alert("overwrite existing file?");
-                            var panel = this.graphcanvas.createPopUpPanel("create directory",{closable:true});
-                            // panel.addButton("ok",function(){
+                            var panel = this.graphcanvas.createPopUpPanel("save file",{closable:true, width: 'auto', height: 175});
+
+                            panel.addHTML("<div style='padding-left: 20px; padding-right: 20px;'><br /><br /><span style='color: red;'><b>warning</b></span>: overwrite existing file <b>'" + new_filename + "'</b> ?<br /><br /></div>");
                             
-                            //    panel.close();
-	                    // }).classList.add("confirm");
+                            panel.addButton("ok",function(){
+                                root.saveSerialGraph(dirpath, new_filename);
+                                panel.close();
+	                    }).classList.add("confirm");
                             
-                            // panel.addButton("cancel",function(){
-                            //     panel.close()
-	                    // }).classList.add("cancel");
-                            // root.editor.appendChild(panel);                
+                            panel.addButton("cancel",function(){
+                                panel.close()
+	                    }).classList.add("cancel");
+                            root.editor.appendChild(panel);                
                             return;
                         }
                     }
                 }
-                
-                var fullpath = dirpath;
-                if( dirpath[dirpath.length - 1] != '/' )
-                    fullpath += '/';
-                fullpath += new_filename;
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new file: " + fullpath);
 
-                // localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
-                // var data = localStorage.getItem( "graphdemo_save" );
-                // if(data)
-                //     graph.load_configure( JSON.parse( data ) );
+                root.saveSerialGraph(dirpath, new_filename);
                 
-                /* break up file into multiple 768-byte sized messages */
-
-                console.log("JSON.stringify(root.graph.serialize())");
-                console.log(JSON.stringify(root.graph.serialize()).length);
-                console.log(JSON.stringify(root.graph.serialize()));                
-
-                var graph_json_split = JSON.stringify(root.graph.serialize()).match(/.{1,768}/g);
-                
-                args = {
-                    'graph': root.graph,
-                    'panel': root.panel,
-                    'graphcanvas': root.graphcanvas,
-                    'editor': root.editor,
-                    'graph_json': graph_json_split
-                }
-                
-                root.graph._cyperus.osc_write_filesystem_file(root.graph._cyperus.uuidv4(),
-                                                              fullpath,
-                                                              graph_json_split.shift(),
-                                                              root.continueSavingSerializedGraphParts,
-                                                              args);
                 // panel.addButton("cancel",function(){
                 //     root.close()
 	        // }).classList.add("cancel");
@@ -14157,6 +14129,40 @@ LGraphNode.prototype.executeAction = function(action)
         }
         
 
+        root.saveSerialGraph = function(dirpath, new_filename) {
+            var fullpath = dirpath;
+            if( dirpath[dirpath.length - 1] != '/' )
+                fullpath += '/';
+            fullpath += new_filename;
+            console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new file: " + fullpath);
+            
+            // localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
+            // var data = localStorage.getItem( "graphdemo_save" );
+            // if(data)
+            //     graph.load_configure( JSON.parse( data ) );
+            
+            /* break up file into multiple 768-byte sized messages */
+            
+            console.log("JSON.stringify(root.graph.serialize())");
+            console.log(JSON.stringify(root.graph.serialize()).length);
+            console.log(JSON.stringify(root.graph.serialize()));                
+
+            var graph_json_split = JSON.stringify(root.graph.serialize()).match(/.{1,768}/g);                
+            args = {
+                'graph': root.graph,
+                'panel': root.panel,
+                'graphcanvas': root.graphcanvas,
+                'editor': root.editor,
+                'graph_json': graph_json_split
+            }
+            root.graph._cyperus.osc_write_filesystem_file(root.graph._cyperus.uuidv4(),
+                                                          fullpath,
+                                                          graph_json_split.shift(),
+                                                          root.continueSavingSerializedGraphParts,
+                                                          args);
+
+        }
+        
         root.continueSavingSerializedGraphParts = function(response, args) {
             console.log("litegraph.js::continueSavingSerializedGraphParts()");
             
@@ -14168,7 +14174,11 @@ LGraphNode.prototype.executeAction = function(action)
                                                                root.continueSavingSerializedGraphParts,
                                                                args);
             } else {
-                console.log("litegraph.js::continueSavingSerializedGraphParts(), done saving");
+                console.log("litegraph.js::continueSavingSerializedGraphParts(), done saving, refreshing file browser");
+                root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
+                                                             root.properties.path,
+                                                             root.buildFileSystemPathList,
+                                                             args);    
             }
         }
 
@@ -14344,11 +14354,12 @@ LGraphNode.prototype.executeAction = function(action)
         
 	if(options.width)
 	    root.style.width = options.width + (options.width.constructor === Number ? "px" : "");
+        else
+            root.style.width = window.innerWidth * 0.5 + "px";        
 	if(options.height)
 	    root.style.height = options.height + (options.height.constructor === Number ? "px" : "");
         else
             root.style.height = window.innerHeight * 0.1 + "px";
-            root.style.width = window.innerWidth * 0.5 + "px";        
         
 	if(options.closable)
 	{
