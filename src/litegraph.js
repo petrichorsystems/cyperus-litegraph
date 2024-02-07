@@ -451,6 +451,56 @@ class Cyperus {
 	    args
 	);
     }    
+
+    osc_remove_filesystem_file(request_id,
+                            filepath,
+			    callback,
+			    args) {
+	console.log('osc_remove_filesystem_file..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/remove/filesystem/file",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: filepath
+                    }     
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }
+    
+    osc_remove_filesystem_dir(request_id,
+                            dirpath,
+			    callback,
+			    args) {
+	console.log('osc_remove_filesystem_dir..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/remove/filesystem/dir",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: dirpath
+                    }     
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }    
     
     osc_add_connection(
         request_id,
@@ -13800,7 +13850,7 @@ LGraphNode.prototype.executeAction = function(action)
             }
 
             if( on_initialize) {
-                var button = root.createSpan("remove", "delete_forever", this.panel.addToolsButton, 'remove', 'file-dialog-footer');
+                var button = root.createSpan("remove", "delete_forever", this.panel.addToolsButton, 'filedir_remove', 'file-dialog-footer');
                 button.classList.add("file-delete");
                 console.log('class list:');
                 console.log(button.classList);
@@ -14090,7 +14140,45 @@ LGraphNode.prototype.executeAction = function(action)
                 // panel.addButton("cancel",function(){
                 //     root.close()
 	        // }).classList.add("cancel");
+            } else if( button_action == "filedir_remove" ) {
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'filedir_remove'");
 
+                console.log("selected_row: ");
+                console.log(root.properties.selected_row);
+
+                if( root.properties.selected_row == null ) {
+                    console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'filedir_remove', trigger no-selected-row popup");
+                    return;
+                }
+
+                var resource_name = root.properties.selected_row.getElementsByTagName("td")[0].innerHTML;
+                var resource_type = root.properties.selected_row.getElementsByTagName("td")[2].innerHTML;
+
+                console.log('resoure_name: ');
+                console.log(resource_name);
+                console.log('resource_type: ');
+                console.log(resource_type);
+                
+                var path_widget = document.getElementsByClassName("property")[0];                    
+                var path_elem = path_widget.querySelector(".property_value");                    
+                var dirpath = path_elem.innerText;
+                    
+                var panel = this.graphcanvas.createPopUpPanel("remove " + resource_type,{closable:true, width: 'auto', height: 175});
+
+                panel.addHTML("<div style='padding-left: 20px; padding-right: 20px;'><br /><br /><span style='color: red;'><b>warning</b></span>: delete " + resource_type  + " <b>'" + resource_name + "'</b> ?<br /><br /></div>");
+                            
+                panel.addButton("ok",function(){
+                    root.deleteFileSystemResource(resource_type, dirpath, resource_name);
+                    root.properties.selected_row.style.backgroundColor = "transparent";
+                    root.properties.selected_row.style.color = "#ccc";
+                    root.properties.selected_row = null;
+                    panel.close();
+	        }).classList.add("confirm");
+                    
+                panel.addButton("cancel",function(){
+                    panel.close()
+	        }).classList.add("cancel");
+                root.editor.appendChild(panel);
             } else {
                 /* probably want to error out here */
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action '" + button_action + "' uknown! returning");
@@ -14162,6 +14250,34 @@ LGraphNode.prototype.executeAction = function(action)
                                                           args);
 
         }
+
+        root.deleteFileSystemResource = function(resource_type, dirpath, resource_name) {
+            var fullpath = dirpath;
+            if( dirpath[dirpath.length - 1] != '/' )
+                fullpath += '/';
+            fullpath += resource_name;
+            console.log("litegraph.js::deleteFileSystemResource(), removing " + resource_type + ": " + fullpath);
+                        
+            args = {
+                'graph': root.graph,
+                'panel': root.panel,
+                'graphcanvas': root.graphcanvas,
+                'editor': root.editor
+            }
+            if( resource_type == 'file' )
+                root.graph._cyperus.osc_remove_filesystem_file(root.graph._cyperus.uuidv4(),
+                                                               fullpath,
+                                                               root.rebuildFileBrowserTable,
+                                                               args);
+            else if( resource_type == 'directory' )
+                root.graph._cyperus.osc_remove_filesystem_dir(root.graph._cyperus.uuidv4(),
+                                                              fullpath,
+                                                              root.rebuildFileBrowserTable,
+                                                              args);
+            else
+                console.log("litegraph.js::deleteFileSystemResource(), ERROR: uknown resource_type: " + resource_type);
+
+        }        
         
         root.continueSavingSerializedGraphParts = function(response, args) {
             console.log("litegraph.js::continueSavingSerializedGraphParts()");
