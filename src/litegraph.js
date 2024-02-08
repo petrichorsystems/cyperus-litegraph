@@ -48,6 +48,8 @@ class Cyperus {
             console.log('RESPONSE');
             console.log(response);
 
+            console.log(this.callbacks);
+            
             if( !(response['args'][0]['value'] in this.callbacks) ) {
                 console.log("litegraph.js::Cyperus._recv(), REQUEST ID NOT FOUND");
             } else {
@@ -362,6 +364,31 @@ class Cyperus {
 	);
     }
 
+    osc_read_filesystem_file(request_id,
+                             filepath,
+			     callback,
+			     args) {
+	console.log('osc_read_filesystem_file..');
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/read/filesystem/file",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: filepath
+                    }  
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }    
+    
     osc_write_filesystem_file(request_id,
                               filepath,
                               content,
@@ -1705,7 +1732,7 @@ class Cyperus {
             
             let request_id = resp[0];
             let error_code = resp[1];
-            let mains = resp[2];
+            let mains = resp[3];
             
 	    let ins = [];
 	    let outs = [];
@@ -3128,6 +3155,9 @@ class Cyperus {
 
     function _cyperus_util_create_bus_ports_from_litegraph_nodes(bus_ports, args) {
         console.log("litegraph.js::_cyperus_util_create_bus_ports_from_litegraph_nodes()");
+
+        console.log('BUS_PORTS: ');
+        console.log(bus_ports);
         
 	var node = args['node'];
 	var my_id = args['my_id'];
@@ -3167,6 +3197,10 @@ class Cyperus {
             bus_port_node = LiteGraph.createNode(bus_port_node_n_info.type, LiteGraph.GraphInput);            
             bus_port_node.id = bus_port_node_n_info.id;
 
+
+            console.log('BUS_PORT_NODE_N_INFO');
+            console.log(bus_port_node_n_info);
+            
             node.subgraph.add(bus_port_node);
             bus_port_node.configure(bus_port_node_n_info);
 
@@ -5075,9 +5109,17 @@ class Cyperus {
         }
         for (var j in info) {
             if (j == "properties") {
+                
                 //i don't want to clone properties, I want to reuse the old container
                 for (var k in info.properties) {
+                    
+                    if( k == 'type')
+                        continue;
+                    
                     this.properties[k] = info.properties[k];
+
+                    console.log('FINISEHD');
+                    
                     if (this.onPropertyChanged) {
                         this.onPropertyChanged( k, info.properties[k] );
                     }
@@ -13792,7 +13834,7 @@ LGraphNode.prototype.executeAction = function(action)
                 // this.panel.addToolsButton("upload_file_btn", "upload file", "upload", this.panel.addToolsButton, 'upload_file', "file-tools-left");                
                 // this.panel.addToolsButton("download_file_btn", "download file", "download", this.panel.addToolsButton, 'download_file', "file-tools-left");
                 this.panel.addToolsButton("save_file_btn", "save", "file_save", this.panel.addToolsButton, 'file_save', "file-tools-left");
-                this.panel.addToolsButton("load_file_btn", "load", "file_open", this.panel.addToolsButton, 'load', "file-tools-left");               
+                this.panel.addToolsButton("load_file_btn", "load", "file_open", this.panel.addToolsButton, 'file_load', "file-tools-left");               
                 
                 this.panel.addSeparator();
                 
@@ -14100,6 +14142,11 @@ LGraphNode.prototype.executeAction = function(action)
             } else if( button_action == "file_save" ) {
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_save'");
 
+    var data = localStorage.getItem( "graphdemo_save" );
+    if(data)
+        graph.load_configure( JSON.parse( data ) );
+    console.log("loaded");
+                
                 var path_widget = document.getElementsByClassName("property")[0];                    
                 var path_elem = path_widget.querySelector(".property_value");                    
                 var dirpath = path_elem.innerText;
@@ -14122,7 +14169,7 @@ LGraphNode.prototype.executeAction = function(action)
                             panel.addHTML("<div style='padding-left: 20px; padding-right: 20px;'><br /><br /><span style='color: red;'><b>warning</b></span>: overwrite existing file <b>'" + new_filename + "'</b> ?<br /><br /></div>");
                             
                             panel.addButton("ok",function(){
-                                root.saveSerialGraph(dirpath, new_filename);
+                                root.saveSerializedGraphToFile(dirpath, new_filename);
                                 panel.close();
 	                    }).classList.add("confirm");
                             
@@ -14135,16 +14182,58 @@ LGraphNode.prototype.executeAction = function(action)
                     }
                 }
 
-                root.saveSerialGraph(dirpath, new_filename);
+                root.saveSerializedGraphToFile(dirpath, new_filename);
                 
                 // panel.addButton("cancel",function(){
                 //     root.close()
 	        // }).classList.add("cancel");
+
+            } else if( button_action == "file_load" ) {
+                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_load'");
+                
+                if( root.properties.selected_row == null ) {
+                    console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_load', trigger no-selected-row popup");
+                    return;
+                }
+
+                var resource_name = root.properties.selected_row.getElementsByTagName("td")[0].innerHTML;
+                var resource_type = root.properties.selected_row.getElementsByTagName("td")[2].innerHTML;
+
+                console.log('resoure_name: ');
+                console.log(resource_name);
+                console.log('resource_type: ');
+                console.log(resource_type);
+
+                if( resource_type != "file" ) {
+                    console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_load', trigger non-file resource popup");
+                    return;
+                }
+                
+                var path_widget = document.getElementsByClassName("property")[0];                    
+                var path_elem = path_widget.querySelector(".property_value");                    
+                var dirpath = path_elem.innerText;
+                    
+                var panel = this.graphcanvas.createPopUpPanel("load graph",{closable:true, width: 'auto', height: 175});
+
+                panel.addHTML("<div style='padding-left: 20px; padding-right: 20px;'><br /><br /><span style='color: red;'><b>warning</b></span>: load graph from file <b>'" + resource_name + "'</b> ?<br /><br /></div>");
+                            
+                panel.addButton("ok",function(){
+
+                    root.loadSerializedGraphFromFile(dirpath, resource_name);
+                    
+                    root.properties.selected_row.style.backgroundColor = "transparent";
+                    root.properties.selected_row.style.color = "#ccc";
+                    root.properties.selected_row = null;
+                    panel.close();
+	        }).classList.add("confirm");
+                    
+                panel.addButton("cancel",function(){
+                    panel.close()
+	        }).classList.add("cancel");
+                root.editor.appendChild(panel);
+                
             } else if( button_action == "filedir_remove" ) {
                 console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'filedir_remove'");
-
-                console.log("selected_row: ");
-                console.log(root.properties.selected_row);
 
                 if( root.properties.selected_row == null ) {
                     console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'filedir_remove', trigger no-selected-row popup");
@@ -14217,7 +14306,7 @@ LGraphNode.prototype.executeAction = function(action)
         }
         
 
-        root.saveSerialGraph = function(dirpath, new_filename) {
+        root.saveSerializedGraphToFile = function(dirpath, new_filename) {
             var fullpath = dirpath;
             if( dirpath[dirpath.length - 1] != '/' )
                 fullpath += '/';
@@ -14246,11 +14335,45 @@ LGraphNode.prototype.executeAction = function(action)
             root.graph._cyperus.osc_write_filesystem_file(root.graph._cyperus.uuidv4(),
                                                           fullpath,
                                                           graph_json_split.shift(),
-                                                          root.continueSavingSerializedGraphParts,
+                                                          root.continueWritingSerializedGraphParts,
                                                           args);
 
         }
 
+        root.loadSerializedGraphFromFile = function(dirpath, filename) {
+            var fullpath = dirpath;
+            if( dirpath[dirpath.length - 1] != '/' )
+                fullpath += '/';
+            fullpath += filename;
+            console.log("litegraph.js::addFilePanelNavButtonHandler(), attempting to load graph from file: " + fullpath);
+            
+            // localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
+            // var data = localStorage.getItem( "graphdemo_save" );
+            // if(data)
+            //     graph.load_configure( JSON.parse( data ) );
+            
+            /* break up file into multiple 768-byte sized messages */
+
+            args = {
+                'graph': root.graph,
+                'panel': root.panel,
+                'graphcanvas': root.graphcanvas,
+                'editor': root.editor
+            }
+            root.graph._cyperus.osc_read_filesystem_file(root.graph._cyperus.uuidv4(),
+                                                         fullpath,
+                                                         root.loadSeralizedGraphToLitegraph,
+                                                         args);
+
+        }
+
+        root.loadSeralizedGraphToLitegraph = function(response, args) {
+            console.log("litegraph.js::loadSerializedGraphToLitegraph()");
+            var serialized_graph = response[5];
+            root.graph.load_configure(JSON.parse(serialized_graph));
+        }
+
+        
         root.deleteFileSystemResource = function(resource_type, dirpath, resource_name) {
             var fullpath = dirpath;
             if( dirpath[dirpath.length - 1] != '/' )
@@ -14279,18 +14402,18 @@ LGraphNode.prototype.executeAction = function(action)
 
         }        
         
-        root.continueSavingSerializedGraphParts = function(response, args) {
-            console.log("litegraph.js::continueSavingSerializedGraphParts()");
+        root.continueWritingSerializedGraphParts = function(response, args) {
+            console.log("litegraph.js::continueWritingSerializedGraphParts()");
             
             if( args['graph_json'].length > 0 ) {
                 
                 root.graph._cyperus.osc_append_filesystem_file(root.graph._cyperus.uuidv4(),
                                                                response[3],
                                                                args['graph_json'].shift(),
-                                                               root.continueSavingSerializedGraphParts,
+                                                               root.continueWritingSerializedGraphParts,
                                                                args);
             } else {
-                console.log("litegraph.js::continueSavingSerializedGraphParts(), done saving, refreshing file browser");
+                console.log("litegraph.js::continueWritingSerializedGraphParts(), done saving, refreshing file browser");
                 root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
                                                              root.properties.path,
                                                              root.buildFileSystemPathList,
