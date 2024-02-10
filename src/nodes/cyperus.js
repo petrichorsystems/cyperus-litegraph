@@ -247,7 +247,6 @@ class clock extends CyperusNode {
 
     osc_listener_callback(node, response) {
         var value = response['args'];
-        console.log('oscillator/clock osc_listener_callbak()');
         console.log(value);
         node.widgets[0].value = value[0].toFixed(8);
         node.widgets[1].value = value[1].toFixed(8);
@@ -277,6 +276,13 @@ class triangle extends CyperusNode {
       this.onExecute = () => {
       }
   }
+
+    osc_listener_callback(node, response) {
+        console.log('oscillator/clock osc_triangle_callback()');        
+        var value = response['args'];
+        node.widgets[0].value = value[0]['value'].toFixed(8);
+        node.widgets[1].value = value[1]['value'].toFixed(8);
+    }    
 }
 
 // delay/simple

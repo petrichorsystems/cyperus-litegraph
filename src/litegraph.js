@@ -3683,33 +3683,46 @@ class Cyperus {
                 } else if (!node.type.localeCompare("oscillator/triangle")) {
                     console.log('_cyperus.osc_add_module_oscillator_triangle()');
 
+                    if (!from_load_configure) {
+                        node['properties']['frequency'] = "440.0";
+                        node['properties']['amplitude'] = "1.0";
+                    } else {
+                        node['properties']['frequency'] = configure_payload['bus_n_info'].properties['frequency'];
+                        node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
+                    }
 
-                    node['properties']['frequency'] = "440.0";
-                    node['properties']['amplitude'] = "1.0";
+                    node['properties']['listener'] = true;
 
                     LiteGraph._cyperus.osc_add_module_oscillator_triangle(
                         LiteGraph._cyperus.uuidv4(), 
                         this.bus_id,
-                        "440",
-                        "1.0",
+                        node['properties']['frequency'],
+                        node['properties']['amplitude'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
                 } else if (!node.type.localeCompare("oscillator/clock")) {
                     console.log('_cyperus.osc_add_module_oscillator_clock()');
 
-
-                    node['properties']['frequency'] = "440.0";
-                    node['properties']['amplitude'] = "1.0";
+                    if (!from_load_configure) {
+                        node['properties']['frequency'] = "440.0";
+                        node['properties']['amplitude'] = "1.0";
+                    } else {
+                        node['properties']['frequency'] = configure_payload['bus_n_info'].properties['frequency'];
+                        node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
+                    }
 
                     node['properties']['listener'] = true;
 
+                    console.log('CLOCK ARGS: ');
+                    console.log(args);
+                    
                     LiteGraph._cyperus.osc_add_module_oscillator_clock(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        "440.0",
-                        "1.0",
+                        node['properties']['frequency'],
+                        node['properties']['amplitude'],
                         _cyperus_util_create_new_dsp_module,
-                        node);                
+                        args);                
                 } else if (!node.type.localeCompare("delay/simple")) {
                     console.log('_cyperus.osc_add_module_delay_simple()');
                     
