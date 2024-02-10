@@ -3469,7 +3469,7 @@ class Cyperus {
 	node.properties['id'] = response[3];
 
 	if( node.properties['listener'] ) {
-	    LiteGraph._cyperus.register_osc_listener(response[2], node.osc_listener_callback, node);
+	    LiteGraph._cyperus.register_osc_listener(response[3], node.osc_listener_callback, node);
 	}
 
         console.log('');
@@ -3479,7 +3479,7 @@ class Cyperus {
         
 	LiteGraph._cyperus.osc_list_module_port(
             LiteGraph._cyperus.uuidv4(),
-            response[2],
+            response[3],
 	    _cyperus_util_store_new_dsp_module_ports,
 	    args);
 					       
