@@ -3466,7 +3466,7 @@ class Cyperus {
 	var self = this;
         
 	// store id
-	node.properties['id'] = response[2];
+	node.properties['id'] = response[3];
 
 	if( node.properties['listener'] ) {
 	    LiteGraph._cyperus.register_osc_listener(response[2], node.osc_listener_callback, node);
