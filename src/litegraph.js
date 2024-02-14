@@ -3770,19 +3770,24 @@ class Cyperus {
                 } else if (!node.type.localeCompare("filter/bandpass")) {
                     console.log('_cyperus.osc_add_module_filter_bandpass()');
 
-
-                    node['properties']['cutoff_frequency'] = "100.0";
-                    node['properties']['q'] = "10.0";
-                    node['properties']['amplitude'] = "1.0";                
+                    if (!from_load_configure) {
+                        node['properties']['cutoff_frequency'] = "100.0";
+                        node['properties']['q'] = "1.0";
+                        node['properties']['amplitude'] = "1.0";
+                    } else {
+                        node['properties']['cutoff_frequency'] = configure_payload['bus_n_info'].properties['cutoff_frequency'];
+                        node['properties']['q'] = configure_payload['bus_n_info'].properties['q'];
+                        node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
+                    }             
 
                     LiteGraph._cyperus.osc_add_module_filter_bandpass(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        "100.0",
-                        "10.0",
-                        "1.0",
+                        node['properties']['cutoff_frequency'],
+                        node['properties']['q'],
+                        node['properties']['amplitude'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
                 } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
                     console.log('_cyperus.osc_add_module_filter_highpass()');
 
