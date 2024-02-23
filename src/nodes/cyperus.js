@@ -354,31 +354,40 @@ class follower extends CyperusNode {
 
 // filter/bandpass
 class bandpass extends CyperusNode {
-  type = 'filter/bandpass';
-  title = 'filter bandpass';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-      this.properties['module_parameters'] = [
-	  {
-	      param_name: "cutoff_frequency",
-	      param_type: "text",
-	      param: this.properties.time		    
+    type = 'filter/bandpass';
+    title = 'filter bandpass';
+    constructor(title) {
+        super(title)
+        this.properties = { precision: 1, is_module: true};
+        this.properties['module_parameters'] = [
+	    {
+	        param_name: "cutoff_frequency",
+	        param_type: "text",
+	        param: this.properties.time		    
 	  },
-	  {
-	      param_name: "q",
-	      param_type: "text",
-	      param: this.properties.feedback
-	  },
+	    {
+	        param_name: "q",
+	        param_type: "text",
+	        param: this.properties.feedback
+	    },
 	  {
 	      param_name: "amplitude",
 	      param_type: "text",
 	      param: this.properties.amplitude
 	  }          
-      ];
-    this.onExecute = () => {
+        ];
+        this.onExecute = () => {
+        }
     }
-  }
+    
+    osc_listener_callback(node, response) {
+        var value = response['args'];
+        
+        node.widgets[0].value = value[0]['value'].toFixed(8);
+        node.widgets[1].value = value[1]['value'].toFixed(8);
+        node.widgets[2].value = value[2]['value'].toFixed(8);        
+    }    
+    
 }
 
     

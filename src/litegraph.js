@@ -3780,6 +3780,8 @@ class Cyperus {
                         node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
                     }             
 
+                    node['properties']['listener'] = true;
+                    
                     LiteGraph._cyperus.osc_add_module_filter_bandpass(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
@@ -5493,9 +5495,10 @@ class Cyperus {
 		undefined
 	    )
 	} else if (!this.type.localeCompare("filter/bandpass")) {
-	    console.log('amplitude', this.properties['amplitude']);
-	    console.log('cutoff', this.properties['cutoff']);
-	    console.log('q', this.properties['q']);	    
+            this.properties['cutoff_frequency'] = this.widgets[0].value;
+            this.properties['q'] = this.widgets[1].value;
+            this.properties['amplitude'] = this.widgets[2].value;
+            
 	    LiteGraph._cyperus.osc_edit_module_filter_bandpass(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
