@@ -1017,7 +1017,7 @@ class Cyperus {
 
     osc_add_module_filter_bandpass(request_id,
                                    path,
-				   cutoff_frequency,
+				   cutoff_freq,
 				   q,
 				   amplitude,                                   
 				   callback,
@@ -1037,7 +1037,7 @@ class Cyperus {
                     },
                     {
                         type: "f",
-                        value: cutoff_frequency
+                        value: cutoff_freq
                     },
                     {
                         type: "f",
@@ -1056,7 +1056,7 @@ class Cyperus {
 
     osc_edit_module_filter_bandpass(request_id,
                                     path,
-				    cutoff_frequency,
+				    cutoff_freq,
                          	    q,
                                     amplitude,
 				    callback,
@@ -1076,7 +1076,7 @@ class Cyperus {
                     },
                     {
                         type: "f",
-                        value: cutoff_frequency
+                        value: cutoff_freq
                     },
                     {
                         type: "f",
@@ -3712,9 +3712,6 @@ class Cyperus {
                     }
 
                     node['properties']['listener'] = true;
-
-                    console.log('CLOCK ARGS: ');
-                    console.log(args);
                     
                     LiteGraph._cyperus.osc_add_module_oscillator_clock(
                         LiteGraph._cyperus.uuidv4(),
@@ -3771,11 +3768,11 @@ class Cyperus {
                     console.log('_cyperus.osc_add_module_filter_bandpass()');
 
                     if (!from_load_configure) {
-                        node['properties']['cutoff_frequency'] = "100.0";
+                        node['properties']['cutoff_freq'] = "100.0";
                         node['properties']['q'] = "1.0";
                         node['properties']['amplitude'] = "1.0";
                     } else {
-                        node['properties']['cutoff_frequency'] = configure_payload['bus_n_info'].properties['cutoff_frequency'];
+                        node['properties']['cutoff_freq'] = configure_payload['bus_n_info'].properties['cutoff_freq'];
                         node['properties']['q'] = configure_payload['bus_n_info'].properties['q'];
                         node['properties']['amplitude'] = configure_payload['bus_n_info'].properties['amplitude'];
                     }             
@@ -3882,45 +3879,58 @@ class Cyperus {
                 } else if (!node.type.localeCompare("utils/counter")) {
                     console.log('_cyperus.osc_add_module_utils_counter()');
 
-
-                    node['properties']['reset'] = "0.0";
-                    node['properties']['start'] = "0.0";
-                    node['properties']['step_size'] = "1.0";
-                    node['properties']['min'] = "0.0";
-                    node['properties']['max'] = "16.0";
-                    node['properties']['direction'] = "1.0";
-                    node['properties']['auto_reset'] = "0.0";
+                    if (!from_load_configure) {
+                        node['properties']['reset'] = "0.0";
+                        node['properties']['start'] = "0.0";
+                        node['properties']['step_size'] = "1.0";
+                        node['properties']['min'] = "0.0";
+                        node['properties']['max'] = "16.0";
+                        node['properties']['direction'] = "1.0";
+                        node['properties']['auto_reset'] = "0.0";
+                    } else {
+                        node['properties']['reset'] = configure_payload['bus_n_info'].properties['reset'];
+                        node['properties']['start'] = configure_payload['bus_n_info'].properties['start'];
+                        node['properties']['step_size'] = configure_payload['bus_n_info'].properties['step_size'];
+                        node['properties']['min'] = configure_payload['bus_n_info'].properties['min'];
+                        node['properties']['max'] = configure_payload['bus_n_info'].properties['max'];
+                        node['properties']['direction'] = configure_payload['bus_n_info'].properties['direction'];
+                        node['properties']['auto_reset'] = configure_payload['bus_n_info'].properties['auto_reset'];
+                    }
 
                     node['properties']['listener'] = true;
 
                     LiteGraph._cyperus.osc_add_module_utils_counter(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        "0.0",
-                        "0.0",
-                        "1.0",
-                        "0.0",
-                        "16.0",
-                        "1.0",
-                        "0.0",
+                        node['properties']['reset'],
+                        node['properties']['start'],
+                        node['properties']['step_size'],
+                        node['properties']['min'],
+                        node['properties']['max'],
+                        node['properties']['direction'],
+                        node['properties']['auto_reset'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
                 } else if (!node.type.localeCompare("utils/equals")) {
                     console.log('_cyperus.osc_add_module_utils_equals()');
 
-
-                    node['properties']['x'] = "0.0";
-                    node['properties']['y'] = "1.0";
+                    if (!from_load_configure) {
+                        node['properties']['x'] = "0.0";
+                        node['properties']['y'] = "1.0";
+                    } else {
+                        node['properties']['x'] = configure_payload['bus_n_info'].properties['x'];
+                        node['properties']['y'] = configure_payload['bus_n_info'].properties['x'];
+                    }
 
                     node['properties']['listener'] = true;
 
                     LiteGraph._cyperus.osc_add_module_utils_equals(
                         LiteGraph._cyperus.uuidv4(),
                         this.bus_id,
-                        "0.0",
-                        "1.0",
+                        node['properties']['x'],
+                        node['properties']['y'],
                         _cyperus_util_create_new_dsp_module,
-                        node);
+                        args);
                 } else if (!node.type.localeCompare("utils/spigot")) {
                     console.log('_cyperus.osc_add_module_utils_spigot()');
 
@@ -5495,7 +5505,7 @@ class Cyperus {
 		undefined
 	    )
 	} else if (!this.type.localeCompare("filter/bandpass")) {
-            this.properties['cutoff_frequency'] = this.widgets[0].value;
+            this.properties['cutoff_freq'] = this.widgets[0].value;
             this.properties['q'] = this.widgets[1].value;
             this.properties['amplitude'] = this.widgets[2].value;
             
