@@ -177,7 +177,7 @@ Editor.prototype.onSaveButton = function() {
     
     this.root.appendChild(panel);
     console.log("saved"); 
-    localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
+    // localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
 };
 
 Editor.prototype.onDownloadButton = function() {
