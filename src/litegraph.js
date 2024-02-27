@@ -3801,7 +3801,7 @@ class Cyperus {
                         node['properties']['y'] = "1.0";
                     } else {
                         node['properties']['x'] = configure_payload['bus_n_info'].properties['x'];
-                        node['properties']['y'] = configure_payload['bus_n_info'].properties['x'];
+                        node['properties']['y'] = configure_payload['bus_n_info'].properties['y'];
                     }
 
                     node['properties']['listener'] = true;
@@ -4758,6 +4758,9 @@ class Cyperus {
                 // we need to grab the first node off the 'cyperus_bus_nodes' list and
                 //  pass it down with corresponding bus input/output ports
                 var node_payload = cyperus_bus_nodes.shift()
+
+                console.log("litegraph.js::LGraph.prototype.load_configure(), node_payload: ");
+                console.log(node_payload);
                 
                 configure_payload = {
                     'bus_n_info': node_payload['n_info'],
@@ -14072,9 +14075,7 @@ LGraphNode.prototype.executeAction = function(action)
                 panel.addHTML("<div style='padding-left: 20px; padding-right: 20px;'><br /><br /><span style='color: red;'><b>warning</b></span>: load graph from file <b>'" + resource_name + "'</b> ?<br /><br /></div>");
                             
                 panel.addButton("ok",function(){
-
-                    root.loadSerializedGraphFromFile(dirpath, resource_name);
-                    
+                    root.loadSerializedGraphFromFile(dirpath, resource_name);                    
                     root.properties.selected_row.style.backgroundColor = "transparent";
                     root.properties.selected_row.style.color = "#ccc";
                     root.properties.selected_row = null;
