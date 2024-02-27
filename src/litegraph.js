@@ -3254,6 +3254,10 @@ class Cyperus {
 	var module_parameters = node.properties['module_parameters'];
 	for( var i=0; i<module_parameters.length; i++ ) {
 	    module_parameter = module_parameters[i];
+
+            console.log('MODULE_PARAMETER:');
+            console.log(module_parameter);
+            
 	    node.addWidget(
 		module_parameter['param_type'],
 		module_parameter['param_name'],
@@ -3547,18 +3551,6 @@ class Cyperus {
                         node['properties']['phase'],
                         _cyperus_util_create_new_dsp_module,
                         args);
-                } else if (!node.type.localeCompare("dsp/generator/square")) {
-                    console.log('_cyperus.osc_add_module_square()');
-
-
-                    node['properties']['frequency'] = "440.0";
-                    node['properties']['amplitude'] = "1.0";
-
-                    LiteGraph._cyperus.osc_add_module_square(this.bus_id,
-                                                             "440.0",
-                                                             "1.0",
-                                                             _cyperus_util_create_new_dsp_module,
-                                                             node);
                 } else if (!node.type.localeCompare("oscillator/triangle")) {
                     console.log('_cyperus.osc_add_module_oscillator_triangle()');
 
@@ -5307,20 +5299,10 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/generator/square")) {
-	    console.log('frequency', this.properties['frequency']);
-	    console.log('amplitude', this.properties['amplitude']);
-	    console.log('phase', this.properties['phase']);	    
-	    LiteGraph._cyperus.osc_edit_module_square(
-		this.properties['id'],
-		this.widgets[0].value,
-		this.widgets[1].value,
-		console.log,
-		undefined
-	    )
 	} else if (!this.type.localeCompare("oscillator/triangle")) {
-	    console.log('frequency', this.properties['frequency']);
-	    console.log('amplitude', this.properties['amplitude']); 
+            this.properties['frequency'] = this.widgets[0].value;
+            this.properties['amplitude'] = this.widgets[1].value;            
+            
 	    LiteGraph._cyperus.osc_edit_module_oscillator_triangle(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
@@ -5330,8 +5312,9 @@ class Cyperus {
 		undefined
 	    )
 	} else if (!this.type.localeCompare("oscillator/clock")) {
-	    console.log('frequency', this.properties['frequency']);
-	    console.log('amplitude', this.properties['amplitude']);	    
+            this.properties['frequency'] = this.widgets[0].value;
+            this.properties['amplitude'] = this.widgets[1].value;            
+            
 	    LiteGraph._cyperus.osc_edit_module_oscillator_clock(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
@@ -5384,42 +5367,6 @@ class Cyperus {
 		console.log,
 		undefined
 	    )
-	} else if (!this.type.localeCompare("dsp/processor/filter_highpass")) {
-	    console.log('amplitude', this.properties['amplitude']);
-	    console.log('cutoff', this.properties['cutoff']);
-	    LiteGraph._cyperus.osc_edit_module_filter_highpass(
-		this.properties['id'],
-		this.widgets[0].value,
-		this.widgets[1].value,
-		console.log,
-		undefined
-	    )
-	} else if (!this.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
-	    console.log('amplitude', this.properties['amplitude']);
-	    console.log('slope', this.properties['slope']);
-	    console.log('cutoff_freq', this.properties['cutoff_freq']);
-	    LiteGraph._cyperus.osc_edit_module_filter_varslope_lowpass(
-		this.properties['id'],
-		this.widgets[0].value,
-		this.widgets[1].value,
-		this.widgets[2].value,
-		console.log,
-		undefined
-	    )
-	} else if (!this.type.localeCompare("network/osc/transmit")) {
-	    console.log('host', this.properties['host']);
-	    console.log('port', this.properties['port']);
-	    console.log('path', this.properties['path']);
-	    console.log('samplerate_divisor', this.properties['samplerate_divisor']);
-	    LiteGraph._cyperus.osc_edit_module_osc_transmit(
-		this.properties['id'],
-		this.widgets[0].value,
-		this.widgets[1].value,
-		this.widgets[2].value,
-		this.widgets[3].value,
-		console.log,
-		undefined
-	    )
 	}  else if (!this.type.localeCompare("movement/osc/metronome")) {
 	    console.log('beats_per_minute', this.properties['beats_per_minute']);
 	    LiteGraph._cyperus.osc_edit_module_movement_osc_metronome(
@@ -5432,7 +5379,7 @@ class Cyperus {
             
 	    console.log('value', this.properties['value']);
             console.log(name, value);
-
+            
             if( name != 'value' )
                 this.properties[name] = value;
             
@@ -5443,28 +5390,15 @@ class Cyperus {
 		console.log,
 		undefined
 	    )            
-	}  else if (!this.type.localeCompare("analysis/transient_detector")) {
-	    console.log('sensitivity', this.properties['sensitivity']);
-	    console.log('attack_ms', this.properties['attack_ms']);
-	    console.log('decay_ms', this.properties['decay_ms']);
-	    console.log('scale', this.properties['scale']);
-	    LiteGraph._cyperus.osc_edit_module_analysis_transient_detector(
-		this.properties['id'],
-		this.widgets[0].value,
-		this.widgets[1].value,
-		this.widgets[2].value,
-		this.widgets[3].value,
-		console.log,
-		undefined
-	    )
 	} else if (!this.type.localeCompare("utils/counter")) {
-            console.log('reset', this.properties['reset']);
-	    console.log('start', this.properties['start']);
-	    console.log('step_size', this.properties['step_size']);
-	    console.log('min', this.properties['min']);
-	    console.log('max', this.properties['max']);
-	    console.log('direction', this.properties['direction']);
-	    console.log('auto_reset', this.properties['auto_reset']);	                
+            this.properties['reset'] = this.widgets[0].value;
+            this.properties['start'] = this.widgets[1].value;
+            this.properties['step_size'] = this.widgets[2].value;
+            this.properties['min'] = this.widgets[3].value;
+            this.properties['max'] = this.widgets[4].value;
+            this.properties['direction'] = this.widgets[5].value;
+            this.properties['auto_reset'] = this.widgets[6].value;
+
  	    LiteGraph._cyperus.osc_edit_module_utils_counter(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
@@ -5479,12 +5413,9 @@ class Cyperus {
 		undefined
 	    )
         } else if (!this.type.localeCompare("utils/equals")) {
-
-            console.log('this: ');
-            console.log(this);
+            this.properties['x'] = this.widgets[0].value;
+            this.properties['y'] = this.widgets[1].value;
             
-            console.log('x', this.properties['x']);
-	    console.log('y', this.properties['y']);
  	    LiteGraph._cyperus.osc_edit_module_utils_equals(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
@@ -5494,7 +5425,8 @@ class Cyperus {
 		undefined
 	    )
         } else if (!this.type.localeCompare("utils/spigot")) {
-            console.log('open', this.properties['open']);
+            this.properties['open'] = this.widgets[0].value;
+            
  	    LiteGraph._cyperus.osc_edit_module_utils_spigot(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
