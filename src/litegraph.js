@@ -160,7 +160,6 @@ class Cyperus {
     }
     
     osc_list_main(callback, args) {
-	console.log("Cyperus::osc_list_main()");
 	var self = this;
 	self._send(
 	    {
@@ -175,8 +174,6 @@ class Cyperus {
 	    callback,
 	    args
 	);
-	console.log("Cyperus::osc_list_main()::after send");
-	// now, place the callback on the queue
     }
 
     osc_add_bus(
@@ -13683,7 +13680,6 @@ LGraphNode.prototype.executeAction = function(action)
         }
 
         root.retrieveFileSystemCWD = function(response, args) {
-            console.log("litegraph.js::_retrieveFileSystemCWD()");
             
             args['graph'].last_filesystem_path_visited = response[3];
             
@@ -13696,12 +13692,6 @@ LGraphNode.prototype.executeAction = function(action)
         }
         
         root.buildFileSystemPathList = function(response, args) {
-            console.log("litegraph.js::_build_FileSystemPathList()");
-            console.log('response:');
-            console.log(response);
-            console.log('args:');
-            console.log(args);
-
             var on_initialize = false;
             
             root.panel = args['panel'];
@@ -13724,9 +13714,6 @@ LGraphNode.prototype.executeAction = function(action)
             } else {
                 
             }
-
-            console.log('this.panel.innerHTML: ');
-            console.log(this.panel.innerHTML);
 
             if( on_initialize ) {
 
@@ -13770,7 +13757,6 @@ LGraphNode.prototype.executeAction = function(action)
             var html_table = html_prefix;
             path_list.sort();
             for(var i=0; i<path_list.length; i++) {
-                console.log(path_list[i]);
                 row_list = path_list[i].split('\t');
                 html_table += "<tr><td class='name-col'>" + row_list[0] + "</td><td>" + row_list[1] + "</td><td>" + row_list[2] + "</td><td>" + row_list[3] + "</td></tr>";
             }
@@ -13796,8 +13782,6 @@ LGraphNode.prototype.executeAction = function(action)
             if( on_initialize) {
                 var button = root.createSpan("remove", "delete_forever", this.panel.addToolsButton, 'filedir_remove', 'file-dialog-footer');
                 button.classList.add("file-delete");
-                console.log('class list:');
-                console.log(button.classList);
                 button.id = "remove_btn";
                 this.panel.footer.appendChild(button);
                 
@@ -13847,9 +13831,7 @@ LGraphNode.prototype.executeAction = function(action)
         }
         
         root.addRowHandlers = function()
-        {
-            console.log(document.getElementsByClassName("file-panel-browser"));
-            
+        {   
             var table = document.getElementsByClassName("file-panel-browser")[1];
             
             var rows = table.getElementsByTagName("tr");
@@ -13858,10 +13840,7 @@ LGraphNode.prototype.executeAction = function(action)
                 var createClickHandler = 
                     function(row) 
                 {
-                    return function() {
-                        console.log('selected_row:');
-                        console.log(root.properties.selected_row);
-                        
+                    return function() {                        
                         if( root.properties.selected_row ) {
                             root.properties.selected_row.style.backgroundColor = "transparent";
                             root.properties.selected_row.style.color = "#ccc";
@@ -13882,9 +13861,7 @@ LGraphNode.prototype.executeAction = function(action)
         }
 
         root.addRowActionHandlers = function()
-        {
-            console.log(document.getElementsByClassName("file-panel-browser"));
-            
+        {            
             var table = document.getElementsByClassName("file-panel-browser")[1];
             
             var rows = table.getElementsByTagName("tr");
@@ -13899,9 +13876,6 @@ LGraphNode.prototype.executeAction = function(action)
                         
                         var name = cell_name.innerHTML;
                         var filetype = cell_type.innerHTML;
-
-                        console.log(root);
-                        console.log(root.properties);
                         
                         if( filetype == "file" ) {
                             root.properties.filename = name;
@@ -13947,18 +13921,14 @@ LGraphNode.prototype.executeAction = function(action)
 
         root.addFilePanelNavButtonHandler = function(button_action)
         {
-            console.log("litegraph.js::addFilePanelNavButtonHandler()");
-
             var path_widget = document.getElementsByClassName("property")[0];
             var new_path = null;
 
             var rebuild_file_browser_table = false;
             if( button_action == "refresh" ) {
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'refresh'");
                 new_path = root.properties.path;
                 rebuild_file_browser_table = true;                
             } else if( button_action == "ascend" ) {
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend'");
                 if( root.properties.path == '/' ) {
                     new_path = root.properties.path;
                 } else {
@@ -13973,10 +13943,8 @@ LGraphNode.prototype.executeAction = function(action)
                         new_path = '/' + new_path;
                     
                 }
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'ascend', ascending to: " + new_path);
                 rebuild_file_browser_table = true;                
             } else if( button_action == "new_dir" ) {
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'new_dir'");
                 var panel = this.graphcanvas.createPopUpPanel("create directory",{closable:true});
                 
 	        panel.addWidget( "string", 'name', "new_directory", {type: 'string'}, function(name,value){
@@ -14014,7 +13982,6 @@ LGraphNode.prototype.executeAction = function(action)
                     if( dirpath[dirpath.length - 1] != '/' )
                         fullpath += '/';
                     fullpath += new_dir_name;
-                    console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new direcotry: " + fullpath);
 
                     args = {
                         'graph': root.graph,
@@ -14042,13 +14009,6 @@ LGraphNode.prototype.executeAction = function(action)
                 
                 root.editor.appendChild(panel);
             } else if( button_action == "file_save" ) {
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_save'");
-
-    // var data = localStorage.getItem( "graphdemo_save" );
-    // if(data)
-    //     graph.load_configure( JSON.parse( data ) );
-    // console.log("loaded");
-                
                 var path_widget = document.getElementsByClassName("property")[0];                    
                 var path_elem = path_widget.querySelector(".property_value");                    
                 var dirpath = path_elem.innerText;
@@ -14091,20 +14051,12 @@ LGraphNode.prototype.executeAction = function(action)
 	        // }).classList.add("cancel");
 
             } else if( button_action == "file_load" ) {
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_load'");
-                
                 if( root.properties.selected_row == null ) {
-                    console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_load', trigger no-selected-row popup");
                     return;
                 }
 
                 var resource_name = root.properties.selected_row.getElementsByTagName("td")[0].innerHTML;
                 var resource_type = root.properties.selected_row.getElementsByTagName("td")[2].innerHTML;
-
-                console.log('resoure_name: ');
-                console.log(resource_name);
-                console.log('resource_type: ');
-                console.log(resource_type);
 
                 if( resource_type != "file" ) {
                     console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'file_load', trigger non-file resource popup");
@@ -14135,20 +14087,12 @@ LGraphNode.prototype.executeAction = function(action)
                 root.editor.appendChild(panel);
                 
             } else if( button_action == "filedir_remove" ) {
-                console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'filedir_remove'");
-
                 if( root.properties.selected_row == null ) {
-                    console.log("litegraph.js::addFilePanelNavButtonHandler(), button_action 'filedir_remove', trigger no-selected-row popup");
                     return;
                 }
 
                 var resource_name = root.properties.selected_row.getElementsByTagName("td")[0].innerHTML;
                 var resource_type = root.properties.selected_row.getElementsByTagName("td")[2].innerHTML;
-
-                console.log('resoure_name: ');
-                console.log(resource_name);
-                console.log('resource_type: ');
-                console.log(resource_type);
                 
                 var path_widget = document.getElementsByClassName("property")[0];                    
                 var path_elem = path_widget.querySelector(".property_value");                    
@@ -14176,7 +14120,6 @@ LGraphNode.prototype.executeAction = function(action)
             }
 
             if( rebuild_file_browser_table ) {
-                console.log("REBUILDING BROWSER TABLE");
                 root.properties.path = new_path;
                 var value_elem = path_widget.querySelector(".property_value");
                 value_elem.innerText = new_path;
@@ -14200,7 +14143,6 @@ LGraphNode.prototype.executeAction = function(action)
 
 
         root.rebuildFileBrowserTable = function(response, args) {
-            console.log("REBUILDING BROWSER TABLE");
             root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
                                                          root.properties.path,
                                                          root.buildFileSystemPathList,
@@ -14213,18 +14155,8 @@ LGraphNode.prototype.executeAction = function(action)
             if( dirpath[dirpath.length - 1] != '/' )
                 fullpath += '/';
             fullpath += new_filename;
-            console.log("litegraph.js::addFilePanelNavButtonHandler(), creating new file: " + fullpath);
-            
-            // localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
-            // var data = localStorage.getItem( "graphdemo_save" );
-            // if(data)
-            //     graph.load_configure( JSON.parse( data ) );
             
             /* break up file into multiple 768-byte sized messages */
-            
-            console.log("JSON.stringify(root.graph.serialize())");
-            console.log(JSON.stringify(root.graph.serialize()).length);
-            console.log(JSON.stringify(root.graph.serialize()));                
 
             var graph_json_split = JSON.stringify(root.graph.serialize()).match(/.{1,768}/g);
             
@@ -14248,15 +14180,8 @@ LGraphNode.prototype.executeAction = function(action)
             if( dirpath[dirpath.length - 1] != '/' )
                 fullpath += '/';
             fullpath += filename;
-            console.log("litegraph.js::addFilePanelNavButtonHandler(), attempting to load graph from file: " + fullpath);
-            
-            // localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );    
-            // var data = localStorage.getItem( "graphdemo_save" );
-            // if(data)
-            //     graph.load_configure( JSON.parse( data ) );
             
             /* break up file into multiple 768-byte sized messages */
-
             args = {
                 'graph': root.graph,
                 'panel': root.panel,
@@ -14271,7 +14196,6 @@ LGraphNode.prototype.executeAction = function(action)
         }
 
         root.loadSeralizedGraphToLitegraph = function(response, args) {
-            console.log("litegraph.js::loadSerializedGraphToLitegraph()");
             var serialized_graph = response[5];
             root.graph.load_configure(JSON.parse(serialized_graph));
         }
@@ -14282,7 +14206,6 @@ LGraphNode.prototype.executeAction = function(action)
             if( dirpath[dirpath.length - 1] != '/' )
                 fullpath += '/';
             fullpath += resource_name;
-            console.log("litegraph.js::deleteFileSystemResource(), removing " + resource_type + ": " + fullpath);
                         
             args = {
                 'graph': root.graph,
@@ -14306,7 +14229,6 @@ LGraphNode.prototype.executeAction = function(action)
         }        
         
         root.continueWritingSerializedGraphParts = function(response, args) {
-            console.log("litegraph.js::continueWritingSerializedGraphParts()");
             
             if( args['graph_json'].length > 0 ) {
                 
@@ -14316,7 +14238,6 @@ LGraphNode.prototype.executeAction = function(action)
                                                                root.continueWritingSerializedGraphParts,
                                                                args);
             } else {
-                console.log("litegraph.js::continueWritingSerializedGraphParts(), done saving, refreshing file browser");
                 root.graph._cyperus.osc_list_filesystem_path(root.graph._cyperus.uuidv4(),
                                                              root.properties.path,
                                                              root.buildFileSystemPathList,
@@ -14438,7 +14359,6 @@ LGraphNode.prototype.executeAction = function(action)
             
 	    function innerChange(name, value)
 	    {
-		console.log("change",name,value);
 		//that.dirty_canvas = true;
 		if(options.callback)
 		    options.callback(name,value);
@@ -14454,9 +14374,6 @@ LGraphNode.prototype.executeAction = function(action)
 
 
     LGraphCanvas.prototype.createPopUpPanel = function(title, options) {
-
-        console.log("CALLING LGraphCanvas.prototype.createPopUpPanel\n");
-        
 	options = options || {};
 
 	var ref_window = options.window || window;
@@ -14760,7 +14677,6 @@ LGraphNode.prototype.executeAction = function(action)
             
 	    function innerChange(name, value)
 	    {
-		console.log("change",name,value);
 		//that.dirty_canvas = true;
 		if(options.callback)
 		    options.callback(name,value);
@@ -14777,9 +14693,6 @@ LGraphNode.prototype.executeAction = function(action)
     
     
     LGraphCanvas.prototype.createPanel = function(title, options) {
-
-        console.log("CALLING LGraphCanvas.prototype.createPanel\n");
-        
 		options = options || {};
 
 		var ref_window = options.window || window;
@@ -14930,7 +14843,6 @@ LGraphNode.prototype.executeAction = function(action)
 
 			function innerChange(name, value)
 			{
-				console.log("change",name,value);
 				//that.dirty_canvas = true;
 				if(options.callback)
 					options.callback(name,value);
@@ -14971,7 +14883,6 @@ LGraphNode.prototype.executeAction = function(action)
     
 	LGraphCanvas.prototype.showShowNodePanel = function( node )
     {
-        console.log("CALLING LGraphCanvas.prototype.showShowNodePanel\n");
 		window.SELECTED_NODE = node;
 		var panel = document.querySelector("#node-panel");
 		if(panel)
@@ -15051,10 +14962,8 @@ LGraphNode.prototype.executeAction = function(action)
 				var textarea = panel.content.querySelector("textarea");
 				textarea.value = node.properties[propname];
 				textarea.addEventListener("keydown", function(e){
-					//console.log(e);
 					if(e.code == "Enter" && e.ctrlKey )
 					{
-						console.log("Assigned");
 						node.setProperty(propname, textarea.value);
 					}
 				});
@@ -15079,8 +14988,6 @@ LGraphNode.prototype.executeAction = function(action)
 	
 	LGraphCanvas.prototype.showSubgraphPropertiesDialog = function(node)
 	{
-		console.log("showing subgraph properties dialog");
-
 		var old_panel = this.canvas.parentNode.querySelector(".subgraph_dialog");
 		if(old_panel)
 			old_panel.close();
@@ -15135,8 +15042,6 @@ LGraphNode.prototype.executeAction = function(action)
 
 	LGraphCanvas.prototype.showSubgraphPropertiesDialogOutput = function(node)
 	{
-		console.log("showing subgraph properties dialog");
-
 		var old_panel = this.canvas.parentNode.querySelector(".subgraph_dialog");
 		if(old_panel)
 			old_panel.close();
