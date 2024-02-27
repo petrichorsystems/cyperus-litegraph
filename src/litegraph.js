@@ -2931,7 +2931,6 @@ class Cyperus {
     }
 
     function _cyperus_util_add_connections_from_serialized_links(subgraph, links) {
-        console.log('litegraph.js::_cyperus_util_add_connections_from_serialized_links()');
         for (var i = 0; i < links.length; i++) {
             if (links[i]) {
                 var cyperus_id_out = undefined;
@@ -3253,11 +3252,7 @@ class Cyperus {
 	var node = args['node'];
 	var module_parameters = node.properties['module_parameters'];
 	for( var i=0; i<module_parameters.length; i++ ) {
-	    module_parameter = module_parameters[i];
-
-            console.log('MODULE_PARAMETER:');
-            console.log(module_parameter);
-            
+	    module_parameter = module_parameters[i];            
 	    node.addWidget(
 		module_parameter['param_type'],
 		module_parameter['param_name'],
@@ -3314,6 +3309,13 @@ class Cyperus {
         if (args['from_load_configure']) {
             args['configure_payload']['bus_n_info'].properties  = node.properties;
             node.configure(args['configure_payload']['bus_n_info']);
+
+            
+            if( node.on_configure ) {
+                console.log('CONFIGURE CONFIGURE CONFIGURE:');
+                console.log(node);
+                node.on_configure(node)
+            }
             
 	    for (var i = 0; i < cyperus_input_ports.length; i++) {
                 node.inputs[i].id = cyperus_input_ports[i];
@@ -3784,9 +3786,6 @@ class Cyperus {
                         args);
                 } else if (!node.type.localeCompare("utils/equals")) {
                     console.log('_cyperus.osc_add_module_utils_equals()');
-
-                    console.log('CONFIGURE_PAYLOAD:');
-                    console.log(configure_payload);
                     
                     if (!from_load_configure) {
                         node['properties']['x'] = "0.0";
@@ -4728,7 +4727,7 @@ class Cyperus {
                     
                     node.id = n_info.id;
                     this.add(node, skip_compute_order, from_load_configure, configure_payload);
-                    node.configure(n_info);                    
+                    node.configure(n_info);;
                 } else {
                     // var skip_compute_order = true;
                     // node.id = n_info.id; //id it or it will create a new id                    
@@ -4739,7 +4738,6 @@ class Cyperus {
                         'node': node,
                         'subgraph_bus_port_nodes': []
                     }
-                    
                     cyperus_bus_nodes.push(node_payload);
                 }
                 

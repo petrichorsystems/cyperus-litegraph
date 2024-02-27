@@ -588,6 +588,25 @@ class float extends CyperusNode {
       ];
   }
 
+    on_configure(node) {
+        console.log("cyperus.js::float::on_configure()");
+        
+        var value = node.properties.value;
+        
+        if (value < node.properties.min) {
+            value = node.properties.min;
+        }
+
+        if (value > node.properties.max) {
+            value = node.properties.max
+        }
+        node.properties.value = value;
+        var node_value = (value - node.properties.min) / (node.properties.max - node.properties.min);
+        node.value = node_value;
+        node.setDirtyCanvas(true);
+
+    }
+    
     osc_listener_callback(node, response) {
 
         var value = response['args']['value'];
