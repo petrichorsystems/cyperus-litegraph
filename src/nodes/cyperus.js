@@ -391,41 +391,6 @@ class bandpass extends CyperusNode {
     
 }
 
-    
-// network/osc/transmit
-class CyperusNetworkOscTransmitNode extends CyperusNode {
-  type = 'network/osc/transmit';
-  title = 'osc transmitter';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-      this.properties['module_parameters'] = [
-	  {
-	      param_name: "host",
-	      param_type: "text",
-	      param: this.properties.host
-	  },
-	  {
-	      param_name: "port",
-	      param_type: "text",
-	      param: this.properties.port
-	  },
-	  {
-	      param_name: "path",
-	      param_type: "text",
-	      param: this.properties.path	    
-	  },
-	  {
-	      param_name: "samplerate_divisor",
-	      param_type: "text",
-	      param: this.properties.samplerate_divisor
-	  }
-      ];
-      this.onExecute = () => {
-      }
-  }
-}
-
 // osc/metronome
 class metronome extends CyperusNode {
   type = 'osc/metronome';
@@ -780,102 +745,6 @@ class float extends CyperusNode {
 
 }
 
-// analysis/transient_detector
-class CyperusAudioAnalysisTransientDetectorNode extends CyperusNode {
-  type = 'cyperus/analysis/transient_detector';
-  title = 'transient detector';
-  constructor(title) {
-    super(title)
-      this.properties = { precision: 1, is_module: true};
-      this.properties['module_parameters'] = [
-	  {
-	      param_name: "sensitivity",
-	      param_type: "text",
-	      param: this.properties.sensitivity
-	  },
-	  {
-	      param_name: "attack_ms",
-	      param_type: "text",
-	      param: this.properties.attack_ms
-	  },
-	  {
-	      param_name: "decay_ms",
-	      param_type: "text",
-	      param: this.properties.decay_ms
-	  },
-	  {
-	      param_name: "scale",
-	      param_type: "text",
-	      param: this.properties.scale
-	  }
-      ];
-      this.onExecute = () => {
-	  this.setDirtyCanvas(true, false);
-      }
-      this._initAnimation();
-  }
-
-    osc_listener_callback(node) {
-	node.redraw_trigger = 1;
-    }
-
-    _initAnimation = function() {
-	this.anim_pos = 0;
-	this.anim_duration = 210;
-    }
-    
-    _resetAnimation = function() {
-	this.anim_pos = 0;
-    }
-
-    _stepAnimation = function(ctx) {
-	if( this.anim_pos >= this.anim_duration ) {
-	    /* do stuff */
-	    return;
-	}
-	var step_val = 1.0 / this.anim_duration;
-	var progress = step_val * this.anim_pos;
-
-	var time_fraction = 1 - (this.anim_pos / this.anim_duration);
-	
-	ctx.moveTo(0, 130);
-	ctx.beginPath();
-
-	var x_pos;
-	var width;
-	var height;
-
-	x_pos = 0;
-
-	var x_coeff = 0;
-	for (let a = 0, b = 1, result; 1; a += b, b /= 2) {
-	    if (time_fraction >= (7 - 4 * a) / 11) {
-		x_coeff = -Math.pow((11 - 6 * a - 11 * time_fraction) / 4, 2) + Math.pow(b, 2);
-		break;
-	    }
-	}
-	x_pos = (1 - x_coeff) * this.anim_duration;
-	width = 10 * 10 * x_coeff;
-	
-	ctx.roundRect(x_pos, 210, width, height);
-	    
-	ctx.fillStyle = "rgba(0, 191, 255, 1.0)";
-	ctx.fill();
-	
-	this.anim_pos = this.anim_pos + 1;
-    }
-    
-    onDrawForeground = function(ctx) {
-	
-	if (this.flags.collapsed) {
-            return;
-        }
-	
-	this._drawNodeShape(this, ctx, [0, 130, 210, 100], false, false);
-	this._stepAnimation(ctx);
-    }
-}
-
 // utils/counter
 class counter extends CyperusNode {
     type = 'utils/counter';
@@ -1035,9 +904,7 @@ LiteGraph.registerNodeType("utils/float", float);
 LiteGraph.registerNodeType("utils/counter", counter);
 LiteGraph.registerNodeType("utils/equals", equals);
 LiteGraph.registerNodeType("utils/spigot", spigot);            
-// LiteGraph.registerNodeType("network/osc/transmit", CyperusNetworkOscTransmitNode );
 // LiteGraph.registerNodeType("osc/metronome", metronome );
-// LiteGraph.registerNodeType("analysis/transient_detector", CyperusAudioAnalysisTransientDetectorNode );
     
 })(this);
 

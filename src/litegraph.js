@@ -3660,59 +3660,6 @@ class Cyperus {
                         node['properties']['amplitude'],
                         _cyperus_util_create_new_dsp_module,
                         args);
-                } else if (!node.type.localeCompare("dsp/processor/filter_highpass")) {
-                    console.log('_cyperus.osc_add_module_filter_highpass()');
-
-
-                    node['properties']['amplitude'] = "1.0";
-                    node['properties']['cutoff'] = "100.0";
-
-                    LiteGraph._cyperus.osc_add_module_filter_highpass(this.bus_id,
-                                                                      "1.0",
-                                                                      "100.0",
-                                                                      _cyperus_util_create_new_dsp_module,
-                                                                      node);
-                } else if (!node.type.localeCompare("dsp/processor/filter_varslope_lowpass")) {
-                    console.log('_cyperus.osc_add_module_filter_varslope_lowpass()');
-
-
-                    node['properties']['amplitude'] = "1.0";
-                    node['properties']['slope'] = "10.0";
-                    node['properties']['cutoff_freq'] = "100.0";
-
-                    LiteGraph._cyperus.osc_add_module_filter_varslope_lowpass(this.bus_id,
-                                                                              "1.0",
-                                                                              "10.0",
-                                                                              "100.0",
-                                                                              _cyperus_util_create_new_dsp_module,
-                                                                              node);
-                } else if (!node.type.localeCompare("network/osc/transmit")) {
-                    console.log('_cyperus.osc_add_module_osc_transmit()');
-
-
-                    node['properties']['host'] = "127.0.0.1";
-                    node['properties']['port'] = "6001";
-                    node['properties']['path'] = "/default";
-                    node['properties']['samplerate_divisor'] = 48;
-
-                    LiteGraph._cyperus.osc_add_module_osc_transmit(this.bus_id,
-                                                                   "127.0.0.1",
-                                                                   "6001",
-                                                                   "/default",
-                                                                   48,
-                                                                   _cyperus_util_create_new_dsp_module,
-                                                                   node);
-                } else if (!node.type.localeCompare("movement/osc/metronome")) {
-                    console.log('_cyperus.osc_add_module_movement_osc_metronome()');
-
-
-                    node['properties']['beats_per_minute'] = "60.0";
-                    node.properties['listener'] = true;
-
-                    LiteGraph._cyperus.osc_add_module_movement_osc_metronome(this.bus_id,
-                                                                             60.0,
-                                                                             _cyperus_util_create_new_dsp_module,
-                                                                             node);
                 } else if (!node.type.localeCompare("utils/float")) {
                     console.log('_cyperus.osc_add_module_utils_float()');
 
@@ -3732,23 +3679,6 @@ class Cyperus {
                         _cyperus_util_create_new_dsp_module,
                         args);
 
-                } else if (!node.type.localeCompare("analysis/transient_detector")) {
-                    console.log('_cyperus.osc_add_moodule_analysis_transient_detector()');
-
-
-                    node['properties']['sensitivity'] = "0.50";
-                    node['properties']['attack_ms'] = "5.0";
-                    node['properties']['decay_ms'] = "5.0";
-                    node['properties']['scale'] = "1.0";
-                    node.properties['listener'] = true;
-
-                    LiteGraph._cyperus.osc_add_module_analysis_transient_detector(this.bus_id,
-                                                                                  0.5,
-                                                                                  5.0,
-                                                                                  5.0,
-                                                                                  1.0,
-                                                                                  _cyperus_util_create_new_dsp_module,
-                                                                                  node);
                 } else if (!node.type.localeCompare("utils/counter")) {
                     console.log('_cyperus.osc_add_module_utils_counter()');
 
@@ -5325,10 +5255,7 @@ class Cyperus {
             this.properties['amplitude'] = this.widgets[0].value;
             this.properties['time'] = this.widgets[1].value;
             this.properties['feedback'] = this.widgets[2].value;
-            
-	    console.log('amplitude', this.properties['amplitude']);
-	    console.log('time', this.properties['time']);
-	    console.log('feeback', this.properties['feedback']);	    
+
 	    LiteGraph._cyperus.osc_edit_module_delay_simple(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
@@ -5339,9 +5266,10 @@ class Cyperus {
 		undefined
 	    )
 	} else if (!this.type.localeCompare("envelope/follower")) {
-	    console.log('attack', this.properties['attack']);
-	    console.log('decay', this.properties['decay']);
-	    console.log('scale', this.properties['scale']);	    
+            this.properties['attack'] = this.widgets[0].value;
+            this.properties['decay'] = this.widgets[1].value;
+            this.properties['scale'] = this.widgets[2].value;
+            
 	    LiteGraph._cyperus.osc_edit_module_envelope_follower(
                 LiteGraph._cyperus.uuidv4(),
 		this.properties['id'],
@@ -5362,14 +5290,6 @@ class Cyperus {
 		this.widgets[0].value,
 		this.widgets[1].value,
 		this.widgets[2].value,
-		console.log,
-		undefined
-	    )
-	}  else if (!this.type.localeCompare("movement/osc/metronome")) {
-	    console.log('beats_per_minute', this.properties['beats_per_minute']);
-	    LiteGraph._cyperus.osc_edit_module_movement_osc_metronome(
-		this.properties['id'],
-		this.widgets[0].value,
 		console.log,
 		undefined
 	    )
