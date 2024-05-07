@@ -582,6 +582,96 @@ class Cyperus {
 	    args
 	);
     }
+
+    osc_add_module_network_oscsend(
+        request_id,
+        path,
+        hostname_ip,
+        port,
+        osc_path,
+        freq_div,
+	callback,
+	args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/module/network/oscsend",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "s",
+                        value: hostname_ip
+                    },
+                    {
+                        type: "i",
+                        value: port
+                    },
+                    {
+                        type: "s",
+                        value: osc_path
+                    },
+                    {
+                        type: "f",
+                        value: freq_div
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    osc_edit_module_network_oscsend(
+        request_id,
+        path,
+        hostname_ip,
+        port,
+        osc_path,
+        freq_div,
+	callback,
+	args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/edit/module/network/oscsend",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: path
+                    },
+                    {
+                        type: "s",
+                        value: hostname_ip
+                    },
+                    {
+                        type: "i",
+                        value: port
+                    },
+                    {
+                        type: "s",
+                        value: osc_path
+                    },
+                    {
+                        type: "f",
+                        value: freq_div
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }    
     
     osc_add_module_oscillator_sine(
         request_id,
@@ -2930,8 +3020,11 @@ class Cyperus {
         console.log("_cyperus_util_add_connection()");
     }
 
-    function _cyperus_util_add_connections_from_serialized_links(subgraph, links) {
+    function _cyperus_util_add_connections_from_serialized_links(subgraph, links) {        
+        console.log("_cyperus_util_add_connections_from_serialized_links");
+        
         for (var i = 0; i < links.length; i++) {
+            console.log(links[i]);
             if (links[i]) {
                 var cyperus_id_out = undefined;
                 var cyperus_id_in = undefined;
@@ -3530,7 +3623,33 @@ class Cyperus {
                         'from_load_configure': from_load_configure,
                         'configure_payload': configure_payload};
 
-                if (!node.type.localeCompare("oscillator/sine")) {
+                if (!node.type.localeCompare("network/oscsend")) {
+                    console.log('_cyperus.osc_add_module_network_oscsend()');
+
+                    if (!from_load_configure) {
+                        node['properties']['hostname_ip'] = "127.0.0.1";
+                        node['properties']['port'] = "9000";
+                        node['properties']['osc_path'] = "/osc/path";
+                        node['properties']['freq_div'] = "1";                    
+                    } else {
+                        node['properties']['hostname_ip'] = configure_payload['bus_n_info'].properties['hostname_ip'];
+                        node['properties']['port'] = configure_payload['bus_n_info'].properties['port'];
+                        node['properties']['osc_path'] = configure_payload['bus_n_info'].properties['osc_path'];
+                        node['properties']['freq_div'] = configure_payload['bus_n_info'].properties['freq_div'];                        
+                    }
+                    
+                    node['properties']['listener'] = false;
+
+                    LiteGraph._cyperus.osc_add_module_network_oscsend(
+                        LiteGraph._cyperus.uuidv4(),
+                        this.bus_id,
+                        node['properties']['hostname_ip'],
+                        node['properties']['port'],
+                        node['properties']['osc_path'],
+                        node['properties']['freq_div'],                        
+                        _cyperus_util_create_new_dsp_module,
+                        args);
+                } else if (!node.type.localeCompare("oscillator/sine")) {
                     console.log('_cyperus.osc_add_module_oscillator_sine()');
 
                     if (!from_load_configure) {
@@ -5209,8 +5328,28 @@ class Cyperus {
 	}
         
 	// START CYPERUS CODE
-        
-        if (!this.type.localeCompare("oscillator/sine")) {
+
+        if (!this.type.localeCompare("network/oscsend")) {
+            this.properties['hostname_ip'] = this.widgets[0].value;
+            this.properties['port'] = this.widgets[1].value;
+            this.properties['osc_path'] = this.widgets[2].value;
+            this.properties['freq_div'] = this.widgets[3].value;
+            
+	    console.log('hostname_ip', this.properties['hostname_ip']);
+	    console.log('port', this.properties['port']);
+	    console.log('osc_path', this.properties['osc_path']);
+            console.log('freq_div', this.properties['freq_div']);
+	    LiteGraph._cyperus.osc_edit_module_network_oscsend(
+                LiteGraph._cyperus.uuidv4(),
+		this.properties['id'],
+		this.widgets[0].value,
+		this.widgets[1].value,
+		this.widgets[2].value,
+                this.widgets[3].value,
+		console.log,
+		undefined
+	    )        
+        } else if (!this.type.localeCompare("oscillator/sine")) {
             this.properties['frequency'] = this.widgets[0].value;
             this.properties['amplitude'] = this.widgets[1].value;
             this.properties['phase'] = this.widgets[2].value;

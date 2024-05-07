@@ -181,6 +181,41 @@ class MainOutputsNode extends CyperusNode {
   }
 }
 
+// network/oscsend
+class oscsend extends CyperusNode {
+  type = 'network/oscsend';
+  title = 'network oscsend';
+  constructor(title) {
+    super(title)
+      this.properties = { precision: 1, is_module: true};
+      this.properties['module_parameters'] = [
+	  {
+	      param_name: "hostname_ip",
+	      param_type: "text",
+	      param: this.properties.hostname_ip
+	  },
+	  {
+	      param_name: "port",
+	      param_type: "text",
+	      param: this.properties.port
+	  },
+	  {
+	      param_name: "osc_path",
+	      param_type: "text",
+	      param: this.properties.osc_path
+	  },          
+	  {
+	      param_name: "freq_div",
+	      param_type: "text",
+	      param: this.properties.freq_div
+	  }
+      ];
+      this.onExecute = () => {
+      }
+  }
+}
+
+    
 // oscillator/sine
 class sine extends CyperusNode {
     type = 'oscillator/sine';
@@ -894,6 +929,7 @@ class spigot extends CyperusNode {
 //register in the system
 LiteGraph.registerNodeType("cyperus/main/inputs", MainInputsNode );
 LiteGraph.registerNodeType("cyperus/main/outputs", MainOutputsNode );
+LiteGraph.registerNodeType("network/oscsend", oscsend );    
 LiteGraph.registerNodeType("oscillator/sine", sine );
 LiteGraph.registerNodeType("oscillator/triangle", triangle );
 LiteGraph.registerNodeType("oscillator/clock", clock );
