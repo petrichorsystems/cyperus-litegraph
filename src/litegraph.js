@@ -3068,6 +3068,49 @@ class Cyperus {
             }
         }   
     }
+
+
+    function _cyperus_util_add_connections_from_serialized_bus_port_links(subgraph, links) {        
+        console.log("_cyperus_util_add_connections_from_serialized_bus_port_links");
+
+        console.log('LINKS:');
+        console.log(links);
+        
+        for (var i = 0; i < links.length; i++) {
+            
+            console.log(links[i]);
+            
+            if (links[i]) {
+                var cyperus_id_out = undefined;
+                var cyperus_id_in = undefined;
+                
+                for (var j = 0; j < subgraph._nodes.length; j++) {
+                    if (subgraph._nodes[j].id == links[i][1]) {
+                        if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input")) {
+                            cyperus_id_out = subgraph._nodes[j].properties.id;
+	                }
+                    }
+
+                    if (subgraph._nodes[j].id == links[i][3]) {
+                        if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/output")) {
+                            cyperus_id_in = subgraph._nodes[j].properties.id;
+	                } 
+	            }
+                }
+                if (cyperus_id_out && cyperus_id_in) {
+                    LiteGraph._cyperus.osc_add_connection(
+                        LiteGraph._cyperus.uuidv4(),
+	                cyperus_id_out,
+	                cyperus_id_in,
+	                console.log,
+	                undefined
+	            );
+                }
+            }
+        }   
+    }
+
+    
     
     function _cyperus_util_create_new_bus_port_litegraph_nodes(bus_ports, args) {        
 	var node = args['node'];
@@ -3269,9 +3312,14 @@ class Cyperus {
                 out_ids.push(id);
             }
         }
+
         node.properties['bus_input_ids'] = in_ids;
         node.properties['bus_output_ids'] = out_ids;
 
+        // console.log('node.subgraph.links: ');
+        // console.log(node.subgraph.links);
+        // throw new Error("Something went badly wrong!");
+        
         var node_payload = args['configure_payload']['bus_nodes'].shift();
 
         if( node_payload ) {
@@ -3289,13 +3337,24 @@ class Cyperus {
             args['configure_payload']['parent_subgraph'].add(node_payload['node'], skip_compute_order, from_load_configure, configure_payload); //add before configure, otherwise configure cannot create links
         } else {
             // process links
+            console.log('PROCESSING');
+            console.log(args['configure_payload']['bus_n_info'].subgraph.links);
+            console.log('node.subgraph:');
+            console.log(node.subgraph);
             _cyperus_util_add_connections_from_serialized_links(args['configure_payload']['parent_subgraph'], args['configure_payload']['links']);
+            _cyperus_util_add_connections_from_serialized_bus_port_links(node.subgraph, args['configure_payload']['bus_n_info'].subgraph.links);
         }
 
         // configure subgraph within bus        
-        if (!node.type.localeCompare("cyperus/bus/add")) {
+        if (!node.type.localeCompare("cyperus/bus/add")) {            
             var keep_old = true;
             node.subgraph.load_configure(args['configure_payload']['bus_n_info'].subgraph, keep_old, node.subgraph);
+
+            // console.log("args['configure_payload']['bus_n_info'].subgraph: ");
+            // console.log(args['configure_payload']['bus_n_info'].subgraph);
+            // console.log("args['configure_payload']['bus_n_info'].subgraph.links: ");
+            // console.log(args['configure_payload']['bus_n_info'].subgraph.links);
+            // _cyperus_util_add_connections_from_serialized_bus_port_links(args['configure_payload']['bus_n_info'].subgraph, args['configure_payload']['bus_n_info'].subgraph.links);
         }
     }
 
