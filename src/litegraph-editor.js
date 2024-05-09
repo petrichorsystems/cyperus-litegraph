@@ -148,10 +148,11 @@ Editor.prototype.onQuickSaveButton = function() {
                                                      panel.buildFileSystemPathList,
                                                      args);    
     
-    var data = localStorage.getItem( "graphdemo_save" );
-    if(data)
-        graph.load_configure( JSON.parse( data ) );
-    console.log("loaded");
+    // var data = localStorage.getItem( "graphdemo_save" );
+    // if(data)
+    //     graph.load_configure( JSON.parse( data ) );
+    localStorage.setItem( "graphdemo_save", JSON.stringify( graph.serialize() ) );        
+    console.log("saved");
 };
 
 Editor.prototype.onSaveButton = function() {

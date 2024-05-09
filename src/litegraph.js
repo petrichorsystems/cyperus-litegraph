@@ -3333,22 +3333,12 @@ class Cyperus {
         } else {
             // process links
             _cyperus_util_add_connections_from_serialized_links(args['configure_payload']['parent_subgraph'], args['configure_payload']['links']);
-            // _cyperus_util_add_connections_from_serialized_bus_port_links(node.subgraph, args['configure_payload']['bus_n_info'].subgraph.links);
         }
 
         // configure subgraph within bus        
         if (!node.type.localeCompare("cyperus/bus/add")) {            
             var keep_old = true;
             node.subgraph.load_configure(args['configure_payload']['bus_n_info'].subgraph, keep_old, node.subgraph);
-
-            console.log('PROCESSING');
-            console.log( args['configure_payload']['bus_n_info'].subgraph.links);
-            
-            // console.log("args['configure_payload']['bus_n_info'].subgraph: ");
-            // console.log(args['configure_payload']['bus_n_info'].subgraph);
-            // console.log("args['configure_payload']['bus_n_info'].subgraph.links: ");
-            // console.log(args['configure_payload']['bus_n_info'].subgraph.links);
-            // _cyperus_util_add_connections_from_serialized_bus_port_links(args['configure_payload']['bus_n_info'].subgraph, args['configure_payload']['bus_n_info'].subgraph.links);
             _cyperus_util_add_connections_from_serialized_bus_port_links(node.subgraph, args['configure_payload']['bus_n_info'].subgraph.links);            
         }
     }
@@ -4935,14 +4925,15 @@ class Cyperus {
     };
 
     //this is the class in charge of storing link information
-    function LLink(id, type, origin_id, origin_slot, target_id, target_slot) {
+    function LLink(id, type, origin_id, origin_slot, target_id, target_slot, cyperus_id) {
         this.id = id;
         this.type = type;
         this.origin_id = origin_id;
         this.origin_slot = origin_slot;
         this.target_id = target_id;
         this.target_slot = target_slot;
-
+        this.cyperus_id = cyperus_id;
+        
         this._data = null;
         this._pos = new Float32Array(2); //center
     }
@@ -4973,6 +4964,7 @@ class Cyperus {
             this.target_id = o[3];
             this.target_slot = o[4];
             this.type = o[5];
+            this.cyperus_id = o[6];
         } else {
             this.id = o.id;
             this.type = o.type;
@@ -4980,6 +4972,7 @@ class Cyperus {
             this.origin_slot = o.origin_slot;
             this.target_id = o.target_id;
             this.target_slot = o.target_slot;
+            this.cyperus_id = o.cyperus_id;
         }
     };
 
@@ -6740,16 +6733,6 @@ class Cyperus {
 	if(!changed)
 	    this.graph.beforeChange();
         
-	//create link class
-	link_info = new LLink(
-	    ++this.graph.last_link_id,
-	    input.type,
-	    this.id,
-	    slot,
-	    target_node.id,
-	    target_slot
-	);
-        
         
 	// START CYPERUS CODE
 	
@@ -6809,7 +6792,17 @@ class Cyperus {
         
 	// END CYPERUS CODE    
         
-	
+	//create link class
+	link_info = new LLink(
+	    ++this.graph.last_link_id,
+	    input.type,
+	    this.id,
+	    slot,
+	    target_node.id,
+	    target_slot,
+            null
+	);
+        
 	//add to graph links list
 	this.graph.links[link_info.id] = link_info;
         
