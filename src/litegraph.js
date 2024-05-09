@@ -3508,6 +3508,90 @@ class Cyperus {
 	    args);
 					       
     }
+
+
+    function _cyperus_util_store_new_dsp_connection_id_in_litegraph_link(response, args) {
+        console.log('_cyperus_util_store_new_dsp_connection_id_in_litegraph_link()');
+        console.log('response:');
+        console.log(response);
+        console.log('args:');
+        console.log(args);
+
+        var input = args['input'];
+        var output = args['output'];
+        var slot = args['slot'];
+        var target_node = args['target_node'];
+        var target_slot = args['target_slot'];
+        var that = args['that'];
+        
+	//create link class
+	link_info = new LLink(
+	    ++that.graph.last_link_id,
+	    input.type,
+	    that.id,
+	    slot,
+	    target_node.id,
+	    target_slot,
+            null
+	);
+        
+	//add to graph links list
+	that.graph.links[link_info.id] = link_info;
+        
+	//connect in output
+	if (output.links == null) {
+	    output.links = [];
+	}
+	output.links.push(link_info.id);
+        
+	//connect in input
+        if (input.links == null) {
+            input.links = [];
+        }       
+	target_node.inputs[target_slot].links.push(link_info.id);
+        
+	if (that.graph) {
+	    that.graph._version++;
+	}
+	if (that.onConnectionsChange) {
+	    that.onConnectionsChange(
+		LiteGraph.OUTPUT,
+		slot,
+		true,
+		link_info,
+		output
+	    );
+	} //link_info has been created now, so its updated
+	if (target_node.onConnectionsChange) {
+	    target_node.onConnectionsChange(
+		LiteGraph.INPUT,
+		target_slot,
+		true,
+		link_info,
+		input
+	    );
+	}
+	if (that.graph && that.graph.onNodeConnectionChange) {
+	    that.graph.onNodeConnectionChange(
+		LiteGraph.INPUT,
+		target_node,
+		target_slot,
+		that,
+		slot
+	    );
+	    that.graph.onNodeConnectionChange(
+		LiteGraph.OUTPUT,
+		that,
+		slot,
+		target_node,
+		target_slot
+	    );
+	}
+        
+        that.setDirtyCanvas(false, true);
+	that.graph.afterChange();
+	that.graph.connectionChange(that, link_info);
+    }
     
     /**
      * Adds a new node instance to this graph
@@ -6759,108 +6843,27 @@ class Cyperus {
         } else {
             cyperus_id_in = target_node.inputs[target_slot]['id'];
         }
-        
-	// var connection_out_path = undefined;
-	// if (this.properties['is_bus_port']) {
-	//     connection_out_path = current_bus_path.concat(':', cyperus_id_out);
-	// } else if (this.properties['is_module']) {
-	//     connection_out_path = current_bus_path.concat('?', this.properties['id']).concat('>', cyperus_id_out);
-	// } else if (this.properties['is_bus']) {
-	//     connection_out_path = current_bus_path.concat('/', this.properties['id']).concat(':', cyperus_id_out);
-	// } else {
-	//     connection_out_path = cyperus_id_out;
-	// }
-	
-	// var connection_in_path = undefined;
-	// if (target_node.properties['is_bus_port']) {
-	//     connection_in_path = current_bus_path.concat(':', cyperus_id_in);
-	// } else if (target_node.properties['is_module']) {
-	//     connection_in_path = current_bus_path.concat('?', target_node.properties['id']).concat('<', cyperus_id_in);
-	// } else if (target_node.properties['is_bus']) {
-	//     connection_in_path = current_bus_path.concat('/', target_node.properties['id']).concat(':', cyperus_id_in);
-	// } else {
-	//     connection_in_path = cyperus_id_in;
-	// }
+
+        args = {
+            'input': input,
+            'slot': slot,
+            'target_node': target_node,
+            'target_slot': target_slot,
+            'output': output,
+            'that': this
+        };
         
 	LiteGraph._cyperus.osc_add_connection(
             LiteGraph._cyperus.uuidv4(),
 	    cyperus_id_out,
 	    cyperus_id_in,
-	    console.log,
-	    undefined
+	    _cyperus_util_store_new_dsp_connection_id_in_litegraph_link,
+	    args
 	);
         
 	// END CYPERUS CODE    
         
-	//create link class
-	link_info = new LLink(
-	    ++this.graph.last_link_id,
-	    input.type,
-	    this.id,
-	    slot,
-	    target_node.id,
-	    target_slot,
-            null
-	);
-        
-	//add to graph links list
-	this.graph.links[link_info.id] = link_info;
-        
-	//connect in output
-	if (output.links == null) {
-	    output.links = [];
-	}
-	output.links.push(link_info.id);
-        
-	//connect in input
-        if (input.links == null) {
-            input.links = [];
-        }       
-	target_node.inputs[target_slot].links.push(link_info.id);
-        
-	if (this.graph) {
-	    this.graph._version++;
-	}
-	if (this.onConnectionsChange) {
-	    this.onConnectionsChange(
-		LiteGraph.OUTPUT,
-		slot,
-		true,
-		link_info,
-		output
-	    );
-	} //link_info has been created now, so its updated
-	if (target_node.onConnectionsChange) {
-	    target_node.onConnectionsChange(
-		LiteGraph.INPUT,
-		target_slot,
-		true,
-		link_info,
-		input
-	    );
-	}
-	if (this.graph && this.graph.onNodeConnectionChange) {
-	    this.graph.onNodeConnectionChange(
-		LiteGraph.INPUT,
-		target_node,
-		target_slot,
-		this,
-		slot
-	    );
-	    this.graph.onNodeConnectionChange(
-		LiteGraph.OUTPUT,
-		this,
-		slot,
-		target_node,
-		target_slot
-	    );
-	}
-        
-        this.setDirtyCanvas(false, true);
-	this.graph.afterChange();
-	this.graph.connectionChange(this, link_info);
-        
-        return link_info;
+        // return link_info;
     };
 
     /**
