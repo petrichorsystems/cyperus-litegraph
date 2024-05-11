@@ -4648,7 +4648,9 @@ class Cyperus {
     LGraph.prototype.removeLink = function(link_id) {
         console.log('removeLink()');
 
+        console.log('this.links:');
         console.log(this.links);
+        console.log('link_id:');
         console.log(link_id);
         
         var link = this.links[link_id];
@@ -4662,7 +4664,7 @@ class Cyperus {
         console.log(node);
         
         if (node) {
-            node.disconnectInput(link.target_slot);
+            node.disconnectInput(link.target_slot, link_id);
         }
     };
 
@@ -7059,7 +7061,11 @@ class Cyperus {
      * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
      * @return {boolean} if it was disconnected successfully
      */
-    LGraphNode.prototype.disconnectInput = function(slot) {
+    LGraphNode.prototype.disconnectInput = function(slot, link_id) {
+
+        console.log('slot:');
+        console.log(slot);
+        
         //seek for the output slot
         if (slot.constructor === String) {
             slot = this.findInputSlot(slot);
@@ -7075,130 +7081,94 @@ class Cyperus {
             }
             return false;
         }
-
+        
         var input = this.inputs[slot];
         if (!input) {
+            console.log('early return');
             return false;
         }
 
-        var link_id = this.inputs[slot].link;
-		if(link_id != null)
-		{
-			this.inputs[slot].link = null;
+        console.log('this.inputs[slot]');
+        console.log(this.inputs[slot]);
 
-			//remove other side
-			var link_info = this.graph.links[link_id];
-			if (link_info) {
-				var target_node = this.graph.getNodeById(link_info.origin_id);
-				if (!target_node) {
-					return false;
-				}
-
-				var output = target_node.outputs[link_info.origin_slot];
-				if (!output || !output.links || output.links.length == 0) {
-					return false;
-				}
-
-
+	if(link_id != null)
+	{
+            console.log('link_id is not null');
+            
+	    this.inputs[slot].link = null;
+            
+	    //remove other side
+	    var link_info = this.graph.links[link_id];
+	    if (link_info) {
+		var target_node = this.graph.getNodeById(link_info.origin_id);
+		if (!target_node) {
+                    console.log('early return, no target node');
+		    return false;
+		}
+                
+		var output = target_node.outputs[link_info.origin_slot];
+		if (!output || !output.links || output.links.length == 0) {
+                    console.log('early return, no output');
+		    return false;
+		}
+                
+                
 			
-	// START CYPERUS CODE
-                            
-            // var origin_node = this.graph.getNodeById(link_info.origin_id);
-		   
-	    // var output_graph_id = undefined;
-	    
-	    // if (LiteGraph._global_graph_stack.length) {
-	    //     output_graph_id = _cyperus_util_get_current_bus_id();
-	    // }
+	        // START CYPERUS CODE
+                
+	        // END CYPERUS CODE
 
-	    // var cyperus_id_out = undefined;
-	    // if (origin_node.type.includes("main/")) {
-	    //     cyperus_id_out = origin_node.properties.ids[link_info.origin_slot];
-	    // } else if(!origin_node.type.localeCompare("cyperus/bus/input")) {
-	    //     cyperus_id_out = origin_node.properties.id;
-	    // } else {
-	    //     cyperus_id_out = LiteGraph._litegraph_to_cyperus_bus_id_record[output_graph_id][link_info.origin_id].output[link_info.origin_slot];
-	    // }
 
-            // var target_slot = link_info.target_slot;
 		
-	    // var input_graph_id = undefined;
-	    // if (LiteGraph._global_graph_stack.length) {
-	    //     input_graph_id = _cyperus_util_get_current_bus_id();
-	    // }
-	    
-	    // if (!target_node.type.localeCompare("main/outputs")) {
-	    //     cyperus_id_in = target_node.properties['ids'][target_slot];
-	    // } else {
-	    //     cyperus_id_in = LiteGraph._litegraph_to_cyperus_bus_id_record[input_graph_id][target_node.id]['input'][target_slot];
-	    // }
-                            
-	    //                 LiteGraph._cyperus.osc_remove_connection(
-            //                     LiteGraph._cyperus.uuidv4(),
-	    //                     cyperus_id_out,
-	    //                     cyperus_id_in,
-	    //                     console.log,
-	    //                     undefined
-	    //                 );
-
-	    // END CYPERUS CODE
-
-
-			    
-			    //search in the inputs list for this link
-			    for (var i = 0, l = output.links.length; i < l; i++) {
-				if (output.links[i] == link_id) {
-				    output.links.splice(i, 1);
-				    break;
-				}
-			    }
-
-
-
-                            console.log('INPUT LINK:');
-                            console.log(this.graph.links[link_id]);
-
-
-                            
-			    delete this.graph.links[link_id]; //remove from the pool
-			    if (this.graph) {
-				this.graph._version++;
-			    }
-			    if (this.onConnectionsChange) {
-				this.onConnectionsChange(
-				    LiteGraph.INPUT,
-				    slot,
-				    false,
-				    link_info,
-				    input
-				);
-			    }
-			    if (target_node.onConnectionsChange) {
-				target_node.onConnectionsChange(
-				    LiteGraph.OUTPUT,
-				    i,
-				    false,
-				    link_info,
-				    output
-				);
-			    }
-			    if (this.graph && this.graph.onNodeConnectionChange) {
-				this.graph.onNodeConnectionChange(
-				    LiteGraph.OUTPUT,
-				    target_node,
-				    i
-				);
-				this.graph.onNodeConnectionChange(LiteGraph.INPUT, this, slot);
-			    }
-			}
-		} //link != null
+		//search in the inputs list for this link
+		for (var i = 0, l = output.links.length; i < l; i++) {
+		    if (output.links[i] == link_id) {
+			output.links.splice(i, 1);
+			break;
+		    }
+		}
+                
+                console.log('INPUT LINK:');
+                console.log(this.graph.links[link_id]);
+                
+		delete this.graph.links[link_id]; //remove from the pool
+		if (this.graph) {
+		    this.graph._version++;
+		}
+		if (this.onConnectionsChange) {
+		    this.onConnectionsChange(
+			LiteGraph.INPUT,
+			slot,
+			false,
+			link_info,
+			input
+		    );
+		}
+		if (target_node.onConnectionsChange) {
+		    target_node.onConnectionsChange(
+			LiteGraph.OUTPUT,
+			i,
+			false,
+			link_info,
+			output
+		    );
+		}
+		if (this.graph && this.graph.onNodeConnectionChange) {
+		    this.graph.onNodeConnectionChange(
+			LiteGraph.OUTPUT,
+			target_node,
+			i
+		    );
+		    this.graph.onNodeConnectionChange(LiteGraph.INPUT, this, slot);
+		}
+	    }
+	} //link != null
         
         this.setDirtyCanvas(false, true);
 	if(this.graph)
 	    this.graph.connectionChange(this);
-        
-        
-	
+
+        console.log('return true!');
         return true;
     };
 
