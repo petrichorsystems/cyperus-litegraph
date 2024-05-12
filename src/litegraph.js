@@ -36,6 +36,7 @@ class Cyperus {
                                                 metadata: true,
                                                 unpackSingleArgs: true
                                             });
+
 	if( response['address'].includes('cyperus/listener/') ) {            
 	    var split_response = response['address'].split('/');
 	    var module_id = split_response[split_response.length - 1];
@@ -527,8 +528,7 @@ class Cyperus {
     }
 
     osc_remove_connection(request_id,
-                          id_out,
-			  id_in,
+                          connection_id,
 			  callback,
 			  args) {
 	var self = this;
@@ -538,11 +538,11 @@ class Cyperus {
 		args: [
                     {
                         type: "s",
-                        value: id_out
+                        value: request_id
                     },
                     {
                         type: "s",
-                        value: id_in
+                        value: connection_id
                     }
                 ]
 	    },
@@ -5061,6 +5061,7 @@ class Cyperus {
             this.target_id = o[3];
             this.target_slot = o[4];
             this.type = o[5];
+            this.cyperus_id = o[6];
         } else {
             this.id = o.id;
             this.type = o.type;
@@ -5068,6 +5069,7 @@ class Cyperus {
             this.origin_slot = o.origin_slot;
             this.target_id = o.target_id;
             this.target_slot = o.target_slot;
+            this.cyperus_id = o.cyperus_id;
         }
     };
     
@@ -6987,6 +6989,17 @@ class Cyperus {
                         );
                     }
                     break;
+
+                    // START CYPERUS CODE
+                    
+                    LiteGraph._cyperus.osc_remove_connection(
+                        LiteGraph._cyperus.uuidv4(),
+                        link_info.cyperus_id,
+                        console.log,
+	                undefined
+	            );
+                
+	            // END CYPERUS CODE
                 }
             }
         } //all the links in this output slot
@@ -7046,6 +7059,18 @@ class Cyperus {
                         link_info.target_slot
                     );
                 }
+                
+                // START CYPERUS CODE
+                
+                LiteGraph._cyperus.osc_remove_connection(
+                    LiteGraph._cyperus.uuidv4(),
+                    link_info.cyperus_id,
+                    console.log,
+	            undefined
+	        );
+                
+	        // END CYPERUS CODE
+                
             }
             output.links = null;
         }
@@ -7090,7 +7115,9 @@ class Cyperus {
 
         console.log('this.inputs[slot]');
         console.log(this.inputs[slot]);
-
+        console.log('link_id:');
+        console.log(link_id);
+        
 	if(link_id != null)
 	{
             console.log('link_id is not null');
@@ -7111,14 +7138,6 @@ class Cyperus {
                     console.log('early return, no output');
 		    return false;
 		}
-                
-                
-			
-	        // START CYPERUS CODE
-                
-	        // END CYPERUS CODE
-
-
 		
 		//search in the inputs list for this link
 		for (var i = 0, l = output.links.length; i < l; i++) {
@@ -7161,8 +7180,98 @@ class Cyperus {
 		    );
 		    this.graph.onNodeConnectionChange(LiteGraph.INPUT, this, slot);
 		}
+
+	        // START CYPERUS CODE
+
+                LiteGraph._cyperus.osc_remove_connection(
+                    LiteGraph._cyperus.uuidv4(),
+                    link_info.cyperus_id,
+                    console.log,
+	            undefined
+	        );
+                
+	        // END CYPERUS CODE
+                
 	    }
-	} //link != null
+            
+	} else {
+            console.log('link_id is null');
+
+            console.log(this.inputs[slot]);
+            
+            var input = this.inputs[slot];
+
+            for (var i = 0, l = input.links.length; i < l; i++) {
+                var link_id = input.links[i];
+                var link_info = this.graph.links[link_id];
+                if (!link_info) {
+                    //bug: it happens sometimes
+                    continue;
+                }
+
+                var target_node = this.graph.getNodeById(link_info.target_id);
+                var input = null;
+                if (this.graph) {
+                    this.graph._version++;
+                }
+                if (target_node) {
+                    input = target_node.inputs[link_info.target_slot];
+                    input.link = null; //remove other side link
+                    if (target_node.onConnectionsChange) {
+                        target_node.onConnectionsChange(
+                            LiteGraph.INPUT,
+                            link_info.target_slot,
+                            false,
+                            link_info,
+                            input
+                        );
+                    } //link_info hasn't been modified so its ok
+                    if (this.graph && this.graph.onNodeConnectionChange) {
+                        this.graph.onNodeConnectionChange(
+                            LiteGraph.INPUT,
+                            target_node,
+                            link_info.target_slot
+                        );
+                    }
+                }
+                delete this.graph.links[link_id]; //remove the link from the links pool
+                if (this.onConnectionsChange) {
+                    this.onConnectionsChange(
+                        LiteGraph.INPUT,
+                        slot,
+                        false,
+                        link_info,
+                        input
+                    );
+                }
+                if (this.graph && this.graph.onNodeConnectionChange) {
+                    this.graph.onNodeConnectionChange(
+                        LiteGraph.INPUT,
+                        this,
+                        slot
+                    );
+                    this.graph.onNodeConnectionChange(
+                        LiteGraph.OUTPUT,
+                        target_node,
+                        link_info.target_slot
+                    );
+                }
+                
+                // START CYPERUS CODE
+                
+                LiteGraph._cyperus.osc_remove_connection(
+                    LiteGraph._cyperus.uuidv4(),
+                    link_info.cyperus_id,
+                    console.log,
+	            undefined
+	        );
+                
+	        // END CYPERUS CODE
+                
+            }
+            input.links = null;
+        }            
+	
         
         this.setDirtyCanvas(false, true);
 	if(this.graph)
@@ -15548,17 +15657,27 @@ LGraphNode.prototype.executeAction = function(action)
                 ) {
                     menu_info.push({ content: "Disconnect Links", slot: slot });
                 }
-                var _slot = slot.input || slot.output;
-                menu_info.push(
-                    _slot.locked
-                        ? "Cannot remove"
-                        : { content: "Remove Slot", slot: slot }
-                );
-                menu_info.push(
-                    _slot.nameLocked
-                        ? "Cannot rename"
-                        : { content: "Rename Slot", slot: slot }
-                );
+
+                if (
+                    slot &&
+                    slot.input &&
+                    slot.input.links &&
+                    slot.input.links.length
+                ) {
+                    menu_info.push({ content: "Disconnect Links", slot: slot });
+                }
+                
+                // var _slot = slot.input || slot.output;
+                // menu_info.push(
+                //     _slot.locked
+                //         ? "Cannot remove"
+                //         : { content: "Remove Slot", slot: slot }
+                // );
+                // menu_info.push(
+                //     _slot.nameLocked
+                //         ? "Cannot rename"
+                //         : { content: "Rename Slot", slot: slot }
+                // );
     
             }
             options.title =
@@ -15606,15 +15725,18 @@ LGraphNode.prototype.executeAction = function(action)
                 return;
             }
 
-            if (v.content == "Remove Slot") {
-                var info = v.slot;
-                if (info.input) {
-                    node.removeInput(info.slot);
-                } else if (info.output) {
-                    node.removeOutput(info.slot);
-                }
-                return;
-            } else if (v.content == "Disconnect Links") {
+            // if (v.content == "Remove Slot") {
+            //     var info = v.slot;
+            //     if (info.input) {
+            //         node.removeInput(info.slot);
+            //     } else if (info.output) {
+            //         node.removeOutput(info.slot);
+            //     }
+            //     return;
+            // } else
+
+            
+            if (v.content == "Disconnect Links") {
                 var info = v.slot;
                 if (info.output) {
                     node.disconnectOutput(info.slot);
@@ -15622,31 +15744,34 @@ LGraphNode.prototype.executeAction = function(action)
                     node.disconnectInput(info.slot);
                 }
                 return;
-            } else if (v.content == "Rename Slot") {
-                var info = v.slot;
-                var slot_info = info.input
-                    ? node.getInputInfo(info.slot)
-                    : node.getOutputInfo(info.slot);
-                var dialog = that.createDialog(
-                    "<span class='name'>Name</span><input autofocus type='text'/><button>OK</button>",
-                    options
-                );
-                var input = dialog.querySelector("input");
-                if (input && slot_info) {
-                    input.value = slot_info.label || "";
-                }
-                dialog
-                    .querySelector("button")
-                    .addEventListener("click", function(e) {
-                        if (input.value) {
-                            if (slot_info) {
-                                slot_info.label = input.value;
-                            }
-                            that.setDirty(true);
-                        }
-                        dialog.close();
-                    });
             }
+
+
+            // else if (v.content == "Rename Slot") {
+            //     var info = v.slot;
+            //     var slot_info = info.input
+            //         ? node.getInputInfo(info.slot)
+            //         : node.getOutputInfo(info.slot);
+            //     var dialog = that.createDialog(
+            //         "<span class='name'>Name</span><input autofocus type='text'/><button>OK</button>",
+            //         options
+            //     );
+            //     var input = dialog.querySelector("input");
+            //     if (input && slot_info) {
+            //         input.value = slot_info.label || "";
+            //     }
+            //     dialog
+            //         .querySelector("button")
+            //         .addEventListener("click", function(e) {
+            //             if (input.value) {
+            //                 if (slot_info) {
+            //                     slot_info.label = input.value;
+            //                 }
+            //                 that.setDirty(true);
+            //             }
+            //             dialog.close();
+            //         });
+            // }
 
             //if(v.callback)
             //	return v.callback.call(that, node, options, e, menu, that, event );
