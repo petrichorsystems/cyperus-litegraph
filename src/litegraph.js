@@ -4053,13 +4053,21 @@ class Cyperus {
             return;
         } //cannot be removed
 
-		this.beforeChange(); //sure?
+	this.beforeChange(); //sure?
 
+        console.log('node.remove!');
+        console.log('node:');
+        console.log(node);
+        
         //disconnect inputs
         if (node.inputs) {
+
+            console.log('node.inputs:');
+            console.log(node.inputs);
+            
             for (var i = 0; i < node.inputs.length; i++) {
                 var slot = node.inputs[i];
-                if (slot.link != null) {
+                if (slot.links != null) {
                     node.disconnectInput(i);
                 }
             }
@@ -4067,6 +4075,8 @@ class Cyperus {
 
         //disconnect outputs
         if (node.outputs) {
+            console.log('node outputs:');
+            console.log(node.outputs);
             for (var i = 0; i < node.outputs.length; i++) {
                 var slot = node.outputs[i];
                 if (slot.links != null && slot.links.length) {
