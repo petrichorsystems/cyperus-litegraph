@@ -166,11 +166,13 @@ Editor.prototype.onSaveButton = function() {
         'editor': this.root
     }
 
-    if( graph.last_filesystem_path_visited == null )
-        this.graph._cyperus.osc_get_filesystem_cwd(this.graph._cyperus.uuidv4(),
-                                                   panel.retrieveFileSystemCWD,
-                                                   args);            
-    else
+    if( graph.last_filesystem_path_visited == null ) {
+        this.graph._cyperus.osc_get_system_env_variable(this.graph._cyperus.uuidv4(),
+                                                        "HOME",
+                                                        panel.retrieveSystemHomeDir,
+                                                        args);
+        
+    } else
         this.graph._cyperus.osc_list_filesystem_path(this.graph._cyperus.uuidv4(),
                                                      graph.last_filesystem_path_visited,
                                                      panel.buildFileSystemPathList,

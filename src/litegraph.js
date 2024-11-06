@@ -28,9 +28,9 @@ class Cyperus {
 
     async _recv(message) {
 	var self = this;
-	
+     
 	var response_raw = await message.data.arrayBuffer().catch((err) => { console.error(err); });
-
+        
 	var response = this.osc.readMessage(response_raw,
                                             {
                                                 metadata: true,
@@ -295,6 +295,30 @@ class Cyperus {
 	);
     }
 
+    osc_get_system_env_variable(request_id,
+                                var_name,
+                                callback,
+                                args) {
+        var self = this;
+        self._send(
+            {
+                address: "/cyperus/get/system/env_variable",
+                args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: var_name
+                    }
+                ]
+            },
+            callback,
+            args
+        );
+    }
+    
     osc_get_filesystem_cwd(request_id,
 			   callback,
 			   args) {
@@ -4844,8 +4868,8 @@ class Cyperus {
     };
 
     /**
-     * Configure a graph from a JSON string
-     * @method configure
+     * Configure a graph from a JSON string and instantiate objects in Cyperus
+     * @method load_configure
      * @param {String} str configure a graph from a JSON string
      * @param {Boolean} returns if there was any error parsing
      */
@@ -13847,7 +13871,7 @@ LGraphNode.prototype.executeAction = function(action)
             document.documentElement.removeEventListener("mousemove", doResizeDrag, false);
             document.documentElement.removeEventListener("mouseup", stopResizeDrag, false);
         }
-
+        
         root.retrieveFileSystemCWD = function(response, args) {
             
             args['graph'].last_filesystem_path_visited = response[3];
@@ -13859,6 +13883,20 @@ LGraphNode.prototype.executeAction = function(action)
                                                             args); 
             
         }
+
+        root.retrieveSystemHomeDir = function(response, args) {
+
+            console.log('response', response);
+            
+
+            var home_dir = response[4] + "/.local/share/cyperus/presets";            
+            args['graph'].last_filesystem_path_visited = home_dir;
+            
+            args['graph']._cyperus.osc_list_filesystem_path(args['graph']._cyperus.uuidv4(),
+                                                            args['graph'].last_filesystem_path_visited,
+                                                            root.buildFileSystemPathList,
+                                                            args);    
+        }        
         
         root.buildFileSystemPathList = function(response, args) {
             var on_initialize = false;
