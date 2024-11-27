@@ -575,6 +575,30 @@ class Cyperus {
 	);
     }
 
+    osc_remove_module(request_id,
+                      module_id,
+                      callback,
+                      args) {
+        var self = this;
+        self._send(
+	    {
+		address: "/cyperus/remove/module",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: module_id
+                    }
+                ]
+	    },
+	    callback,
+	    args            
+        );
+    }
+    
     osc_add_module_sawtooth(path,
 			    frequency,
 			    amplitude,
@@ -4079,9 +4103,23 @@ class Cyperus {
 
 	this.beforeChange(); //sure?
 
+        // START CYPERUS CODE
+        
         console.log('node.remove!');
         console.log('node:');
         console.log(node);
+
+        console.log(node.properties.id);
+        
+        LiteGraph._cyperus.osc_remove_module(
+            LiteGraph._cyperus.uuidv4(),
+            node.properties.id,
+            console.log,
+	    undefined
+	);
+
+
+        // END CYPERUS CODE
         
         //disconnect inputs
         if (node.inputs) {
@@ -4092,7 +4130,7 @@ class Cyperus {
             for (var i = 0; i < node.inputs.length; i++) {
                 var slot = node.inputs[i];
                 if (slot.links != null) {
-                    node.disconnectInput(i);
+                    node.disconnectInput(i, null, true);
                 }
             }
         }
@@ -4104,7 +4142,7 @@ class Cyperus {
             for (var i = 0; i < node.outputs.length; i++) {
                 var slot = node.outputs[i];
                 if (slot.links != null && slot.links.length) {
-                    node.disconnectOutput(i);
+                    node.disconnectOutput(i, null, true);
                 }
             }
         }
@@ -6941,7 +6979,7 @@ class Cyperus {
      * @param {LGraphNode} target_node the target node to which this slot is connected [Optional, if not target_node is specified all nodes will be disconnected]
      * @return {boolean} if it was disconnected successfully
      */
-    LGraphNode.prototype.disconnectOutput = function(slot, target_node) {
+    LGraphNode.prototype.disconnectOutput = function(slot, target_node, from_remove_node) {
         if (slot.constructor === String) {
             slot = this.findOutputSlot(slot);
             if (slot == -1) {
@@ -7025,13 +7063,15 @@ class Cyperus {
                     break;
 
                     // START CYPERUS CODE
-                    
-                    LiteGraph._cyperus.osc_remove_connection(
-                        LiteGraph._cyperus.uuidv4(),
-                        link_info.cyperus_id,
-                        console.log,
-	                undefined
-	            );
+
+                    if (from_remove_node == null) {
+                        LiteGraph._cyperus.osc_remove_connection(
+                            LiteGraph._cyperus.uuidv4(),
+                            link_info.cyperus_id,
+                            console.log,
+	                    undefined
+	                );
+                    }
                 
 	            // END CYPERUS CODE
                 }
@@ -7095,13 +7135,15 @@ class Cyperus {
                 }
                 
                 // START CYPERUS CODE
-                
-                LiteGraph._cyperus.osc_remove_connection(
-                    LiteGraph._cyperus.uuidv4(),
-                    link_info.cyperus_id,
-                    console.log,
-	            undefined
-	        );
+
+                if (from_remove_node == null) {
+                    LiteGraph._cyperus.osc_remove_connection(
+                        LiteGraph._cyperus.uuidv4(),
+                        link_info.cyperus_id,
+                        console.log,
+	                undefined
+	            );
+                }
                 
 	        // END CYPERUS CODE
                 
@@ -7120,7 +7162,7 @@ class Cyperus {
      * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
      * @return {boolean} if it was disconnected successfully
      */
-    LGraphNode.prototype.disconnectInput = function(slot, link_id) {
+    LGraphNode.prototype.disconnectInput = function(slot, link_id, from_remove_node) {
 
         console.log('slot:');
         console.log(slot);
@@ -7217,12 +7259,14 @@ class Cyperus {
 
 	        // START CYPERUS CODE
 
-                LiteGraph._cyperus.osc_remove_connection(
-                    LiteGraph._cyperus.uuidv4(),
-                    link_info.cyperus_id,
-                    console.log,
-	            undefined
-	        );
+                if (from_remove_node == null) {
+                    LiteGraph._cyperus.osc_remove_connection(
+                        LiteGraph._cyperus.uuidv4(),
+                        link_info.cyperus_id,
+                        console.log,
+	                undefined
+	            );
+                }
                 
 	        // END CYPERUS CODE
                 
@@ -7292,13 +7336,14 @@ class Cyperus {
                 }
                 
                 // START CYPERUS CODE
-                
-                LiteGraph._cyperus.osc_remove_connection(
-                    LiteGraph._cyperus.uuidv4(),
-                    link_info.cyperus_id,
-                    console.log,
-	            undefined
-	        );
+                if (from_remove_node == null) {
+                    LiteGraph._cyperus.osc_remove_connection(
+                        LiteGraph._cyperus.uuidv4(),
+                        link_info.cyperus_id,
+                        console.log,
+	                undefined
+	            );
+                }
                 
 	        // END CYPERUS CODE
                 
