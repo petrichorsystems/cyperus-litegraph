@@ -371,7 +371,7 @@
 	}
 
     LiteGraph.Subgraph = Subgraph;
-    LiteGraph.registerNodeType("cyperus/bus/add", Subgraph);
+    LiteGraph.registerNodeType("bus/add", Subgraph);
 
     //Input for a subgraph
     function GraphInput() {
@@ -405,32 +405,37 @@
     GraphInput.title = "input";
     GraphInput.desc = "input of the graph";
 
-	GraphInput.prototype.onConfigure = function()
-	{
-	}
+    GraphInput.prototype.onConfigure = function()
+    {
+    }
 
 
-	//this is executed AFTER the property has changed
-	GraphInput.prototype.onPropertyChanged = function(name,v)
+    //this is executed AFTER the property has changed
+    GraphInput.prototype.onPropertyChanged = function(name,v)
+    {
+        console.log('graphInput.prototype.onPropertyChanged(), this:');
+        console.log(this);
+        
+	if( name == "name" )
 	{
-		if( name == "name" )
-		{
-			if (v == "" || v == this.name_in_graph || v == "enabled") {
-				return false;
-			}
-			if(this.graph)
-			{
-				if (this.name_in_graph) {
-					//already added
-					this.graph.renameInput( this.name_in_graph, v );
-				} else {
-					this.graph.addInput( v, this.properties.type );
-				}
-			} //what if not?!
-			this.name_widget.value = v;
-			this.name_in_graph = v;
+	    if (v == "" || v == this.name_in_graph || v == "enabled") {
+		return false;
+	    }
+	    if(this.graph)
+	    {
+		if (this.name_in_graph) {
+		    //already added
+		    this.graph.renameInput( this.name_in_graph, v );
+                    this.properties.name = v;                                    
+		} else {
+		    this.graph.addInput( v, this.properties.type );
 		}
+	    } //what if not?!
+	    this.name_widget.value = v;
+	    this.name_in_graph = v;
 	}
+    }
+
 
     GraphInput.prototype.getTitle = function() {
         if (this.flags.collapsed) {
@@ -464,7 +469,7 @@
     };
 
     LiteGraph.GraphInput = GraphInput;
-    LiteGraph.registerNodeType("cyperus/bus/input", GraphInput);
+    LiteGraph.registerNodeType("bus/input", GraphInput);
 
     //Output for a subgraph
     function GraphOutput() {
@@ -525,6 +530,29 @@
     GraphOutput.title = "output";
     GraphOutput.desc = "output of the graph";
 
+	//this is executed AFTER the property has changed
+	// GraphOutput.prototype.onPropertyChanged = function(name,v)
+	// {
+	// 	if( name == "name" )
+	// 	{
+	// 		if (v == "" || v == this.name_in_graph || v == "enabled") {
+	// 			return false;
+	// 		}
+	// 		if(this.graph)
+	// 		{
+	// 			if (this.name_in_graph) {
+	// 				//already added
+	// 			    this.graph.renameOutput( this.name_in_graph, v );
+        //                             this.properties.name = v;
+	// 			} else {
+	// 				this.graph.addOutput( v, this.properties.type );
+	// 			}
+	// 		} //what if not?!
+	// 		this.name_widget.value = v;
+	// 		this.name_in_graph = v;
+	// 	}
+	// }
+    
     GraphOutput.prototype.onExecute = function() {
         this._value = this.getInputData(0);
         this.graph.setOutputData(this.properties.name, this._value);
@@ -550,7 +578,7 @@
     };
 
     LiteGraph.GraphOutput = GraphOutput;
-    LiteGraph.registerNodeType("cyperus/bus/output", GraphOutput);
+    LiteGraph.registerNodeType("bus/output", GraphOutput);
 
     //Constant
     function ConstantNumber() {

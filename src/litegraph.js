@@ -247,6 +247,41 @@ class Cyperus {
 	);
     }
 
+    osc_add_bus_port(request_id,
+                     bus_id,
+                     bus_port_name,
+                     is_output,
+		     callback,
+		     args) {
+	var self = this;
+	self._send(
+	    {
+		address: "/cyperus/add/bus_port",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: bus_id
+                    },
+                    {
+                        type: "s",
+                        value: bus_port_name
+                    },
+                    {
+                        type: "i",
+                        value: is_output
+                    }
+                ]
+	    },
+	    callback,
+	    args
+	);
+    }
+
+    
     osc_list_bus_port(request_id,
                       bus_id,
 		      callback,
@@ -575,6 +610,30 @@ class Cyperus {
 	);
     }
 
+    osc_remove_bus(request_id,
+                      bus_id,
+                      callback,
+                      args) {
+        var self = this;
+        self._send(
+	    {
+		address: "/cyperus/remove/bus",
+		args: [
+                    {
+                        type: "s",
+                        value: request_id
+                    },
+                    {
+                        type: "s",
+                        value: bus_id
+                    }
+                ]
+	    },
+	    callback,
+	    args            
+        );
+    }
+    
     osc_remove_module(request_id,
                       module_id,
                       callback,
@@ -3084,10 +3143,10 @@ class Cyperus {
                     if (subgraph._nodes[j].id == links[i].origin_id) {
 	                if (!subgraph._nodes[j].type.localeCompare("cyperus/main/inputs")) {
 	                    cyperus_id_out = subgraph._nodes[j].properties['ids'][links[i].origin_slot];
-	                } else if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input") ||
-                                   !subgraph._nodes[j].type.localeCompare("cyperus/bus/output") ) {
+	                } else if (!subgraph._nodes[j].type.localeCompare("bus/input") ||
+                                   !subgraph._nodes[j].type.localeCompare("bus/output") ) {
                             cyperus_id_out = subgraph._nodes[j].properties.id;
-	                } else 	if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/add")) {
+	                } else 	if (!subgraph._nodes[j].type.localeCompare("bus/add")) {
                             cyperus_id_out = subgraph._nodes[j].properties.bus_output_ids[links[i].origin_slot];
                         } else {
                             cyperus_id_out = subgraph._nodes[j].outputs[links[i].origin_slot]['id'];
@@ -3097,10 +3156,10 @@ class Cyperus {
                     if (subgraph._nodes[j].id == links[i].target_id) {
 	                if (!subgraph._nodes[j].type.localeCompare("cyperus/main/outputs")) {
 	                    cyperus_id_in = subgraph._nodes[j].properties['ids'][links[i].target_slot];
-	                } else if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input") ||
-                                   !subgraph._nodes[j].type.localeCompare("cyperus/bus/output") ) {
+	                } else if (!subgraph._nodes[j].type.localeCompare("bus/input") ||
+                                   !subgraph._nodes[j].type.localeCompare("bus/output") ) {
                             cyperus_id_in = subgraph._nodes[j].properties.id;
-	                } else 	if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/add")) {
+	                } else 	if (!subgraph._nodes[j].type.localeCompare("bus/add")) {
                             cyperus_id_in = subgraph._nodes[j].properties.bus_input_ids[links[i].target_slot];
                         } else {
                             cyperus_id_in = subgraph._nodes[j].inputs[links[i].target_slot]['id'];
@@ -3135,13 +3194,13 @@ class Cyperus {
                 
                 for (var j = 0; j < subgraph._nodes.length; j++) {
                     if (subgraph._nodes[j].id == links[i].origin_id) {
-                        if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/input")) {
+                        if (!subgraph._nodes[j].type.localeCompare("bus/input")) {
                             cyperus_id_out = subgraph._nodes[j].properties.id;
 	                }
                     }
 
                     if (subgraph._nodes[j].id == links[i].target_id) {
-                        if (!subgraph._nodes[j].type.localeCompare("cyperus/bus/output")) {
+                        if (!subgraph._nodes[j].type.localeCompare("bus/output")) {
                             cyperus_id_in = subgraph._nodes[j].properties.id;
 	                } 
 	            }
@@ -3160,8 +3219,6 @@ class Cyperus {
         }   
     }
 
-    
-    
     function _cyperus_util_create_new_bus_port_litegraph_nodes(bus_ports, args) {        
 	var node = args['node'];
 	var my_id = args['my_id'];
@@ -3202,7 +3259,7 @@ class Cyperus {
 	    var id = inval_split[0];
 	    var name = inval_split[1];
 
-	    var node_bus_input = LiteGraph.createNode("cyperus/bus/input", LiteGraph.GraphInput);
+	    var node_bus_input = LiteGraph.createNode("bus/input", LiteGraph.GraphInput);
 	    
 	    node_bus_input.properties = {
 		'id': id,
@@ -3216,6 +3273,8 @@ class Cyperus {
 
 	    node.subgraph.add(node_bus_input);
 	    node.subgraph.addInput(name, "number", {'id': id});
+            node_bus_input.name_in_graph = name;
+            node_bus_input.parent_node = node;
 
 	    in_ids.push(id);
 
@@ -3228,7 +3287,7 @@ class Cyperus {
 	    var outval_split = outval.split('|');
 	    var id = outval_split[0];
 	    var name = outval_split[1];
-	    var node_bus_output = LiteGraph.createNode("cyperus/bus/output", LiteGraph.GraphOutput);
+	    var node_bus_output = LiteGraph.createNode("bus/output", LiteGraph.GraphOutput);
 	    
 	    node_bus_output.properties = {
 		'id': id,
@@ -3242,7 +3301,9 @@ class Cyperus {
 	    
 	    node.subgraph.add(node_bus_output);
 	    node.subgraph.addOutput(name, "number", {'id': id});
-
+            node_bus_output.name_in_graph = name;
+            node_bus_output.parent_node = node;
+            
 	    out_ids.push(id);
 
 	}
@@ -3268,7 +3329,110 @@ class Cyperus {
         );
     }
 
+    function _cyperus_util_create_bus_port_from_new_litegraph_node(resp, args) {
+        console.log('litegraph.js::_cyperus_util_create_bus_port_from_new_litegraph_node()');
 
+        console.log('resp: ');
+        console.log(resp);
+        
+	var node = args['node'];
+        var subgraph = args['subgraph'];
+        var parent_node = subgraph._subgraph_node;
+        
+        console.log('node: ');
+        console.log(node);
+        console.log('subgraph: ');
+        console.log(subgraph);
+        console.log('parent_node: ');
+        console.log(parent_node);
+
+        var bus_port_name = resp[4];
+        var is_output = resp[5];
+        var bus_port_id = resp[6];
+
+        console.log('bus_port_name: ');
+        console.log(bus_port_name);
+        console.log('is_output: ');
+        console.log(is_output);
+        console.log('bus_port_id: ');
+        console.log(bus_port_id);
+
+        node.properties.id = bus_port_id;
+        node.properties.name = bus_port_name;
+        node.properties.is_bus_port = true;
+        node.properties.parent_node_id = subgraph.bus_id;
+        node.widgets[0].value = bus_port_name;
+        node.parent_node = parent_node;
+        node.name_in_graph = bus_port_name;
+        
+        if (is_output == 0) {
+            subgraph.addInput(bus_port_name, "number", {'id': bus_port_id});
+            parent_node.properties.bus_input_ids.push(bus_port_id);
+        } else {
+            subgraph.addOutput(bus_port_name, "number", {'id': bus_port_id});
+            parent_node.properties.bus_output_ids.push(bus_port_id);            
+        }
+        
+	// var my_id = args['my_id'];
+
+	// var node_idx = 0;
+	// var i = 0;
+	// for (var inval of ins) {
+	//     node_idx++;
+
+	//     var inval_split = inval.split('|');
+	//     var id = inval_split[0];
+	//     var name = inval_split[1];
+
+	//     var node_bus_input = LiteGraph.createNode("bus/input", LiteGraph.GraphInput);
+	    
+	//     node_bus_input.properties = {
+	// 	'id': id,
+	// 	'name': name,
+	// 	'is_bus_port': true,
+        //         'parent_node_id': node.subgraph.node_id
+	//     }
+	//     node_bus_input.widgets[0].value = name;
+	//     node_bus_input.title = "input";
+	//     node_bus_input.pos = [250,400];
+
+	//     node.subgraph.add(node_bus_input);
+	//     node.subgraph.addInput(name, "number", {'id': id});
+
+	//     in_ids.push(id);
+
+	//     i++;
+	// };
+
+	// var i = 0;
+	// for (var outval of outs) {
+	//     node_idx++;
+	//     var outval_split = outval.split('|');
+	//     var id = outval_split[0];
+	//     var name = outval_split[1];
+	//     var node_bus_output = LiteGraph.createNode("bus/output", LiteGraph.GraphOutput);
+	    
+	//     node_bus_output.properties = {
+	// 	'id': id,
+	// 	'name': name,
+	// 	'is_bus_port': true,
+        //         'parent_node_id': node.subgraph.node_id 
+	//     }
+	//     node_bus_output.widgets[0].value = name;
+	//     node_bus_output.title = "output";
+	//     node_bus_output.pos = [1000,400];
+	    
+	//     node.subgraph.add(node_bus_output);
+	//     node.subgraph.addOutput(name, "number", {'id': id});
+
+	//     out_ids.push(id);
+
+	// }
+
+	// node.properties['bus_input_ids'] = in_ids;
+	// node.properties['bus_output_ids'] = out_ids;
+    }
+    
     function _cyperus_util_create_bus_ports_from_litegraph_nodes(bus_ports, args) {
 	var node = args['node'];
 	var my_id = args['my_id'];
@@ -3316,7 +3480,7 @@ class Cyperus {
                 parent_cyperus_id = args['configure_payload']['parent_subgraph_node'].bus_id;
             }
 
-            if (!bus_port_node.type.localeCompare("cyperus/bus/input")) {
+            if (!bus_port_node.type.localeCompare("bus/input")) {
                 var lg_slot_number = 0;
                 var inval = undefined;
                 for(var raw_inval of ins) {
@@ -3339,7 +3503,7 @@ class Cyperus {
                 in_ids.push(id);
             }
 
-            if (!bus_port_node.type.localeCompare("cyperus/bus/output")) {
+            if (!bus_port_node.type.localeCompare("bus/output")) {
                 var lg_slot_number = 0;
                 outval = undefined;
                 for(var raw_outval of outs) {
@@ -3391,14 +3555,12 @@ class Cyperus {
         }
 
         // configure subgraph within bus        
-        if (!node.type.localeCompare("cyperus/bus/add")) {            
+        if (!node.type.localeCompare("bus/add")) {            
             var keep_old = true;
             node.subgraph.load_configure(args['configure_payload']['bus_n_info'].subgraph, keep_old, node.subgraph);
             _cyperus_util_add_connections_from_serialized_bus_port_links(node.subgraph, args['configure_payload']['bus_n_info'].subgraph.links);            
         }
     }
-
-    // function _cyperus_util_
     
     function _cyperus_util_store_new_bus_uuid(response, args) {
         
@@ -3748,7 +3910,7 @@ class Cyperus {
                 if( from_load_configure) {
                     this._cyperus.osc_list_main(LiteGraph._cyperus_parse_existing_mains, node);
                 }
-	    } else if (!node.type.localeCompare("cyperus/bus/add")) {
+	    } else if (!node.type.localeCompare("bus/add")) {
                 console.log('litegraph.js::LGraph.prototype.add(), target_bus_id:');
                 console.log(target_bus_id);
                 
@@ -3780,38 +3942,52 @@ class Cyperus {
                         args);
 		}
 
-	    } else if (!node.type.localeCompare("cyperus/bus/input")) {
+	    } else if (!node.type.localeCompare("bus/input")) {
 
-                // if( from_load_configure ) {
-                //     args = {'node': node,
-                //             'from_load_configure': true};
-                //     console.log(this.bus_id);
+                if( from_load_configure ) {
+                    
+                    // do nothing
+                    
+                } else {
 
-                //     console.log('ADD(), this:');
-                //     console.log(this);
-                    
-	        //     LiteGraph._cyperus.osc_list_bus_port(
-                //         LiteGraph._cyperus.uuidv4(),
-                //         this.bus_id,
-	        //         _cyperus_util_create_bus_port_from_litegraph_node,
-	        //         args);
-                // }
+                    if (node.properties.id == null) {
+                        args = {'subgraph': this,
+                                'node': node};
+                        var is_output = 0;
 
-	    } else if (!node.type.localeCompare("cyperus/bus/output")) {
-                // if( from_load_configure ) {
-                //     args = {'node': node,
-                //             'from_load_configure': true};
+                        console.log('is_output: ');
+                        console.log(is_output);
+                        
+	                LiteGraph._cyperus.osc_add_bus_port(
+                            LiteGraph._cyperus.uuidv4(),
+                            this.bus_id,
+                            "new bus input",
+                            is_output,
+	                    _cyperus_util_create_bus_port_from_new_litegraph_node,
+	                    args);
+                    }
+                }
+	    } else if (!node.type.localeCompare("bus/output")) {
+
+                if( from_load_configure ) {
                     
-                //     console.log('ADD(), this:');
-                //     console.log(this);
-                //     console.log(this.bus_id);
+                    // do nothing
                     
-	        //     LiteGraph._cyperus.osc_list_bus_port(
-                //         LiteGraph._cyperus.uuidv4(),
-                //         this.bus_id,
-	        //         _cyperus_util_create_bus_port_from_litegraph_node,
-	        //         args);
-                // }
+                } else {
+                    if (node.properties.id == null) {
+                        args = {'subgraph': this,
+                                'node': node};
+                        var is_output = 1;
+	                LiteGraph._cyperus.osc_add_bus_port(
+                            LiteGraph._cyperus.uuidv4(),
+                            this.bus_id,
+                            "new bus output",
+                            is_output,
+	                    _cyperus_util_create_bus_port_from_new_litegraph_node,
+	                    args);
+                    }
+                }
+                
 	    } else {
 
                 args = {'node': node,
@@ -4110,15 +4286,24 @@ class Cyperus {
         console.log(node);
 
         console.log(node.properties.id);
+
+
+        if (node.type == 'bus/add') {
+            LiteGraph._cyperus.osc_remove_bus(
+                LiteGraph._cyperus.uuidv4(),
+                node.properties.id,
+                console.log,
+	        undefined
+	    );
+        } else {
+            LiteGraph._cyperus.osc_remove_module(
+                LiteGraph._cyperus.uuidv4(),
+                node.properties.id,
+                console.log,
+	        undefined
+	    );
+        }
         
-        LiteGraph._cyperus.osc_remove_module(
-            LiteGraph._cyperus.uuidv4(),
-            node.properties.id,
-            console.log,
-	    undefined
-	);
-
-
         // END CYPERUS CODE
         
         //disconnect inputs
@@ -4960,8 +5145,8 @@ class Cyperus {
                 
                 var n_info = nodes[i]; //stored info
 
-                if( !n_info.type.localeCompare("cyperus/bus/input") ||
-                           !n_info.type.localeCompare("cyperus/bus/output") ) {
+                if( !n_info.type.localeCompare("bus/input") ||
+                           !n_info.type.localeCompare("bus/output") ) {
                     continue;
                 }
                 
@@ -4983,11 +5168,11 @@ class Cyperus {
                     //continue;
                 }
 
-                if(!node.type.localeCompare("cyperus/bus/add")) {
+                if(!node.type.localeCompare("bus/add")) {
                     subgraph_bus_port_nodes = [];
                     for (var idx = 0, len = nodes[i].subgraph.nodes.length; idx < len; ++idx) {
-                        if( !nodes[i].subgraph.nodes[idx].type.localeCompare("cyperus/bus/input") ||
-                            !nodes[i].subgraph.nodes[idx].type.localeCompare("cyperus/bus/output") ) {
+                        if( !nodes[i].subgraph.nodes[idx].type.localeCompare("bus/input") ||
+                            !nodes[i].subgraph.nodes[idx].type.localeCompare("bus/output") ) {
                             subgraph_bus_port_nodes.push(nodes[i].subgraph.nodes[idx]);
                         }
                     }
@@ -5544,6 +5729,7 @@ class Cyperus {
         
 	var prev_value = this.properties[name];
         this.properties[name] = value;
+        
         if (this.onPropertyChanged) {
             if( this.onPropertyChanged(name, value, prev_value) === false ) //abort change
                 console.log('ERROR');
@@ -6929,10 +7115,10 @@ class Cyperus {
 	var cyperus_id_out = undefined;
 	if (!this.type.localeCompare("cyperus/main/inputs")) {
 	    cyperus_id_out = this.properties['ids'][slot];
-	} else if (!this.type.localeCompare("cyperus/bus/input") ||
-                   !this.type.localeCompare("cyperus/bus/output") ) {
+	} else if (!this.type.localeCompare("bus/input") ||
+                   !this.type.localeCompare("bus/output") ) {
             cyperus_id_out = this.properties.id;
-	} else 	if (!this.type.localeCompare("cyperus/bus/add")) {
+	} else 	if (!this.type.localeCompare("bus/add")) {
             cyperus_id_out = this.properties.bus_output_ids[slot];;
         } else {
             cyperus_id_out = this.outputs[slot]['id'];
@@ -6941,10 +7127,10 @@ class Cyperus {
         var cyperus_id_in = undefined;
 	if (!target_node.type.localeCompare("cyperus/main/outputs")) {
 	    cyperus_id_in = target_node.properties['ids'][target_slot];
-	} else if (!target_node.type.localeCompare("cyperus/bus/input") ||
-                   !target_node.type.localeCompare("cyperus/bus/output") ) {
+	} else if (!target_node.type.localeCompare("bus/input") ||
+                   !target_node.type.localeCompare("bus/output") ) {
             cyperus_id_in = target_node.properties.id;
-	} else 	if (!target_node.type.localeCompare("cyperus/bus/add")) {
+	} else 	if (!target_node.type.localeCompare("bus/add")) {
             cyperus_id_in = target_node.properties.bus_input_ids[target_slot];;
         } else {
             cyperus_id_in = target_node.inputs[target_slot]['id'];
@@ -8741,7 +8927,13 @@ LGraphNode.prototype.executeAction = function(action)
                         if (node.onDblClick) {
                             node.onDblClick( e, pos, this );
                         }
-                        this.processNodeDblClicked(node);
+
+
+                        // ignoring double click
+                        // this.processNodeDblClicked(node);
+
+                        
+
                         block_drag_node = true;
                     }
 
@@ -10350,7 +10542,7 @@ LGraphNode.prototype.executeAction = function(action)
 			//input button clicked
 			if( this.drawButton( 20,y+2,w - 20, h - 2 ) )
 			{
-				var type = subnode.constructor.input_node_type || "cyperus/bus/input";
+				var type = subnode.constructor.input_node_type || "bus/input";
 				this.graph.beforeChange();
 				var newnode = LiteGraph.createNode( type );
 				if(newnode)
@@ -10490,7 +10682,7 @@ LGraphNode.prototype.executeAction = function(action)
 			//output button clicked
 			if( this.drawButton(this.canvas.width - w,y+2,w - 20, h - 2 ) )
 			{
-				var type = subnode.constructor.output_node_type || "cyperus/bus/output";
+				var type = subnode.constructor.output_node_type || "bus/output";
 				this.graph.beforeChange();
 				var newnode = LiteGraph.createNode( type );
 				if(newnode)
@@ -12764,7 +12956,10 @@ LGraphNode.prototype.executeAction = function(action)
                 var base_category_regex = new RegExp('^(' + base_category + ')');
                 var category_name = category.replace(base_category_regex,"").split('/')[0];
                 var category_path = base_category  === '' ? category_name + '/' : base_category + category_name + '/';
-    
+
+                if( category_name == "cyperus" )
+                    return;
+                
                 var name = category_name;
                 if(name.indexOf("::") != -1) //in case it has a namespace like "shader::math/rand" it hides the namespace
                     name = name.split("::")[1];
@@ -15508,7 +15703,7 @@ LGraphNode.prototype.executeAction = function(action)
 		if( !nodes_list.length )
 			nodes_list = [ node ];
 
-		var subgraph_node = LiteGraph.createNode("cyperus/bus/add");
+		var subgraph_node = LiteGraph.createNode("bus/add");
 		subgraph_node.pos = node.pos.concat();
 		graph.add(subgraph_node);
 
@@ -16702,115 +16897,7 @@ LGraphNode.prototype.executeAction = function(action)
             function(callback) {
                 window.setTimeout(callback, 1000 / 60);
             };
-    }
-
-    
-    
-    // function Cyperus(url) {
-    // 	this._ctor(url);
-    // }
-
-    // global.Cyperus = LiteGraph.Cyperus = Cyperus;
-
-    // Cyperus.prototype._ctor = function(url) {
-    // 	this.url = url;
-    // 	this.socket = new WebSocket(url);
-    // 	this.callbacks = [];
-    // }
-
-    
-    // Cyperus.prototype.initialize = function() {
-    //     this.socket.addEventListener("open", function (event) {
-    // 	    console.log("Cyperus::initialize(), browser WebSocket connection");
-    //     });
-	
-    //     this.socket.addEventListener("message", function (oscMessage) {
-    // 	    var dequeued = this.callbacks.shift();
-    // 	    var callback = dequeued['callback'];
-    // 	    var args = dequeued['args'];
-    // 	    this._recv(oscMessage, callback, args);
-    //     });
-    // }
-    
-    // Cyperus.prototype._recv = async function(message, callback, args) {
-    // 	var response_raw = await message.data.arrayBuffer().catch((err) => { console.error(err); });
-    // 	var response = osc.readMessage(response_raw);
-    // 	callback(response['args'], args);
-    // }
-
-    // Cyperus.prototype._waitForConnection = function(callback, interval) {
-    // 	if (this.socket.readyState === 1) {
-    //         callback();
-    // 	} else {
-    //         // optional: implement backoff for interval here
-    //         setTimeout(function () {
-    // 		this._waitForConnection(callback, interval);
-    //         }, interval);
-    // 	}
-    // }
-    
-    // Cyperus.prototype._send = function(message, callback, args) {
-    // 	Cyperus.prototype._waitForConnection(function () {
-    //         this.socket.send(osc.writePacket(message));
-    //         if (typeof callback !== 'undefined') {
-    // 		this.callbacks.push({'callback': callback,
-    // 					  'args': args});
-    //         } else {
-    // 		console.log('BARF');
-    // 	    }
-    // 	}, 1000);	
-    // }
-
-    // Cyperus.prototype.osc_list_main = function(callback, args) {
-    // 	this._send(
-    // 	    {
-    // 		address: "/cyperus/list/main",
-    // 		args: undefined
-    // 	    },
-    // 	    callback,
-    // 	    args
-    // 	);
-    // }
-
-    // Cyperus.prototype.parse_mains = function(mains, args) {
-    // 	let ins = [];
-    // 	let outs = [];
-    // 	let processing_ins = 0;
-    // 	let processing_outs = 0;
-    // 	for (let line of mains.split('\n')) {
-    // 	    if (line.includes('in:')) {
-    // 		processing_ins = 1;
-    // 	    }
-    // 	    if (processing_ins) {
-    // 		if (line.includes('out:')) {
-    // 		    processing_ins = 0;
-    // 		    processing_outs = 1;
-    // 		}
-    // 	    }
-    // 	    if (line.includes('mains')) {
-    // 		if (processing_ins) {
-    // 		    ins.push(line);
-    // 		} else if (processing_outs) {
-    // 		    outs.push(line);
-    // 		}
-    // 	    }
-	    
-    // 	}
-    // 	LiteGraph.global_main_ins = ins;
-    // 	LiteGraph.global_main_outs = outs;
-    // 	let ret = {'in': ins, 'out': outs};
-	
-    // 	var node_main_inputs = LiteGraph.createNode("main/inputs");
-    // 	node_main_inputs.pos = [250,200];
-	
-    // 	var node_main_outputs = LiteGraph.createNode("main/outputs");
-    // 	node_main_outputs.pos = [1000,200];
-	
-    // 	this.graph.add(node_main_inputs);
-    // 	this.graph.add(node_main_outputs);
-    // }
-
-    
+    }    
     
 }
 )(this);
