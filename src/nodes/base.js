@@ -179,16 +179,17 @@
         }
     };
 
-    Subgraph.prototype.onSubgraphNewInput = function(name, type) {
-        var slot = this.findInputSlot(name);
+    Subgraph.prototype.onSubgraphNewInput = function(name, type, cyperus_id) {
+        var slot = this.findInputSlot(cyperus_id);
         if (slot == -1) {
             //add input to the node
-            this.addInput(name, type);
+            // this.addInput(name, type);
         }
     };
 
-    Subgraph.prototype.onSubgraphRenamedInput = function(oldname, name) {
-        var slot = this.findInputSlot(oldname);
+    Subgraph.prototype.onSubgraphRenamedInput = function(oldname, name, cyperus_id) {
+        
+        var slot = this.findInputSlot(cyperus_id);
         if (slot == -1) {
             return;
         }
@@ -205,8 +206,8 @@
         info.type = type;
     };
 
-    Subgraph.prototype.onSubgraphRemovedInput = function(name) {
-        var slot = this.findInputSlot(name);
+    Subgraph.prototype.onSubgraphRemovedInput = function() {
+        var slot = this.findInputSlot(cyperus_id);
         if (slot == -1) {
             return;
         }
@@ -217,7 +218,7 @@
     Subgraph.prototype.onSubgraphNewOutput = function(name, type) {
         var slot = this.findOutputSlot(name);
         if (slot == -1) {
-            this.addOutput(name, type);
+            // this.addOutput(name, type);
         }
     };
 
@@ -415,25 +416,30 @@
     {
         console.log('graphInput.prototype.onPropertyChanged(), this:');
         console.log(this);
+        console.log(this.properties.id);
+        
         
 	if( name == "name" )
 	{
 	    if (v == "" || v == this.name_in_graph || v == "enabled") {
 		return false;
 	    }
+            
 	    if(this.graph)
 	    {
 		if (this.name_in_graph) {
 		    //already added
-		    this.graph.renameInput( this.name_in_graph, v );
+		    this.graph.renameInput( this.name_in_graph, v, this.properties.id);
                     this.properties.name = v;                                    
-		} else {
-		    this.graph.addInput( v, this.properties.type );
-		}
+                }
 	    } //what if not?!
+
+
 	    this.name_widget.value = v;
-	    this.name_in_graph = v;
+	    this.name_in_graph = v;            
 	}
+
+        return true;
     }
 
 

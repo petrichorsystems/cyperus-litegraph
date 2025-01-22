@@ -2588,8 +2588,8 @@ class Cyperus {
         this.catch_errors = true;
 
         //subgraph_data
-        this.inputs = {};
-        this.outputs = {};
+        this.inputs = [];
+        this.outputs = [];
 
         //notify canvas to redraw
         this.change();
@@ -3272,7 +3272,8 @@ class Cyperus {
 	    node_bus_input.pos = [250,400];
 
 	    node.subgraph.add(node_bus_input);
-	    node.subgraph.addInput(name, "number", {'id': id});
+	    node.subgraph.addInput(name, "number", 0, id);
+	    node.addInput(name, "number", 0, id);            
             node_bus_input.name_in_graph = name;
             node_bus_input.parent_node = node;
 
@@ -3300,7 +3301,8 @@ class Cyperus {
 	    node_bus_output.pos = [1000,400];
 	    
 	    node.subgraph.add(node_bus_output);
-	    node.subgraph.addOutput(name, "number", {'id': id});
+	    node.subgraph.addOutput(name, "number", 0, id);
+	    node.addOutput(name, "number", 0, id);            
             node_bus_output.name_in_graph = name;
             node_bus_output.parent_node = node;
             
@@ -3366,10 +3368,12 @@ class Cyperus {
         node.name_in_graph = bus_port_name;
         
         if (is_output == 0) {
-            subgraph.addInput(bus_port_name, "number", {'id': bus_port_id});
+            subgraph.addInput(bus_port_name, "number", 0, bus_port_id);
+            parent_node.addInput(bus_port_name, "number", 0, bus_port_id);            
             parent_node.properties.bus_input_ids.push(bus_port_id);
         } else {
-            subgraph.addOutput(bus_port_name, "number", {'id': bus_port_id});
+            subgraph.addOutput(bus_port_name, "number", 0, bus_port_id);
+            parent_node.addOutput(bus_port_name, "number", 0, bus_port_id);            
             parent_node.properties.bus_output_ids.push(bus_port_id);            
         }
         
@@ -3654,10 +3658,9 @@ class Cyperus {
 	    if( split_output_port.length > 1 ) {
 		var cyperus_id = split_output_port[0];
 		var port_name = split_output_port[1];
-
 		node.addOutput(port_name, "number", {'id': cyperus_id });
+                cyperus_output_ports.push(cyperus_id);                
 	    }
-            cyperus_output_ports.push(cyperus_id);
 	}
 
         if (args['from_load_configure']) {
@@ -4553,13 +4556,16 @@ class Cyperus {
      */
     LGraph.prototype.addInput = function(name, type, value, cyperus_id) {
         var input = this.inputs[name];
-        if (input) {
-            //already exist
-            return;
+
+        for(var graph_input in this.inputs) {
+            if( graph_input.id == cyperus_id ) {
+                // already exists
+                return;
+            }
         }
 
 	this.beforeChange();
-        this.inputs[name] = { name: name, type: type, value: value, id: cyperus_id };
+        this.inputs.push({ name: name, type: type, value: value, id: cyperus_id });
         this._version++;
 		this.afterChange();
 
@@ -4606,26 +4612,23 @@ class Cyperus {
      * @param {String} old_name
      * @param {String} new_name
      */
-    LGraph.prototype.renameInput = function(old_name, name) {
+    LGraph.prototype.renameInput  = function(old_name, name, cyperus_id) {
+        
         if (name == old_name) {
             return;
         }
-
-        if (!this.inputs[old_name]) {
-            return false;
+        
+        for(var temp_input in this.inputs) {
+            if( this.inputs[temp_input].id === cyperus_id ) {
+                this.inputs[temp_input].name = name;
+                break;
+            }
         }
-
-        if (this.inputs[name]) {
-            console.error("there is already one input with that name");
-            return false;
-        }
-
-        this.inputs[name] = this.inputs[old_name];
-        delete this.inputs[old_name];
+        
         this._version++;
 
         if (this.onInputRenamed) {
-            this.onInputRenamed(old_name, name);
+            this.onInputRenamed(old_name, name, cyperus_id);
         }
 
         if (this.onInputsOutputsChange) {
@@ -4690,8 +4693,11 @@ class Cyperus {
      * @param {String} type
      * @param {*} value
      */
-    LGraph.prototype.addOutput = function(name, type, value) {
-        this.outputs[name] = { name: name, type: type, value: value };
+    LGraph.prototype.addOutput = function(name, type, value, cyperus_id) {
+
+        // we need to pass down cyperus id here
+        
+        this.outputs.push({ name: name, type: type, value: value, id: cyperus_id });
         this._version++;
 
         if (this.onOutputAdded) {
@@ -5731,27 +5737,15 @@ class Cyperus {
         this.properties[name] = value;
         
         if (this.onPropertyChanged) {
-            if( this.onPropertyChanged(name, value, prev_value) === false ) //abort change
+            if( this.onPropertyChanged(name, value) === false ) //abort change
                 console.log('ERROR');
 		this.properties[name] = prev_value;
         }
-
-
-	if(this.widgets) //widgets could be linked to properties
-	    for(var i = 0; i < this.widgets.length; ++i)
-	{
-	    var w = this.widgets[i];
-	    if(!w)
-		continue;
-	    if(w.options.property == name)
-	    {
-		w.value = value;
-		break;
-	    }
-	}
         
 	// START CYPERUS CODE
-
+        if( name == "name" )
+            this.properties.name = this.name_widget.value;
+        
         if (!this.type.localeCompare("network/oscsend")) {
             this.properties['hostname_ip'] = this.widgets[0].value;
             this.properties['port'] = this.widgets[1].value;
@@ -5932,6 +5926,7 @@ class Cyperus {
 		break;
 	    }
 	}
+        
     };
 
     // Execution *************************
@@ -6965,12 +6960,12 @@ class Cyperus {
      * @param {string} name the name of the slot
      * @return {number} the slot (-1 if not found)
      */
-    LGraphNode.prototype.findInputSlot = function(name) {
+    LGraphNode.prototype.findInputSlot = function(cyperus_id) {
         if (!this.inputs) {
             return -1;
         }
         for (var i = 0, l = this.inputs.length; i < l; ++i) {
-            if (name == this.inputs[i].name) {
+            if (cyperus_id === this.properties.bus_input_ids[i]) {
                 return i;
             }
         }
@@ -13218,7 +13213,7 @@ LGraphNode.prototype.executeAction = function(action)
         var ref_window = canvas.getCanvasWindow();
 
         var entries = [];
-        for (var i in node.properties) {
+        for (var i in node.properties) {            
             var value = node.properties[i] !== undefined ? node.properties[i] : " ";
 			if( typeof value == "object" )
 				value = JSON.stringify(value);
