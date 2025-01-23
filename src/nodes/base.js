@@ -215,15 +215,15 @@
     };
 
     //**** OUTPUTS ***********************************
-    Subgraph.prototype.onSubgraphNewOutput = function(name, type) {
-        var slot = this.findOutputSlot(name);
+    Subgraph.prototype.onSubgraphNewOutput = function(name, type, cyperus_id) {
+        var slot = this.findOutputSlot(cyperus_id);
         if (slot == -1) {
             // this.addOutput(name, type);
         }
     };
 
-    Subgraph.prototype.onSubgraphRenamedOutput = function(oldname, name) {
-        var slot = this.findOutputSlot(oldname);
+    Subgraph.prototype.onSubgraphRenamedOutput = function(oldname, name, cyperus_id) {
+        var slot = this.findOutputSlot(cyperus_id);
         if (slot == -1) {
             return;
         }
@@ -376,7 +376,7 @@
 
     //Input for a subgraph
     function GraphInput() {
-        this.addOutput("", "number");
+        this.addOutput("", "");
 
         this.name_in_graph = "";
         this.properties = {
@@ -413,12 +413,7 @@
 
     //this is executed AFTER the property has changed
     GraphInput.prototype.onPropertyChanged = function(name,v)
-    {
-        console.log('graphInput.prototype.onPropertyChanged(), this:');
-        console.log(this);
-        console.log(this.properties.id);
-        
-        
+    {        
 	if( name == "name" )
 	{
 	    if (v == "" || v == this.name_in_graph || v == "enabled") {
@@ -482,53 +477,26 @@
         this.addInput("", "");
 
         this.name_in_graph = "";
-        this.properties = {};
+        this.properties = {
+            name: "",
+            type: "number",
+            value: 0
+        };
         var that = this;
 
-        Object.defineProperty(this.properties, "name", {
-            get: function() {
-                return that.name_in_graph;
-            },
-            set: function(v) {
-                if (v == "" || v == that.name_in_graph) {
+
+        this.name_widget = this.addWidget(
+            "text",
+            "Name",
+            this.properties.name,
+            function(v) {
+                if (!v) {
                     return;
                 }
-                if (that.name_in_graph) {
-                    //already added
-                    that.graph.renameOutput(that.name_in_graph, v);
-                } else {
-                    that.graph.addOutput(v, that.properties.type);
-                }
-                that.name_widget.value = v;
-                that.name_in_graph = v;
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(this.properties, "type", {
-            get: function() {
-                return that.inputs[0].type;
-            },
-            set: function(v) {
-                if (v == "action" || v == "event") {
-                    v = LiteGraph.ACTION;
-                }
-		        if (!LiteGraph.isValidConnection(that.inputs[0].type,v))
-					that.disconnectInput(0);
-                that.inputs[0].type = v;
-                if (that.name_in_graph) {
-                    //already added
-                    that.graph.changeOutputType(
-                        that.name_in_graph,
-                        that.inputs[0].type
-                    );
-                }
-                that.type_widget.value = v || "";
-            },
-            enumerable: true
-        });
-
-        this.name_widget = this.addWidget("text","Name",this.properties.name,"name");
+                that.setProperty("name",v);
+            }
+        );
+        
         this.widgets_up = true;
         this.size = [180, 35];
     }
@@ -536,28 +504,29 @@
     GraphOutput.title = "output";
     GraphOutput.desc = "output of the graph";
 
-	//this is executed AFTER the property has changed
-	// GraphOutput.prototype.onPropertyChanged = function(name,v)
-	// {
-	// 	if( name == "name" )
-	// 	{
-	// 		if (v == "" || v == this.name_in_graph || v == "enabled") {
-	// 			return false;
-	// 		}
-	// 		if(this.graph)
-	// 		{
-	// 			if (this.name_in_graph) {
-	// 				//already added
-	// 			    this.graph.renameOutput( this.name_in_graph, v );
-        //                             this.properties.name = v;
-	// 			} else {
-	// 				this.graph.addOutput( v, this.properties.type );
-	// 			}
-	// 		} //what if not?!
-	// 		this.name_widget.value = v;
-	// 		this.name_in_graph = v;
-	// 	}
-	// }
+    //this is executed AFTER the property has changed
+    GraphOutput.prototype.onPropertyChanged = function(name,v)
+    {
+        if( name == "name" )
+        {
+            // if (v == "" || v == this.name_in_graph || v == "enabled") {
+	    //     return false;
+	    // }
+
+            if(this.graph)
+            {
+                    if (this.name_in_graph) {
+                        //already added
+
+                        this.graph.renameOutput( this.name_in_graph, v, this.properties.id);
+                        this.properties.name = v;
+                    }
+            } //what if not?!
+            this.name_widget.value = v;
+            this.name_in_graph = v;
+            }
+        return true;
+    }
     
     GraphOutput.prototype.onExecute = function() {
         this._value = this.getInputData(0);

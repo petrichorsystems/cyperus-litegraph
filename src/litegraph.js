@@ -4570,7 +4570,7 @@ class Cyperus {
 		this.afterChange();
 
         if (this.onInputAdded) {
-            this.onInputAdded(name, type);
+            this.onInputAdded(name, type, cyperus_id);
         }
 
         if (this.onInputsOutputsChange) {
@@ -4696,12 +4696,21 @@ class Cyperus {
     LGraph.prototype.addOutput = function(name, type, value, cyperus_id) {
 
         // we need to pass down cyperus id here
-        
+
+        for(var graph_output in this.outputs) {
+            if( graph_output.id == cyperus_id ) {
+                // already exists
+                return;
+            }
+        }
+
+        this.beforeChange();
         this.outputs.push({ name: name, type: type, value: value, id: cyperus_id });
         this._version++;
+        this.afterChange();
 
         if (this.onOutputAdded) {
-            this.onOutputAdded(name, type);
+            this.onOutputAdded(name, type, cyperus_id);
         }
 
         if (this.onInputsOutputsChange) {
@@ -4743,22 +4752,22 @@ class Cyperus {
      * @param {String} old_name
      * @param {String} new_name
      */
-    LGraph.prototype.renameOutput = function(old_name, name) {
-        if (!this.outputs[old_name]) {
-            return false;
+    LGraph.prototype.renameOutput = function(old_name, name, cyperus_id) {        
+        if (name == old_name) {
+            return;
         }
-
-        if (this.outputs[name]) {
-            console.error("there is already one output with that name");
-            return false;
+        
+        for(var temp_output in this.outputs) {            
+            if( this.outputs[temp_output].id === cyperus_id ) {
+                this.outputs[temp_output].name = name;
+                break;
+            }
         }
-
-        this.outputs[name] = this.outputs[old_name];
-        delete this.outputs[old_name];
+        
         this._version++;
 
         if (this.onOutputRenamed) {
-            this.onOutputRenamed(old_name, name);
+            this.onOutputRenamed(old_name, name, cyperus_id);
         }
 
         if (this.onInputsOutputsChange) {
@@ -5721,6 +5730,7 @@ class Cyperus {
      * @param {*} value
      */
     LGraphNode.prototype.setProperty = function(name, value) {
+        
         if (!this.properties) {
             this.properties = {};
         }
@@ -5743,6 +5753,15 @@ class Cyperus {
         }
         
 	// START CYPERUS CODE
+
+        console.log('name: ');
+        console.log(name);
+        console.log('value: ');
+        console.log(value);
+
+        console.log('this');
+        console.log(this);
+        
         if( name == "name" )
             this.properties.name = this.name_widget.value;
         
@@ -6978,12 +6997,12 @@ class Cyperus {
      * @param {string} name the name of the slot
      * @return {number} the slot (-1 if not found)
      */
-    LGraphNode.prototype.findOutputSlot = function(name) {
+    LGraphNode.prototype.findOutputSlot = function(cyperus_id) {
         if (!this.outputs) {
             return -1;
        } 
         for (var i = 0, l = this.outputs.length; i < l; ++i) {
-            if (name == this.outputs[i].name) {
+            if (cyperus_id === this.properties.bus_output_ids[i]) {
                 return i;
             }
         }
